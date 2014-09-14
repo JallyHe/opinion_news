@@ -23,7 +23,6 @@
         $(document).ready(function(){   //网页加载时执行下面函数
         var style = '0';
         gettimeline_data();
-        getweibos_data(style);
    })
         var result = [];
         var result1 = [];
@@ -38,50 +37,127 @@
             dataType:"json",
             async: false,
             success: function(data){
-               
-               for (var i = 0;i < data.length;i++) {
+                for (var i = 0;i < data.length;i++) {
                     result[i] = data[i][i][0];
                 };
                 for (var i = 0;i < data.length;i++) {
                     result1[i] = data[i][i][1]; 
                 };
-                for (var i = 0;i < data.length;i++) {
-                    result2[i] = data[i][i][2][0]+'-'+data[i][i][2][1]; 
-
+                for (var i = 0; i < data.length; i++) {
+                    var html = "";
                     var s = i.toString();
-                    if(i==0){
-                        html += '<a value='+ s + ' class="tabLi gColor0 curr" href="javascript:;" style="display: block;">';
-                        html += '<div class="nmTab">'+ result2[i]+ '</div>';
-                        html += '<div class="hvTab">'+result2[i]+'</div></a>';
-                    }
-                    else{
-                        html += '<a value='+ s + ' class="tabLi gColor0" href="javascript:;" style="display: block;">';
-                        html += '<div class="nmTab">'+ result2[i]+ '</div>';
-                        html += '<div class="hvTab">'+result2[i]+'</div></a>';
-                    }
-                    
-                };
-                $("#Tableselect").append(html);
-                bindSentimentTabClick();
+                    result2[i] = data[i][i][2][0]+'-'+data[i][i][2][1]; 
+                    html+='<span><input type="checkbox" value = '+ s +' name="子话题">'+result2[i]+'</span>';
+                    $("#checkbox").append(html);
+                }
+               
+               // for (var i = 0;i < data.length;i++) {
+               //      result[i] = data[i][i][0];
+               //  };
+               //  for (var i = 0;i < data.length;i++) {
+               //      result1[i] = data[i][i][1]; 
+               //  };
+               //  for (var i = 0;i < data.length;i++) {
+               //      result2[i] = data[i][i][2][0]+'-'+data[i][i][2][1]; 
+
+               //      var s = i.toString();
+               //      if(i==0){
+               //          html += '<a value='+ s + ' class="tabLi gColor0 curr" href="javascript:;" style="display: block;">';
+               //          html += '<div class="nmTab">'+ result2[i]+ '</div>';
+               //          html += '<div class="hvTab">'+result2[i]+'</div></a>';
+               // //      }
+               //      else{
+               //          html += '<a value='+ s + ' class="tabLi gColor0" href="javascript:;" style="display: block;">';
+               //          html += '<div class="nmTab">'+ result2[i]+ '</div>';
+               //          html += '<div class="hvTab">'+result2[i]+'</div></a>';
+               //      }                   
+               //  };
+               //  $("#Tableselect").append(html);
 
                drawVisualization(); 
                getkeywords_data();
-                             
+               bindinput_tab(); 
+            }       
+        });
+    }
+    function bindinput_tab(){
+        var style;
+        var k = 0;
+        $("#checkbox span").children("input").unbind();
+        $("#checkbox span").children("input").click(function() { 
+            var select_input = $(this);
+            style = select_input.attr('value');
+            if(!select_input.hasClass("input_curr")){
+                select_input.addClass("input_curr");
+                unbind_tab(k); 
+                var i = Number(style);
+                // var html = '';
+                // html += '<a value='+ style + ' class="tabLi gColor0 curr" href="javascript:;" style="display: block;">';
+                // html += '<div class="nmTab">'+ result2[i]+ '</div>';
+                // html += '<div class="hvTab">'+result2[i]+'</div></a>';
+                // $("#Tableselect").append(html);
+                getweibos_data(style);
+                k++;
+
             }
+            else {
+                select_input.removeClass("input_curr");
+                k--;
+                removeElement(style,k);
+            } 
+            bindSentimentTabClick();     
+        })
+    }    
+    function unbind_tab(k){
+        var time = k;
+        if(k>=1){
+          $("#Tableselect").children("a").each(function(){
+            var select= $(this);
+            select.removeClass("curr");
+          })  
+        }
 
-       
-    });
+    }
 
-}
+    function removeElement(data,k){
+        var el = document.getElementById("Tableselect");
+        var first;
+        var time;
+        time =k;
+        console.log(time);
+        $("#Tableselect").children("a").each(function(){
+            var obj = $(this);
+            var obj_a = this;
+            if(obj.attr('value') == data){
+                el.removeChild(obj_a);
+               if(obj.hasClass("curr")){
+                    obj.removeClass("curr");
+                    
+                    $("#vertical-ticker").empty();
 
-
-
+                    first = $("#Tableselect").children("a").first();
+                    console.log(first);
+                    first.addClass("curr");
+                    console.log('abx');
+                    var style = first.attr("value");
+                    if(time >0){
+                        getweibos_data(style);
+                    }
+                    
+                    //document.getElementById('vertical-ticker').innerHtml = "";
+               }
+                  
+               
+            }
+        })
+    }
+    
     function bindSentimentTabClick(){
+
         
         $("#Tablebselect").children("a").unbind();
 
         $("#Tableselect").children("a").click(function() {
-            
             var select_a = $(this);
             var unselect_a = $(this).siblings('a');
             if(!select_a.hasClass('curr')) {
@@ -109,7 +185,6 @@
                     'start': data[0],
                     'end': data1[0],
                     'content': result2[0],
-                    'link': "www.baidu.com"
                 },
                 {
                     'start': data[1],
@@ -175,13 +250,7 @@
             timeline = new links.Timeline(document.getElementById('mytimeline'));
             // Draw our timeline with the created data and options
             timeline.draw(data, options);
-
-
-
-            
-
         }
-
     var query = "中国";
     var ts = 1378035900;
     var START_TS = 1377965700
@@ -246,7 +315,7 @@
     
     option = {
         title : {
-            text: '子类占比图',
+            text: '',
             x:'center',
             textStyle:{
             fontWeight:'lighter',
@@ -334,7 +403,7 @@
 
 
             function chg_weibos(data){  
-                $("#vertical-ticker").empty();
+                // $("#vertical-ticker").empty();
                 var html = "";
                 html += '<div class="tang-scrollpanel-wrapper" style="height: ' + 66 * data.length  + 'px;">';
                 html += '<div class="tang-scrollpanel-content">';
@@ -386,14 +455,11 @@
                 html += '</div>';
                 html += '</li>';
             }
-            html += '</ul>';
-            html += '</div>';
+                html += '</ul>';
+                html += '</div>';
             $("#vertical-ticker").append(html);
             }
  
-
-
-
         function getkeywords_data(){   
                 var topic = '博鳌';
                 $.ajax({
@@ -405,14 +471,13 @@
                     }
                 });
             }
-
-        function drawtable(data){
-            
+        function drawtable(data){           
             var tagout ;
             var tagin;
             var html = '';
             for (var i =0 ;i<data.length; i++){
                 var html = '';
+                var html1 = '';
                 var m = i+1;
                 var keyword = [];
                 var s = i.toString();
@@ -428,72 +493,71 @@
                     for (var k = tagout[tagin].length; k < 5; k++){
                         keyword[k] = " ";
                     }
-
                  }  
                  else{ 
                     for (var k1 in tagout[tagin]){
                 
                         keyword.push(tagout[tagin][k1]['0']);
                         //console.log(tagout[tagin][k1]['0']);
-                    }
-             
+                    }             
                 } 
-
                 var tindex = Number(tagin);
-                console.log(keyword);
-                console.log(tindex);
+                // console.log(keyword);
+                // console.log(tindex);
                 if(tindex == 0){
-                    html += '<tr value='+tagin+' class="tablecurrent">';
-                    html += '<td><b>'+m+'</b></td><td><b onclick = \"connect('+tagin+')\" style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
+                    html += '<tr value='+tagin+'>';
+                    html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
                     html += '</tr>';
-                }
+                }                             
                 else{
                     html += '<tr value='+tagin+'>';
-                    html += '<td><b>'+m+'</b></td><td><b onclick = \"connect('+tagin+')\" style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
+                    html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
                     html += '</tr>';
-                }
 
+                    html1 += '<tr>';
+                    html1 += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
+                    html1 += '</tr>';
+                }
                  $("#alternatecolor").append(html);
+                 $("#alternate").append(html1);
             }
-           
-           
         }
-        function connect(data){
-            var value_data = data;
+        // function connect(data){
+        //     var value_data = data;
 
-            $("#alternatecolor tr").each(function() {
-                var select_all =$(this);
-                console.log(select_all.attr('value'));
-                if(select_all.attr('value') == value_data){
-                    if(!select_all.hasClass("tablecurrent")){
-                        select_all.addClass("tablecurrent");
-                    }
-                }
-                else{
-                    if(select_all.hasClass("tablecurrent")){
-                        select_all.removeClass('tablecurrent');
-                    }
-                }
+        //     $("#alternatecolor tr").each(function() {
+        //         var select_all =$(this);
+        //         console.log(select_all.attr('value'));
+        //         if(select_all.attr('value') == value_data){
+        //             if(!select_all.hasClass("tablecurrent")){
+        //                 select_all.addClass("tablecurrent");
+        //             }
+        //         }
+        //         else{
+        //             if(select_all.hasClass("tablecurrent")){
+        //                 select_all.removeClass('tablecurrent');
+        //             }
+        //         }
 
-            })
-            refreshWeiboTab(value_data);
-        }
+        //     })
+        //     refreshWeiboTab(value_data);
+        // }
 
-        function refreshWeiboTab(data){
-            var curr_data = data;
-             $("#Tableselect a").each(function() {
-                var select_a = $(this);
-                var select_a_sentiment = select_a.attr('value');
-                if (select_a_sentiment == curr_data){
-                    if(!select_a.hasClass('curr')) {
-                        select_a.addClass('curr');
-                    }
-                }
-                else{
-                    if(select_a.hasClass('curr')) {
-                        select_a.removeClass('curr');
-                    }
-                }
-            });
-            getweibos_data(curr_data);
-        }
+        // function refreshWeiboTab(data){
+        //     var curr_data = data;
+        //      $("#Tableselect a").each(function() {
+        //         var select_a = $(this);
+        //         var select_a_sentiment = select_a.attr('value');
+        //         if (select_a_sentiment == curr_data){
+        //             if(!select_a.hasClass('curr')) {
+        //                 select_a.addClass('curr');
+        //             }
+        //         }
+        //         else{
+        //             if(select_a.hasClass('curr')) {
+        //                 select_a.removeClass('curr');
+        //             }
+        //         }
+        //     });
+        //     getweibos_data(curr_data);
+        // }
