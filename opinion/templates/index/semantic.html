@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% block title %}语义分析{% endblock %}
-{% block module_title %}深度分析{% endblock %}
+{% block module_title %}微博观点分析{% endblock %}
 
 {% block head_css %}
     <!--
@@ -233,7 +232,7 @@
             border-width: 1px;
             padding: 0px;
             height: 22px;
-            border-style: solid;
+ 
             border-color: #a9c6c9;
         }
         table.altrowstable th {
@@ -244,6 +243,9 @@
         }
         .tablecurrent {
             background-color:#3385ff;
+        }
+        .input_curr{
+            checked: "checked";
         }
 
     </style>
@@ -274,7 +276,7 @@
 
     <div class="blkUnit grpUnit" style="float:left;" id="cloudpie">
         <div class="titlBar" style="padding-bottom:15px;">
-            <h4><b>子话题占比分析|关键词列表</b></h4>
+            <h4><b>子话题占比分析|子话题列表</b></h4>
              <i id="table_pie_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="各类信息占比分析:子话题信息占比；各类子话题的关键词对"></i>&nbsp;&nbsp;
         </div>
         <div class="tabUnit">
@@ -282,13 +284,43 @@
             </div>
             <div class="tabConts">
                 <div style="width:1033px;">
-                    <div id="main" style="clear:left;width:50%;float:left;height:280px;position:relative;">
+                    <div id="main" style="clear:left;width:50%;float:left;height:310px;position:relative;">
                     </div>
                  <div id="list" style="width:50%;height:250px;float:right;margin-top:0px;"> 
                 
-                    <table class="altrowstable" id="alternatecolor" style = "margin-left :15px;height : 250px;width:500px;">
+                    <table  rules=rows frame= hsides class="altrowstable" id="alternatecolor" style = "margin-left :15px;height : 250px;width:500px;">
                         <td><b>标号</b></td><td><b>子话题</b></td><td>关键词对1</td><td>关键词对2</td><td>关键词对3</td><td>关键词对4</td><td>关键词对5</td>
-                    </table> 
+                    </table>
+
+                <button style="margin-top:6px;margin-left:10px"data-toggle="modal" 
+                        data-target="#myModal">显示更多关键词对</button> 
+                <!-- 模态框（Mod<al） -->
+                <div class="modal fade" id="myModal" tabindex="-1" role="dialog" 
+                   aria-labelledby="myModalLabel" aria-hidden="true">
+                   <div class="modal-dialog">
+                      <div class="modal-content">
+                         <div class="modal-header">
+                            <button type="button" class="close" 
+                               data-dismiss="modal" aria-hidden="true">
+                                  &times;
+                            </button>
+                            <h4>
+                               子话题关键词对
+                            </h4>
+                         </div>
+                         <div class="modal-body" >
+                                    <table  rules=rows frame= hsides class="altrowstable" id="alternate" style = "margin-left :15px;height : 250px;width:500px;">
+                                        <td><b>标号</b></td><td><b>子话题</b></td><td>关键词对6</td><td>关键词对7</td><td>关键词对8</td><td>关键词对9</td><td>关键词对10</td>
+                                    </table>
+                         </div>
+                         <div class="modal-footer" >
+                            <button type="button" class="btn btn-primary" 
+                               data-dismiss="modal">关闭
+                            </button>
+                         </div>
+                      </div><!-- /.modal-content -->
+                </div><!-- /.modal -->
+                </div>
                 </div>
             </div>
         </div>
@@ -296,11 +328,43 @@
 </div>
     <div class="blkUnit grpUnit" style="float:left;" id="cloudpie">
         <div class="titlBar" style="padding-bottom:15px;">
+
             <h4><b>重要微博</b></h4>
             <i id="weibo_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="重要微博:各类子话题的重要微博"></i>&nbsp;&nbsp;
         </div>
         <div class="stmTabs tabUnit" style="width:1033px;">
-            <div class="tabTitle" style="padding-top:1px;">
+
+                <div class="btn-group">
+                   <button type="button" class="btn btn-primary btn-xs">排序方式选择</button>
+                   <button type="button" class="btn btn-primary btn-xs" 
+                      data-toggle="dropdown">
+                      <span class="caret"></span>
+                      <span class="sr-only">切换下拉菜单</span>
+                   </button>
+                   <ul class="dropdown-menu" role="menu">
+                      <li><a href="#">代表性</a></li>
+                      <li><a href="#">时间</a></li>
+                      <li><a href="#">转发数</a></li>
+                      <li><a href="#">评论数</a></li>
+                   </ul>
+                </div>
+
+                <div style="margin-top:5px" id ="checkbox"><p class="btn btn-primary btn-xs">子话题选择：</p>
+                
+<!--                 <input type="checkbox" name="子话题" >博鳌-论坛
+                <input type="checkbox" name="子话题" >博鳌-新动力
+                <input type="checkbox" name="子话题" >陈志武-炮轰
+                <input type="checkbox" name="子话题" >中澳-总理
+                <input type="checkbox" name="子话题" >问题-博鳌
+                <input type="checkbox" name="子话题" >博鳌-人口
+                <input type="checkbox" name="子话题" >沃尔沃-集团
+                <input type="checkbox" name="子话题" >海南-非物质文化
+                <input type="checkbox" name="子话题" >博鳌-亚洲
+                <input type="checkbox" name="子话题" >博鳌-亚洲
+                <input type="checkbox" name="子话题" >李克强-果断 --></div>
+<!--                 <div>
+                <input type="submit"  style="margin-left:900px" class="btn btn-primary btn-xs" name="提交按钮" value="确定"></div> -->
+            <div class="tabTitle">
                 <div class="tabUI" id="Tableselect">
                 </div>
             </div>
@@ -311,8 +375,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-      
+        </div>     
     </div>
 
 {% endblock content %}
