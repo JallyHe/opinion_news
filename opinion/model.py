@@ -2,20 +2,8 @@
 
 from extensions import db
 
-__all__ = ['Topics', 'OpinionTestRatio','OpinionTestTime',\
+__all__ = ['OpinionTestRatio','OpinionTestTime',\
            'OpinionTestKeywords', 'OpinionTestWeibos', 'IndexTopic']
-
-class Topics(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(20, unsigned=True))
-    end_ts = db.Column(db.BigInteger(20, unsigned=True))
-
-    def __init__(self, topic, start_ts, end_ts):
-        self.topic = topic
-        self.start_ts = start_ts
-        self.end_ts = end_ts
-#实际上这一部分是需要重新修改的，但是在此次测试中用不到，就先不动。
 
 class IndexTopic(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
@@ -57,8 +45,7 @@ class OpinionTestTime(db.Model):
 class OpinionTestRatio(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     topic = db.Column(db.String(20))
-    #ts = db.clumns(db.BigInteger(10),unsigned=True)
-    child_topic = db.Column(db.String(20))
+    child_topic = db.Column(db.Text)
     ratio = db.Column(db.Float)
 
     def __init__(self, topic, child_topic, ratio):
@@ -69,7 +56,7 @@ class OpinionTestRatio(db.Model):
 class OpinionTestKeywords(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     topic = db.Column(db.String(20))
-    child_topic = db.Column(db.String(20))
+    child_topic = db.Column(db.Text)
     keywords = db.Column(db.Text)
 
     def __init__(self, topic, child_topic, keywords):
@@ -80,115 +67,31 @@ class OpinionTestKeywords(db.Model):
 class OpinionTestWeibos(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     topic = db.Column(db.String(20))
-    child_topic = db.Column(db.String(20))
-    weibos = db.Column(db.Text)
+    child_topic = db.Column(db.Text)
+    weight = db.Column(db.Float)
+    mid = db.Column(db.String(20))
+    title = db.Column(db.Text)
+    content = db.Column(db.Text)
+    user = db.Column(db.String(20))
+    time = db.Column(db.String(20))    
+    source = db.Column(db.String(20))
+    c_source = db.Column(db.String(20))
+    repeat = db.Column(db.Integer)
 
-    def __init__(self, topic, child_topic, weibos):
+    def __init__(self, topic, child_topic, weight, mid, title, content, user, time, source, c_source, repeat):
         self.topic = topic
         self.child_topic = child_topic
-        self.weibos = weibos
+        self.weight = weight
+        self.mid = mid
+        self.title = title
+        self.content = content
+        self.user = user
+        self.time = time        
+        self.source = source
+        self.c_source = c_source
+        self.repeat = repeat
 
-# Quota_system Module
-class QuotaAttention(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(10, unsigned=True))
-    end_ts = db.Column(db.BigInteger(10, unsigned=True))
-    domain = db.Column(db.String(20))
-    attention = db.Column(db.Float)
 
-    def __init__(self, topic, start_ts, end_ts, domain, attention):
-        self.topic = topic
-        self.start_ts = start_ts
-        self.end_ta = end_ts
-        self.domain = domain
-        self.attention = attention
-
-class QuotaPenetration(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(10, unsigned=True))
-    end_ts = db.Column(db.BigInteger(10, unsigned=True))
-    domain = db.Column(db.String(20))
-    penetration = db.Column(db.Float)
-
-    def __init__(self, topic, start_ts, end_ts, domain, penetration):
-        self.topic = topic
-        self.start_ts = start_ts
-        self.end_ts = end_ts
-        self.domain = domain
-        self.penetration = penetration
-
-class QuotaQuickness(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(10, unsigned=True))
-    end_ts = db.Column(db.BigInteger(10, unsigned=True))
-    domain = db.Column(db.String(20))
-    quickness = db.Column(db.Float)
-
-    def __init__(self, topic, start_ts, end_ts, domain, quickness):
-        self.topic = topic
-        self.start_ts = start_ts
-        self.end_ts = end_ts
-        self.domain = domain
-        self.quickness = quickness
-
-class QuotaSentiment(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(10, unsigned=True))
-    end_ts = db.Column(db.BigInteger(10, unsigned=True))
-    sentiment = db.Column(db.Integer(1, unsigned=True))
-    ratio = db.Column(db.Float)
-
-    def __init__(self, topic, start_ts, end_ts, sentiment, ratio):
-        self.topic = topic
-        self.start_ts = start_ts
-        self.end_ts = end_ts
-        self.sentiment = sentiment
-        self.ratio = ratio
-
-class QuotaDuration(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(10, unsigned=True))
-    end_ts = db.Column(db.BigInteger(10, unsigned=True))
-    duration = db.Column(db.Float)
-
-    def __init__(self, topic, start_ts, end_ts, duration):
-        self.topic = topic
-        self. start_ts = start_ts
-        self.end_ts = end_ts
-        self.duration = duration
-
-class QuotaSensitivity(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(10, unsigned=True))
-    end_ts = db.Column(db.BigInteger(10, unsigned=True))
-    classfication = db.Column(db.Integer(1, unsigned=True)) # ['category':1, 'word':2, 'place':3]
-    score = db.Column(db.Float) # 1<=score<=5
-
-    def __init__(self, topic, start_ts, end_ts, classfication, score):
-        self.topic = topic
-        self.start_ts = start_ts
-        self.end_ts = end_ts
-        self.classfication = classfication
-        self.score = score
-
-class QuotaImportance(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    topic = db.Column(db.String(20))
-    start_ts = db.Column(db.BigInteger(10, unsigned=True))
-    end_ts = db.Column(db.BigInteger(10, unsigned=True))
-    score = db.Column(db.Float)
-
-    def __init__(self, topic, start_ts, end_ts, score):
-        self.topic = topic
-        self.start_ts = start_ts
-        self.end_ts = end_ts
-        self.score = score # 0<=score<1
 
 
 
