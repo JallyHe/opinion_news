@@ -95,7 +95,7 @@ def opinion_weibos():
     for i in range(0,len(results)):
         k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
         row = {'c_topic':k,'weight':results[i][1],'_id':results[i][2],'title':results[i][3],'content':results[i][4],'user':results[i][5],'time':results[i][6],'source':results[i][7],'c_source':results[i][8],'repeat':results[i][9]}
-        f_weibo.Push((results[i][1],row))
+        f_news.Push((results[i][1],row))
 
     data = f_news.TopK()
     return json.dumps(data)
@@ -119,13 +119,13 @@ def opinion_rank():#自定义排序
         for i in range(0,len(results)):
             k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
             row = {'c_topic':k,'weight':results[i][1],'_id':results[i][2],'title':results[i][3],'content':results[i][4],'user':results[i][5],'time':results[i][6],'source':results[i][7],'c_source':results[i][8],'repeat':results[i][9]}
-            f_weibo.Push((results[i][1],row))
+            f_news.Push((results[i][1],row))
     else:#按时间排序
         f_news = TopkHeap(20)
         for i in range(0,len(results)):
             k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
             row = {'c_topic':k,'weight':results[i][1],'_id':results[i][2],'title':results[i][3],'content':results[i][4],'user':results[i][5],'time':results[i][6],'source':results[i][7],'c_source':results[i][8],'repeat':results[i][9]}
-            f_weibo.Push((results[i][5],row))
+            f_news.Push((results[i][5],row))
 
     data = f_news.TopK()
     return json.dumps(data)
