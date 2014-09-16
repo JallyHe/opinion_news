@@ -23,6 +23,7 @@
         $(document).ready(function(){   //网页加载时执行下面函数
         var style = '0';
         gettimeline_data();
+        getweibos_data();
    })
         var result = [];
         var result1 = [];
@@ -43,7 +44,7 @@
                     var html = "";
                     var s = i.toString();
                     result2[i] = data[i][0]; 
-                    html+='<span><input type="checkbox" value = '+ s +' name="子话题">'+result2[i]+'</span>';
+                    html+='<span style ="padding:2px"><input type="checkbox" value = '+ s +' name="子话题">'+result2[i]+'</span>';
                     $("#checkbox").append(html);
                 };
                
@@ -268,7 +269,6 @@
             async:false,
             success: function(data){
             	for (var i =0 ; i< result2.length; i++){
-            		console.log(result2[i])
             		result3[i] = data[result2[i]]
             }
                // result3[0]=data['10']['10'];
@@ -378,71 +378,45 @@
     //     });
     // }
 
-        function getweibos_data(style){   
+        function getweibos_data(){   
                 var topic = '两会';
-                var selects = style;
-                //console.log(selects);
-                var dataselect = [];
                 $.ajax({
                     url: "/index/weibos/?&topic=" + topic,
                     type: "GET",
                     dataType:"json",
                     success: function(data){
-                        
-
-                        for (var i = 0 ;i< data.length; i++){
-                             var s = i.toString();
-                             dataselect.push(data[i][1])
-
-                        }
                       
-                        chg_weibos(dataselect);
+                        chg_weibos(data);
                     }
-        });
-    }
+            });
+        }
 
 
-            function chg_weibos(data){  
-                // $("#vertical-ticker").empty();
-                var html = "";
-                html += '<div class="tang-scrollpanel-wrapper" style="height: ' + 66 * data.length  + 'px;">';
-                html += '<div class="tang-scrollpanel-content">';
-                html += '<ul id="weibo_ul">';
-                for(var i = 0; i < data.length; i += 1){
-                var da = data[i];
-                var c_topic = da['name'];
-                var mid = da['_id'];
-                var user = da['user'];
-                var title = da['title'];
-                var content = da['content'];
-                var time = da['time'];
-                var source = da['c_source'];
-                
-                //以下格式得调一下
-                html += '<li class="item"><div class="weibo_face">' + mid + ':' + c_topic;
-                html += '</a></div>';
-                html += '<div class="weibo_detail">';
-                html += '<p>昵称:<a class="undlin" target="_blank" href="' + user_link  + '">' + name + '</a>&nbsp;&nbsp;UID:' + uid + '&nbsp;&nbsp;于' + ip + '&nbsp;&nbsp;发布&nbsp;&nbsp;' + text + '</p>';
-                html += '<div class="weibo_info">';
-                html += '<div class="weibo_pz">';
-                html += '<a class="undlin" href="javascript:;" target="_blank">转发(' + reposts_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
-                html += '<a class="undlin" href="javascript:;" target="_blank">评论(' + comments_count + ')</a></div>';
-                html += '<div class="m">';
-                html += '<a class="undlin" target="_blank" href="' + weibo_link + '">' + timestamp + '</a>&nbsp;-&nbsp;';
-                html += '<a target="_blank" href="http://weibo.com">新浪微博</a>&nbsp;-&nbsp;';
-                html += '<a target="_blank" href="' + weibo_link + '">微博页面</a>&nbsp;-&nbsp;';
-                html += '<a target="_blank" href="' + user_link + '">用户页面</a>';
-                html += '</div>';
-                html += '</div>';
-                html += '</div>';
-                html += '</li>';
-                
+        function chg_weibos(data){  
+            // $("#vertical-ticker").empty();
+            var html = "";
+            console.log(data[1][1]);
+            for(var i = 0; i < data.length; i += 1){
+            var da = data[i][1];
+            var c_topic = da['c_topic'];
+            var mid = da['_id'];
+            var user = da['user'];
+            var title = da['title'];
+            var content = da['content'];
+            var time = da['time'];
+            var new_data = new Date(time * 1000).format("yyyy年MM月dd日 hh:mm:ss")
+            var source = da['source'];
+            html += '<div class="inner">';
+            html += '<span class="title"><b>'+ mid +':'+ c_topic + '</b></span><br>';
+            html += '<span class="title"><b>'+ title + '</b></span><br/>';
+            html += '<span>'+ content+ '</span><br>'; 
+            html += '<span style="float:right;">'+new_data + user +"发布于"+source;                      
+            html +='</div>';
             }
-                html += '</ul>';
-                html += '</div>';
+
             $("#vertical-ticker").append(html);
-            }
- 
+        }
+
         function getkeywords_data(){   
                 var topic = '两会';
                 $.ajax({
@@ -455,92 +429,44 @@
                 });
             }
         function drawtable(data){           
-            var tagout ;
-            var tagin;
-            var html = '';
-            for (var i =0 ;i<data.length; i++){
+                var topic_child_keywords = {};
                 var html = '';
-                var html1 = '';
-                var m = i+1;
-                var keyword = [];
-                var s = i.toString();
-                tagout = data[s];
-                 for (var k in tagout){
-                    tagin = k;
-                 } 
-                 if(tagout[tagin].length != 5){
-                    for (var k1 in tagout[tagin]){
+                var target_html = '';
+                var m = 0;
+                var number;               
                 
-                        keyword.push(tagout[tagin][k1]['0']);
+                for (var key in data){
+                    topic_child_keywords[key] = [];
+                    for (var i = 0; i < data[key].length; i++){
+                        topic_child_keywords[key].push(data[key][i][1]);
                     }
-                    for (var k = tagout[tagin].length; k < 5; k++){
-                        keyword[k] = " ";
-                    }
-                 }  
-                 else{ 
-                    for (var k1 in tagout[tagin]){
-                
-                        keyword.push(tagout[tagin][k1]['0']);
-                        //console.log(tagout[tagin][k1]['0']);
-                    }             
-                } 
-                var tindex = Number(tagin);
-                // console.log(keyword);
-                // console.log(tindex);
-                if(tindex == 0){
-                    html += '<tr value='+tagin+'>';
-                    html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
-                    html += '</tr>';
-                }                             
-                else{
-                    html += '<tr value='+tagin+'>';
-                    html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
-                    html += '</tr>';
-
-                    html1 += '<tr>';
-                    html1 += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+result2[tindex]+'</b></td><td>'+keyword[0]+'</td><td>'+keyword[1]+'</td><td>'+keyword[2]+'</td><td>'+keyword[3]+'</td><td>'+keyword[4]+'</td>';
-                    html1 += '</tr>';
                 }
-                 $("#alternatecolor").append(html);
-                 $("#alternate").append(html1);
+                for (var topic in topic_child_keywords){
+                    html += '<tr>';
+                    m++;
+                    if( m > 10) {break;}
+                    html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+topic+'</b></td>';
+                    for (var n = 0 ;n < 5; n++){
+                        html += '<td>'+topic_child_keywords[topic][n]+'</td>'
+                    }
+                    html += "</tr>";
+                }
+                $("#alternatecolor").append(html);
+                
+                target_html += '<tr><td><b>标号</b></td><td><b>子话题</b></td>';
+                for (var topic in topic_child_keywords){
+                    number++;
+                    target_html += '<td>关键词'+ number.toString() +'</td>'
+                }
+                target_html += '</tr>';
+                for (var topic in topic_child_keywords){
+                    target_html += '<tr>';
+                    target_html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+topic+'</b></td>';
+                    for (var n = 0 ;n < topic_child_keywords[topic].length; n++){
+                        target_html += '<td>'+topic_child_keywords[topic][n]+'</td>'
+                    }
+                    target_html += "</tr>";
+                }
+                $("#alternate").append(target_html);
             }
-        }
-        // function connect(data){
-        //     var value_data = data;
-
-        //     $("#alternatecolor tr").each(function() {
-        //         var select_all =$(this);
-        //         console.log(select_all.attr('value'));
-        //         if(select_all.attr('value') == value_data){
-        //             if(!select_all.hasClass("tablecurrent")){
-        //                 select_all.addClass("tablecurrent");
-        //             }
-        //         }
-        //         else{
-        //             if(select_all.hasClass("tablecurrent")){
-        //                 select_all.removeClass('tablecurrent');
-        //             }
-        //         }
-
-        //     })
-        //     refreshWeiboTab(value_data);
-        // }
-
-        // function refreshWeiboTab(data){
-        //     var curr_data = data;
-        //      $("#Tableselect a").each(function() {
-        //         var select_a = $(this);
-        //         var select_a_sentiment = select_a.attr('value');
-        //         if (select_a_sentiment == curr_data){
-        //             if(!select_a.hasClass('curr')) {
-        //                 select_a.addClass('curr');
-        //             }
-        //         }
-        //         else{
-        //             if(select_a.hasClass('curr')) {
-        //                 select_a.removeClass('curr');
-        //             }
-        //         }
-        //     });
-        //     getweibos_data(curr_data);
-        // }
+    
