@@ -297,17 +297,11 @@
                 -->
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <li><a class="brand" href="#"><strong><font size="+2">新闻观点分析</font></strong></a></li>
+                        <li><a class="brand" href="#"><strong><font size="+2">新闻评论观点分析</font></strong></a></li>
                         <li><a class="brand"><small><font size="+1"> > </font></small></a></li>
-                        <li><a class="brand" href="#"><strong><font size="+1">九一八</font></strong></a></li>
+                        <li><a class="brand" href="#"><strong><font size="+1">{{topic}}</font></strong></a></li>
                     </ul>
                     &nbsp;&nbsp;
-<!--                     <ul class="nav navbar-nav">
-                        <li class="active"><a href="#">微博</a></li>
-                        <li><a class="iactive" href="#">新闻</a></li>
-                        <li><a class="iactive" href="#">论坛</a></li>
-                        <li><a class="iactive" href="#">博客</a></li>
-                    </ul> -->
 
                     <ul class="nav navbar-nav navbar-right">
                         <li><a class="source" href="#">关于</a></li>
@@ -323,99 +317,19 @@
 
 
             <div class="tabConts">
-<!--                 <div style="margin: 20px auto 10px 20px;border-bottom: 1px dotted #666;width: 182px;font-weight: bold;font-size: 14px;">参数选择</div>
-
-                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
-                    <span class="input-group-addon">关键词</span>
-                    <input id="keyword_input" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ topic }}" disabled>
-                </div>
-
-                <div class="compVsplit"></div>
-
-                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
-                    <span class="input-group-addon">时间段</span>
-                        <div id="reportrange" class="form-control" style="padding: 5px;">
-                            <span id="all_time">{{ time_range }}</span>
-                            <b class="caret"></b>
-                        </div>
-                </div>
-
-                <div class="compVsplit"></div>
- -->
-<!--                 <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
-                    <span class="input-group-addon">时间粒度</span>
-                    <div class="form-control">
-                        <select id="select_dur" style="width:110px;text-align:right;">
-                            {% for pv in pointIntervals %}
-                                {% if pv['en'] == pointInterval['en'] %}
-                                    <option value="{{ pv['en'] }}" selected="selected"> {{ pv['zh'] }} </option>
-                                {% else %}
-                                    <option value="{{ pv['en'] }}"> {{ pv['zh'] }} </option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                        <input id="all_durtime" name="all_dur" type="hidden" value="{{ pointInterval['en'] }}">
-                    </div>
-                </div> -->
-<!-- 
-                <div class="compVsplit"></div> -->
 
                 <div style="margin: 20px auto 10px 20px;border-bottom: 1px dotted #666;width: 182px;font-weight:    
                 bold;font-size: 14px;">话题概述</div>
 
                 <p>
                     <div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">子话题数：</div>
-                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="1"></textarea>
+                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="1">{{n}}</textarea>
                 </p> 
 
                 <p>
                     <div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">简介：</div>
-                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="5"></textarea>
+                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="5">{{content}}</textarea>
                 </p>
-
-<!--                 <div id="radio_yaosu" style="margin:5px auto auto 20px;">
-                    <div style="margin: 20px auto 10px 0px;font-size: 13px;">舆情概况</div>
-                    {% for en, zh in gaishu_yaosus.iteritems() %}
-                        {% if en == yaosu %}
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="optionsRadios" id="optionsRadios1" value="{{ en }}" checked>
-                                        {{ zh }}
-                                </label>
-                            </div>
-                        {% else %}
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="optionsRadios" id="optionsRadios1" value="{{ en }}">
-                                        {{ zh }}
-                                </label>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-
-                    <div style="margin: 20px auto 10px 0px;font-size: 13px;">深度分析</div>
-                    {% for en, zh in deep_yaosus.iteritems() %}
-                        {% if en == yaosu %}
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="optionsRadios" id="optionsRadios1" value="{{ en }}" checked>
-                                        {{ zh }}
-                                </label>
-                            </div>
-                        {% else %}
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="optionsRadios" id="optionsRadios1" value="{{ en }}">
-                                        {{ zh }}
-                                </label>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-
-                    <input id="yaosu_input" name="all_dur" type="hidden" value="{{ yaosu }}">
-                </div> -->
-
-               <!--  <span id="submit_request"><a class="compOK" ><i class="glyphicon glyphicon-ok icons"></i>搜索</a></span> -->
             </div>
         </div>
 
@@ -429,73 +343,6 @@
 
 {% endblock navbar %}
 
-    <script>
-        var all_startDate = new Date('09/01/2013');
-        var all_endDate = new Date('09/21/2013');
-        var all_maxDate = new Date('09/21/2013');
-        var all_minDate = new Date('09/01/2013');
-        var week_ago = subtract(all_endDate,7);
-        //var month_ago = subtract(all_endDate,30);
-        //var 3month_ago = subtract(all_endDate,90);
-
-        function subtract(date,days){
-            var nd = new Date(date);
-            nd = nd.valueOf();
-            nd = nd - days * 24 * 60 * 60 * 1000;
-            nd = new Date(nd);
-            var y = nd.getFullYear();
-            var m = nd.getMonth()+1;
-            var d = nd.getDate();
-            if(m <= 9) m = "0"+m;
-            if(d <= 9) d = "0"+d; 
-            var cdate = y+"-"+m+"-"+d;
-            return cdate;
-        }
-        $('#reportrange').daterangepicker({
-            ranges: {
-                '今天': [all_endDate, all_endDate],
-                '最近7天': [week_ago, all_endDate],
-            },
-            startDate: all_startDate,
-            endDate: all_endDate,
-            minDate: all_minDate,
-            maxDate: all_maxDate
-        },
-        function(start, end) {
-            $('#reportrange span').html(start.format('YYYYMMDD') + '-' + end.format('YYYYMMDD'));
-        }
-        );
-
-        $("#select_dur").change(function(){
-            $('#all_durtime').val($(this).children('option:selected').val());
-        });
-
-        $("input[name='optionsRadios']").on("click", function(){
-            $('#yaosu_input').val($(this).val());
-        });
-
-        $("#submit_request").click(function(){
-            var QUERY = document.getElementById('keyword_input').value;
-            var TIME_RANGE = $('#all_time').html();
-            var POINT_INTERVAL = document.getElementById('all_durtime').value;
-            var YAOSU = $('#yaosu_input').val();
-            window.location.href = "/index/" + YAOSU + "/?query=" + QUERY + "&time_range=" + TIME_RANGE + "&point_interval=" + POINT_INTERVAL;
-        });
-
-        function date2ts(date){
-            // 20130901
-            var year = date.substring(0, 4);
-            var month = date.substring(4, 6);
-            var day = date.substring(6, 8);
-            return new Date(year, month-1, day).getTime() / 1000;
-        }
-        var QUERY = document.getElementById('keyword_input').value;
-        var TIME_RANGE = $('#all_time').html();
-        var START_TS = date2ts(TIME_RANGE.split('-')[0]);
-        var END_TS = date2ts(TIME_RANGE.split('-')[1]) + 3600 * 24;
-        var POINT_INTERVAL = document.getElementById('all_durtime').value;
-        var YAOSU = $('#yaosu_input').val();
-    </script>
     {% block tail_js %}
     {% endblock tail_js %}
 </body>

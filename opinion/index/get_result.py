@@ -12,30 +12,27 @@ def get_opinion_time(topic):
     results = []
     for item in items:
         topic_term = json.loads(item.child_topic)
-        child_topic = topic_term.keys()[0]
-        term_list = topic_term[child_topic]
         start_ts = item.start_ts
         end_ts = item.end_ts
-        # 缺少子话题名称--name
-        results.append({child_topic:[start_ts, end_ts, term_list[:2]]})
+        results.append([topic_term,start_ts,end_ts])
     
     return results
 
 def get_opinion_ratio(topic):
-    items = db.session.query(OpinionTestRatio).filter(OpinionTestRatio.topic==topic).all()
+    items = db.session.query(OpinionTestRatio).filter((OpinionTestRatio.id>=53)&(OpinionTestRatio.id<=76)).all()#ratio表有问题，话题存不进去
     if not items:
         return None
-    sort_list = []
-    results = {}
+##    items = db.session.query(OpinionTestRatio).filter(OpinionTestRatio.topic==topic).all()
+##    if not items:
+##        return None
+
+    results = []
     for item in items:
-        child_topic = item.child_topic
+        child_topic = json.loads(item.child_topic)
         ratio = item.ratio
-        results[child_topic] = ratio
-    for i in range(len(results)):
-        child_topic = str(i)
-        ratio = results[child_topic]
-        sort_list.append({child_topic:ratio})
-    return sort_list
+        results.append([child_topic,ratio])
+
+    return results
 
 def get_opinion_keywords(topic):
     items = db.session.query(OpinionTestKeywords).filter(OpinionTestKeywords.topic==topic).all()
@@ -43,9 +40,9 @@ def get_opinion_keywords(topic):
         return None
     results = []
     for item in items:
-        child_topic = item.child_topic
+        child_topic = json.loads(item.child_topic)
         keywords_weight = json.loads(item.keywords)
-        results.append({child_topic:keywords_weight})
+        results.append([child_topic,keywords_weight])
     
     return results
 
@@ -55,10 +52,43 @@ def get_opinion_weibos(topic):
         return None
     results = []
     for item in items:
-        child_topic = item.child_topic
-        weibos_weight = json.loads(item.weibos)
-        results.append({child_topic:weibos_weight})
+        child_topic = json.loads(item.child_topic)
+        weight = item.weight
+        mid = item.mid
+        title = item.title
+        content = item.content
+        user = item.user
+        time = item.time
+        source = item.source
+        c_source = item.c_source
+        repeat = item.repeat
+        results.append([child_topic,weight,mid,title,content,user,time,source,c_source,repeat])
     return results
 
+def get_opinion_weibos_rank(topic,c_topic):
+
+    title = c_topic.split('-')
+    row = []
+    for i in range(0,len(title)):
+        row.append(title[i].decode('utf-8'))
+
+    row = json.dumps(row)
+    items = db.session.query(OpinionTestWeibos).filter((OpinionTestWeibos.topic==topic)&(OpinionTestWeibos.child_topic==row)).all()
+    if not items:
+        return None
+    results = []
+    for item in items:
+        child_topic = json.loads(item.child_topic)
+        weight = item.weight
+        mid = item.mid
+        title = item.title
+        content = item.content
+        user = item.user
+        time = item.time
+        source = item.source
+        c_source = item.c_source
+        repeat = item.repeat
+        results.append([child_topic,weight,mid,title,content,user,time,source,c_source,repeat])
+    return results
 
         

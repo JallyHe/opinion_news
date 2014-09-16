@@ -29,7 +29,7 @@
         var result2 = [];
 
     function gettimeline_data() {
-        var topic = '博鳌';
+        var topic = '两会';
         var html ="";
         $.ajax({
             url: "/index/time/?topic=" + topic,
@@ -38,18 +38,14 @@
             async: false,
             success: function(data){
                 for (var i = 0;i < data.length;i++) {
-                    result[i] = data[i][i][0];
-                };
-                for (var i = 0;i < data.length;i++) {
-                    result1[i] = data[i][i][1]; 
-                };
-                for (var i = 0; i < data.length; i++) {
+                    result[i] = data[i][1];
+                    result1[i] = data[i][2];
                     var html = "";
                     var s = i.toString();
-                    result2[i] = data[i][i][2][0]+'-'+data[i][i][2][1]; 
+                    result2[i] = data[i][0]; 
                     html+='<span><input type="checkbox" value = '+ s +' name="子话题">'+result2[i]+'</span>';
                     $("#checkbox").append(html);
-                }
+                };
                
                // for (var i = 0;i < data.length;i++) {
                //      result[i] = data[i][i][0];
@@ -264,24 +260,28 @@
 
     function getpie_data() {
         var result = [];
-        var topic = '博鳌';
+        var topic = '两会';
         $.ajax({
             url: "/index/ratio/?topic=" + topic,
             type: "GET",
             dataType:"json",
             async:false,
             success: function(data){
-                result3[0]=data['10']['10'];
-                result3[1]=data['0']['0'];
-                result3[10]=data['1']['1'];
-                result3[3]=data['2']['2'];
-                result3[2]=data['3']['3'];
-                result3[5]=data['4']['4'];
-                result3[4]=data['5']['5'];
-                result3[7]=data['6']['6'];
-                result3[6]=data['7']['7'];
-                result3[9]=data['8']['8'];
-                result3[8]=data['9']['9'];
+            	for (var i =0 ; i< result2.length; i++){
+            		console.log(result2[i])
+            		result3[i] = data[result2[i]]
+            }
+               // result3[0]=data['10']['10'];
+               // result3[1]=data['0']['0'];
+               // result3[10]=data['1']['1'];
+               // result3[3]=data['2']['2'];
+               // result3[2]=data['3']['3'];
+               // result3[5]=data['4']['4'];
+               // result3[4]=data['5']['5'];
+               // result3[7]=data['6']['6'];
+              //  result3[6]=data['7']['7'];
+               // result3[9]=data['8']['8'];
+               // result3[8]=data['9']['9'];
 
                 on_update(result);
             }
@@ -379,7 +379,7 @@
     // }
 
         function getweibos_data(style){   
-                var topic = '博鳌';
+                var topic = '两会';
                 var selects = style;
                 //console.log(selects);
                 var dataselect = [];
@@ -390,9 +390,9 @@
                     success: function(data){
                         
 
-                        for (var i = 0 ;i< data[selects][selects].length; i++){
+                        for (var i = 0 ;i< data.length; i++){
                              var s = i.toString();
-                             dataselect.push(data[selects][selects][s]['0'])
+                             dataselect.push(data[i][1])
 
                         }
                       
@@ -410,34 +410,16 @@
                 html += '<ul id="weibo_ul">';
                 for(var i = 0; i < data.length; i += 1){
                 var da = data[i];
-                var uid = da['user'];
-                var name;
-                if ('name' in da){
-                    name = da['name'];
-                    if(name == 'unknown'){
-                        name = '未知';
-                    }
-                }
-                else{
-                    name = '未知';
-                }
+                var c_topic = da['name'];
                 var mid = da['_id'];
-                var retweeted_mid = da['retweeted_mid'];
-                var retweeted_uid = da['retweeted_uid'];
-                var ip = da['geo'];
-                var loc = ip;
-                var text = da['text'];
-                var reposts_count = da['reposts_count'];
-                var comments_count = da['comments_count'];
-                var timestamp = da['timestamp'];
-                var weibo_link = da['weibo_link'];
-                var user_link = 'http://weibo.com/u/' + uid;
-                var user_image_link = da['profile_image_url'];
-                if (user_image_link == 'unknown'){
-                    user_image_link = '/static/img/unknown_profile_image.gif';
-                }
-                html += '<li class="item"><div class="weibo_face"><a target="_blank" href="' + user_link + '">';
-                html += '<img src="' + user_image_link + '">';
+                var user = da['user'];
+                var title = da['title'];
+                var content = da['content'];
+                var time = da['time'];
+                var source = da['c_source'];
+                
+                //以下格式得调一下
+                html += '<li class="item"><div class="weibo_face">' + mid + ':' + c_topic;
                 html += '</a></div>';
                 html += '<div class="weibo_detail">';
                 html += '<p>昵称:<a class="undlin" target="_blank" href="' + user_link  + '">' + name + '</a>&nbsp;&nbsp;UID:' + uid + '&nbsp;&nbsp;于' + ip + '&nbsp;&nbsp;发布&nbsp;&nbsp;' + text + '</p>';
@@ -454,6 +436,7 @@
                 html += '</div>';
                 html += '</div>';
                 html += '</li>';
+                
             }
                 html += '</ul>';
                 html += '</div>';
@@ -461,7 +444,7 @@
             }
  
         function getkeywords_data(){   
-                var topic = '博鳌';
+                var topic = '两会';
                 $.ajax({
                     url: "/index/keywords/?&topic=" + topic,
                     type: "GET",
