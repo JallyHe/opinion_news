@@ -130,6 +130,11 @@ def opinion_rank():#自定义排序
     data = f_news.TopK()
     return json.dumps(data)
     
-    
+@mod.route('/load_more/')
+def opinion_load_more():
+
+    topic = request.args.get('topic', '')
+
+    return render_template('index/load_more.html',topic=topic)    
 
     

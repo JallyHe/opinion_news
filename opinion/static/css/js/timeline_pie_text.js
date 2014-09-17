@@ -468,23 +468,7 @@
                     }
                     html += "</tr>";
                 }
-                //html += "<tr><span style='margin-top:6px;margin-left:10px' data-toggle='modal' data-target='#myModal'>显示更多</span> </tr>"
                 $("#alternatecolor").append(html);
-                
-                target_html += '<tr><td><b>标号</b></td><td><b>子话题</b></td>';
-                for (var topic in topic_child_keywords){
-                    number++;
-                    target_html += '<td>关键词'+ number.toString() +'</td>'
-                }
-                target_html += '</tr>';
-                for (var topic in topic_child_keywords){
-                    target_html += '<tr>';
-                    target_html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+topic+'</b></td>';
-                    for (var n = 0 ;n < topic_child_keywords[topic].length; n++){
-                        target_html += '<td>'+topic_child_keywords[topic][n]+'</td>'
-                    }
-                    target_html += "</tr>";
-                }
-                $("#alternate").append(target_html);
+
             }
     

@@ -305,10 +305,10 @@
                         <tr style="height:30px"><td><b>子话题</b></td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
                     </table>
                     <div style="padding-top:5px;padding-right:50px;" align="right">
-                        <a class="btn btn btn-large" data-toggle="modal" href="#myModal" style="font-size:16px;">查看更多</a> 
+                        <span class="btn btn btn-large" data-toggle="modal" style="font-size:16px;" onClick="load_more()">查看更多</span> 
                     </div>
                 <!-- 模态框（Mod<al） -->
-                <div class="modal fade" id="myModal" style="height:1000px; width:1300px" tabindex="-1" role="dialog" 
+                <!--<div class="modal fade" id="myModal" style="height:1000px; width:1300px" tabindex="-1" role="dialog" 
                    aria-labelledby="myModalLabel" aria-hidden="true">
                    <div class="modal-dialog" style="height:1000px; width:1300px" >
                       <div class="modal-content" style="height:1000px; width:1300px">
@@ -321,18 +321,18 @@
                                子话题关键词对
                             </h4>
                          </div>
-                         <div class="modal-body" style="height:1000px; width:1300px">
-                                    <table  rules=rows frame= hsides class="altrowstable" id="alternate" style = "margin-left :15px;height :1000px;width:1300px;">
-                                        
-                                    </table>
+                         <div class="modal-body" style="height:900px; width:1000px">
+                            <table  rules=rows frame= hsides class="altrowstable" id="alternate" style = "margin-left :15px;height :1000px;width:1300px;">
+                                <tr style="height:30px"><td><b>子话题</b></td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td></tr>
+                            </table>
                          </div>
                          <div class="modal-footer" >
                             <button type="button" class="btn btn-primary" 
                                data-dismiss="modal">关闭
                             </button>
                          </div>
-                      </div><!-- /.modal-content -->
-                </div><!-- /.modal -->
+                      </div> /.modal-content 
+                </div>--><!-- /.modal -->
                 </div>
                 </div>
             </div>
@@ -424,5 +424,10 @@
     var lis = document.getElementById("whole_rank_method_dropdown_menu");
     lis.style.display='none';
     }
+
+  function load_more(){
+    topic = "两会";
+    window.open("/index/load_more/?topic=" +  topic, "_blank");
+  }
     </script>
 {% endblock tail_js %}
