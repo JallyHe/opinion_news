@@ -265,6 +265,9 @@
         }
     </style>
     {% block head_css %}
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-responsive.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     {% endblock head_css %}
 
     <!-- JQuery core JS -->
@@ -274,6 +277,7 @@
     <script src="/static/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="{{ url_for('static', filename='js/moment.js') }}"></script>
     <script src="{{ url_for('static', filename='js/datarangepiker.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}" type="text/javascript"></script>
     {% block head_js %}
     {% endblock head_js %}
 
@@ -282,7 +286,7 @@
 <body>
 {% block navbar %}
     <div class="navbar navbar-fixed-top">
-        <div class="navbar-inner">
+        <div class="navbar-inner" style="background-color:#58ACFA">
             <div class="mw1300">
                 <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="icon-bar"></span>
@@ -295,7 +299,7 @@
                 <a class="brand"><small><font size="+1"> > </font></small></a>
                 <a class="brand" href="#"><strong><font size="+1">舆情要素提取</font></strong></a>
                 -->
-                <div class="navbar-collapse collapse">
+                <div class="navbar-collapse collapse" style="background-color:#58ACFA">
                     <ul class="nav navbar-nav">
                         <li><a class="brand" href="#"><strong><font size="+2">新闻评论观点分析</font></strong></a></li>
                         <li><a class="brand"><small><font size="+1"> > </font></small></a></li>
@@ -319,16 +323,22 @@
             <div class="tabConts">
 
                 <div style="margin: 20px auto 10px 20px;border-bottom: 1px dotted #666;width: 182px;font-weight:    
-                bold;font-size: 14px;">话题概述</div>
+                bold;font-size: 20px;">话题概述</div>
 
                 <p>
-                    <div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">子话题数：</div>
-                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="1">{{n}}</textarea>
+                    <div style="padding-left:10px;padding-top:10px;">
+                        <label style="font-size:16px">子话题数：<div class="btn btn-warning btn-xs"style="border-bottom: 1px dotted #666;font-weight: bold;font-size: 15px;">{{ n }}</div> </label>
+                    </div>
+                    <!--<div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">子话题数：</div>
+                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="1">{{n}}</textarea>-->
                 </p> 
 
                 <p>
-                    <div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">简介：</div>
-                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="5">{{content}}</textarea>
+                    <div style="padding-left:10px;padding-top:10px;">
+                        <label style="font-size:15px">简介：<textarea name="content" id="content" cols="25" style="padding-top:10px" rows="10">{{content}}</textarea> </label>
+                    </div>
+                    <!--<div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">简介：</div>
+                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="5">{{content}}</textarea>-->
                 </p>
             </div>
         </div>

@@ -38,15 +38,26 @@
             dataType:"json",
             async: false,
             success: function(data){
+            		var html = "<tbody>";
                 for (var i = 0;i < data.length;i++) {
                     result[i] = data[i][1];
-                    result1[i] = data[i][2];
-                    var html = "";
+                    result1[i] = data[i][2];                   
                     var s = i.toString();
                     result2[i] = data[i][0]; 
-                    html+='<span style ="padding:2px"><input type="checkbox" value = '+ s +' name="子话题">'+result2[i]+'</span>';
-                    $("#checkbox").append(html);
+                    if ((i+1)%5 == 1){
+                    	html+='<tr><td style ="padding:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
+                    }	
+                    else if ((i+1)%5 == 0){
+                    	html+='<td style ="padding:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td></tr>';
+                    }
+                    else{
+                    	html+='<td style ="padding:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
+                    }
+                    
+                    
                 };
+                html+='</tbody>';
+                $("#checkbox").append(html);
                
                // for (var i = 0;i < data.length;i++) {
                //      result[i] = data[i][i][0];
