@@ -45,13 +45,13 @@
                     var s = i.toString();
                     result2[i] = data[i][0]; 
                     if ((i+1)%5 == 1){
-                    	html+='<tr><td style ="padding:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
+                    	html+='<tr><td style ="padding:5px;padding-left:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
                     }	
                     else if ((i+1)%5 == 0){
-                    	html+='<td style ="padding:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td></tr>';
+                    	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td></tr>';
                     }
                     else{
-                    	html+='<td style ="padding:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
+                    	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
                     }
                     
                     
@@ -406,7 +406,6 @@
         function chg_weibos(data){  
             // $("#vertical-ticker").empty();
             var html = "";
-            console.log(data[1][1]);
             for(var i = 0; i < data.length; i += 1){
             var da = data[i][1];
             var c_topic = da['c_topic'];
@@ -414,13 +413,20 @@
             var user = da['user'];
             var title = da['title'];
             var content = da['content'];
+            if (content.length>200){
+            	new_content = ''
+            	for(var j=0; j<200; j+=1){
+            		new_content += content[j];
+            	}
+            	new_content +=  '...';
+            }
             var time = da['time'];
             var new_data = new Date(time * 1000).format("yyyy年MM月dd日 hh:mm:ss")
             var source = da['source'];
             html += '<div class="inner">';
-            html += '<span class="title"><b>'+ mid +':'+ c_topic + '</b></span><br>';
-            html += '<span class="title"><b>'+ title + '</b></span><br/>';
-            html += '<span>'+ content+ '</span><br>'; 
+            html += '<span class="title" style="color:#0000FF"><b>'+ mid +':'+ c_topic + '</b></span><br>';
+            html += '<span class="title" style="color:#0000FF"><b>'+ title + '</b></span><br/>';
+            html += '<span>'+ new_content+ '</span><br>'; 
             html += '<span style="float:right;">'+new_data + user +"发布于"+source;                      
             html +='</div>';
             }
@@ -453,15 +459,16 @@
                     }
                 }
                 for (var topic in topic_child_keywords){
-                    html += '<tr>';
                     m++;
                     if( m > 10) {break;}
-                    html += '<td><b>'+m+'</b></td><td><b style =\"width:20px\">'+topic+'</b></td>';
+                    html += '<tr style="height:25px">';                    
+                    html += '<td><b style =\"width:20px\">'+topic+'</b></td>';
                     for (var n = 0 ;n < 5; n++){
                         html += '<td>'+topic_child_keywords[topic][n]+'</td>'
                     }
                     html += "</tr>";
                 }
+                //html += "<tr><span style='margin-top:6px;margin-left:10px' data-toggle='modal' data-target='#myModal'>显示更多</span> </tr>"
                 $("#alternatecolor").append(html);
                 
                 target_html += '<tr><td><b>标号</b></td><td><b>子话题</b></td>';
