@@ -45,13 +45,13 @@
                     var s = i.toString();
                     result2[i] = data[i][0]; 
                     if ((i+1)%5 == 1){
-                    	html+='<tr><td style ="padding:5px;padding-left:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
+                    	html+='<tr><td style ="padding:5px;padding-left:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td>';
                     }	
                     else if ((i+1)%5 == 0){
-                    	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td></tr>';
+                    	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td></tr>';
                     }
                     else{
-                    	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="子话题">&nbsp&nbsp&nbsp'+result2[i]+'</td>';
+                    	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td>';
                     }
                     
                     
@@ -404,7 +404,7 @@
 
 
         function chg_weibos(data){  
-            // $("#vertical-ticker").empty();
+             $("#vertical-ticker").empty();
             var html = "";
             for(var i = 0; i < data.length; i += 1){
             var da = data[i][1];

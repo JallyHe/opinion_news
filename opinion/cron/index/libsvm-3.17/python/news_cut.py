@@ -193,7 +193,7 @@ def get_s(text,weibo):#计算相似度，剔除重复文本
             pass
     return max_r,n
 
-def get_text_net(topic,flag,lable,word,weibo_text,title,f):
+def get_text_net(topic,flag,lable,word,weibo_text,title,f_new):
 
     c = dict()
     data = dict()
@@ -231,7 +231,8 @@ def get_text_net(topic,flag,lable,word,weibo_text,title,f):
             z_count = z_count + 1
 
     data = f_weibo.TopK()
-    if f == 0:
+    print f_new
+    if f_new == 0:
         item_exist = db.session.query(OpinionTestWeibos).filter(OpinionTestWeibos.topic==topic).all()
         if item_exist:
             for item in item_exist:
@@ -250,7 +251,7 @@ def get_text_net(topic,flag,lable,word,weibo_text,title,f):
             new_item = OpinionTestWeibos(topic,str_title,float(data[i][0]),data[i][1],weibo_text[data[i][1]][0],weibo_text[data[i][1]][1],weibo_text[data[i][1]][2],weibo_text[data[i][1]][3],weibo_text[data[i][1]][4],weibo_text[data[i][1]][5],0)
         db.session.add(new_item)
         db.session.commit()
-      
+    print len(data)
     return float(z_count)/len(weibo_text)
 
 def word_net(data):

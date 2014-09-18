@@ -19,7 +19,7 @@ def get_opinion_time(topic):
     return results
 
 def get_opinion_ratio(topic):
-    items = db.session.query(OpinionTestRatio).filter((OpinionTestRatio.id>=53)&(OpinionTestRatio.id<=76)).all()#ratio表有问题，话题存不进去
+    items = db.session.query(OpinionTestRatio).filter((OpinionTestRatio.id>=103)&(OpinionTestRatio.id<=128)).all()#ratio表有问题，话题存不进去
     if not items:
         return None
 ##    items = db.session.query(OpinionTestRatio).filter(OpinionTestRatio.topic==topic).all()
@@ -70,7 +70,7 @@ def get_opinion_weibos_rank(topic,c_topic):
     title = c_topic.split('-')
     row = []
     for i in range(0,len(title)):
-        row.append(title[i].decode('utf-8'))
+        row.append(title[i])
 
     row = json.dumps(row)
     items = db.session.query(OpinionTestWeibos).filter((OpinionTestWeibos.topic==topic)&(OpinionTestWeibos.child_topic==row)).all()
