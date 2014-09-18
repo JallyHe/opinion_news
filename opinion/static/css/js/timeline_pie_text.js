@@ -182,74 +182,20 @@
 
         function drawVisualization() {
             var data = [];
-            var data1 = [];
+            var data_start = [];
+            var data_end = [];
             for (var i =0 ; i< result.length; i++){
-                data1[i] = new Date(parseInt(result1[i]) * 1000);
-                data[i] = new Date(parseInt(result[i]) * 1000);
+                data_end[i] = new Date(parseInt(result1[i]) * 1000);
+                data_start[i] = new Date(parseInt(result[i]) * 1000);
+                data[i] = {'start':data_start[i],'end':data_end[i],'content':result2[i]};
             }
-
-            data = [
-                {
-                    'start': data[0],
-                    'end': data1[0],
-                    'content': result2[0],
-                },
-                {
-                    'start': data[1],
-                    'end': data1[1],
-                    'content': result2[1]
-                },
-                {
-                    'start': data[2],
-                    'end': data1[2],
-                    'content': result2[2]
-                },
-                {
-                    'start': data[3],
-                    'end': data1[3],
-                    'content': result2[3]
-                },
-                {
-                    'start': data[4],
-                    'end': data1[4],
-                    'content': result2[4]
-                },
-                {
-                    'start': data[5],
-                    'end': data1[5],
-                    'content': result2[5]
-                },
-                {
-                    'start': data[6],
-                    'end': data1[6],
-                    'content': result2[6]
-                },
-                {
-                    'start': data[7],
-                    'end': data1[7],
-                    'content': result2[7]
-                },
-                {
-                    'start': data[8],
-                    'end': data1[8],
-                    'content': result2[8]
-                },
-                {
-                    'start': data[9],
-                    'end': data1[9],
-                    'content': result2[9]
-                },                
-                {
-                    'start': data[10],
-                    'end': data1[10],
-                    'content': result2[10],
-                }
-            ];
+						var height_str = 25*result2.length;//需寻找一种机制让时间轴的高度动态可调
+						height_str += 'px';       
 
             // specify options
             var options = {
                 'width':  '100%',
-                'height': '300px',
+                'height': height_str,
                 'editable': true,   // enable dragging and editing events
                 'style': 'box'
             };
