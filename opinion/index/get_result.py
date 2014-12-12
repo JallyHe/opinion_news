@@ -31,7 +31,7 @@ def get_opinion_ratio(topic):
         child_topic = json.loads(item.child_topic)
         ratio = item.ratio
         results.append([child_topic,ratio])
-
+    print len(results)
     return results
 
 def get_opinion_keywords(topic):
