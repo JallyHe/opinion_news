@@ -6,7 +6,8 @@ s = load_scws()
 cx_dict = set(['Ag','a','an','Ng','n','nr','ns','nt','nz','Vg','v','vd','vn','@','j']) # 关键词词性词典
 
 def load_black_words():
-    one_words = set([line.strip('\r\n') for line in file(EXTRA_BLACK_LIST_PATH)])
+    #one_words = set([line.strip('\r\n') for line in file(EXTRA_BLACK_LIST_PATH)])
+    one_words = set([])
     return one_words
 
 black_words = load_black_words()
@@ -72,5 +73,5 @@ def extract_feature(items, title_term_weight=5, content_term_weight=1):
 
 if __name__ == '__main__':
     items = [{"feature_title": "TF-IDF的主要思想", "feature_content": "如果某个词或短语在一篇文章中出现的频率TF高，并且在其他文章中很少出现，则认为此词或者短语具有很好的类别区分能力，适合用来分类。TF-IDF实际上是：TF * IDF"}, {"feature_title": "平面设计作品", "feature_content": "网页设计欣赏 三维动画赏析 标志设计欣赏 插画设计作品 建筑设计欣赏 VI设计欣赏 UI设计欣赏 摄影艺术 设计理念"}]
-    extract_feature(items, title_term_weight=5, content_term_weight=1):
+    extract_feature(items, title_term_weight=5, content_term_weight=1)
 
