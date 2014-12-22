@@ -7,9 +7,10 @@ from config import MONGO_DB_NAME, EVENTS_NEWS_COLLECTION_PREFIX
 s = load_scws()
 cx_dict = set(['Ag','a','an','Ng','n','nr','ns','nt','nz','Vg','v','vd','vn','@','j']) # 关键词词性词典
 
+EXTRA_BLACK_LIST_PATH = "./black.txt"
+
 def load_black_words():
-    #one_words = set([line.strip('\r\n') for line in file(EXTRA_BLACK_LIST_PATH)])
-    one_words = set([])
+    one_words = set([line.strip('\r\n') for line in file(EXTRA_BLACK_LIST_PATH)])
     return one_words
 
 black_words = load_black_words()
