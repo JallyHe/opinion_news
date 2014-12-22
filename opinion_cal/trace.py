@@ -3,12 +3,6 @@
 # Date: 2014-12-21 22:00:00
 # Version: 0.1.0
 
-import re
-import os
-import csv
-import math
-import time
-
 
 def subevent_classifier(text, labels, feature_words):
     """input
@@ -16,27 +10,34 @@ def subevent_classifier(text, labels, feature_words):
            labels: 子事件标签，list
            feature_words: 各子事件的特征词，与上述标签对应，list
        output
-           
-    """
-    max_count = 0
-    max_lable = -1
-    sum_count = 0
-    for k,v in word_dict.iteritems():
-        count = 0
-        sum_count = 0
-        for i in range(0,len(v)):
-            sum_count = sum_count + v[i][0]
-            if v[i][1] in text:
-                count = count + v[i][0]
-        s_weight = float(sum_count)*0.05
-        if count > s_weight:
-            if count > max_count:
-                max_lable = k
-                max_count = count
-        else:
-            continue
+           单条文本的类别标签
+       example
+           from trace import subevent_classifier
 
-    return max_lable
+    """
+    if len(labels) != len(feature_words):
+        raise ValueError("labels and feature words list must have same length")
+
+    if not isinstance(text, str):
+        raise ValueError("text must be encode utf-8")
+
+    label_score = dict()
+    for idx, count_words_list in enumerate(feature_words):
+        sum_count = reduce(lambda x, y: x[0] + y[0], count_words_list)
+        weight_count = float(sum_count) * 0.05
+        hit_count = sum([count for count, word in count_words if word in text])
+
+        if hit_count > weight_count:
+            label = labels[idx]
+            label_score[label] = hit_count
+
+    if label_score != {}:
+        results = sorted(label_score.iteritems(), key=lambda(k, v): v, reverse=True)
+        # 归为类得分最高的一类
+        return results[0][1]
+    else:
+        # 归为其他类
+        return 'other'
 
 
 def text_classify(input_data, r_words):
@@ -73,3 +74,12 @@ def text_classify(input_data, r_words):
             data_lable[str(mid)] = [place,str(t),str(c),p_time,l]
 
     return ex_lable,data_lable,data_other
+
+
+if __name__=="__main__":
+    from Event import Event
+    eventid = ""
+    event = Event(eventid)
+    subevents = event.getSubEvents()
+
+    print subevents
