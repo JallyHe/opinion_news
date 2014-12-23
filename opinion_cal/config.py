@@ -1,6 +1,17 @@
 #-*-coding=utf-8-*-
 
+from utils import datetime2ts
+
+
 MONGO_DB_NAME = "news"
+EVENTS_COLLECTION = "news_topic"
 SUB_EVENTS_COLLECTION = "news_subevent"
 SUB_EVENTS_FEATURE_COLLECTION = "news_subevent_feature"
 EVENTS_NEWS_COLLECTION_PREFIX = "post_"
+
+START_DATETIME = "2014-11-10 00:00:00"
+END_DATETIME = "2014-11-10 01:00:00"
+
+START_TS = datetime2ts(START_DATETIME)
+END_TS = datetime2ts(END_DATETIME)
+

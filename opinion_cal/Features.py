@@ -25,7 +25,8 @@ class Feature(object):
     def get_newest(self):
         """获取子事件最新的特征词
         """
-        results = self.mongo[SUB_EVENTS_FEATURE_COLLECTION].find({"subeventid": self.id, "$not": {"_id": other_subevent_id}})
+        results = self.mongo[SUB_EVENTS_FEATURE_COLLECTION].find({"subeventid": self.id, "$not": {"_id": other_subevent_id}, "pattern": "newest"})
+        return results
 
     def set_range(self, words, start_ts, end_ts):
         """计算子事件某时间范围的特征词并存储
