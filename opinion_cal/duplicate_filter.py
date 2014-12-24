@@ -53,21 +53,37 @@ class ShingLing(object):
 
 def max_same_rate(items, item):
     #计算item 和 items 的相似度
-    ratio_list = [Levenshtein.ratio(i['text4duplicate'], item['text4duplicate']) for i in items]
-    if len(ratio_list):
-        return max(ratio_list)
-    else:
-        return 0
+    reserve = True
+    idx = 0
+    rate_threshold = 0.8
+    max_rate = 0
+    for i in items:
+        ratio = Levenshtein.ratio(i['text4duplicate'], item['text4duplicate'])
+        if ratio >= rate_threshold:
+            max_rate = ratio
+            reserve = False
+            break
+
+        idx += 1
+
+    return idx, max_rate, reserve
 
 def max_same_rate_shingle(items, item):
+    reserve = True
+    idx = 0
+    rate_threshold = 0.2
     max_rate = 0
     for i in items:
         sl = ShingLing(i['text4duplicate'], item['text4duplicate'], n=3)
         sl.cal_jaccard()
-        if sl.jaccard > max_rate:
+        if sl.jaccard >= rate_threshold:
             max_rate = sl.jaccard
+            reserve = False
+            break
 
-    return max_rate
+        idx += 1
+
+    return idx, max_rate, reserve
 
 
 if __name__ == '__main__':

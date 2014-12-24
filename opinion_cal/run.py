@@ -31,18 +31,31 @@ if __name__ == '__main__':
 
     results = event.getInfos(START_TS, END_TS)
     count = 0
-    now = time.time()
+    tb = time.time()
+    t0 = tb
     items = []
     for r in results:
-        r['text4duplicate'] = r['title'] + r['content168']
+        r['text4duplicate'] = r['title'] + r["content168"]
+
         """
-        if max_same_rate(items, r) < 0.8:
+        idx, rate, reserve = max_same_rate(items, r)
+        if reserve:
             items.append(r)
+        else:
+            print idx, rate, reserve, items[idx]['title'], r['title']
+        t1 = time.time()
+        print t1 - tb
+        tb = t1
+
         """
-        rate = max_same_rate_shingle(items, r)
-        if rate < 0.2:
+        idx, rate, reserve = max_same_rate_shingle(items, r)
+        if reserve:
             items.append(r)
-        print time.time() - now
+        else:
+            print idx, rate, reserve, items[idx]['title'], r['title'], items[idx]['content168'], r['content168']
+        t1 = time.time()
+        print t1 - tb
+        tb = t1
 
         """
         news = News(r["_id"], event.id)
@@ -56,12 +69,12 @@ if __name__ == '__main__':
 
         count += 1
         if count == 100:
-            print count, ' need ', time.time() - now, ' seconds'
+            print count, ' need ', t1 - t0, ' seconds'
+            break
 
-    print count, ' need ', time.time() - now, ' seconds'
+    print count, ' need ', t1 - t0, ' seconds'
 
     print len(items)
     for item in items:
-        pass
-        #print item["title"]
+        print item["title"]
 
