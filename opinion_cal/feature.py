@@ -96,13 +96,12 @@ def extract_feature(items, title_term_weight=5, content_term_weight=1):
 
 
 if __name__ == '__main__':
-    mongo = _default_mongo(usedb=MONGO_DB_NAME)
     topic = "APEC2014"
     topicid = "54916b0d955230e752f2a94e"
+    mongo = _default_mongo(usedb=MONGO_DB_NAME)
     results = mongo[EVENTS_NEWS_COLLECTION_PREFIX + topicid].find()
-    inputs = []
-    for r in results:
-        inputs.append({"feature_title": r["title"].encode("utf-8"), "feature_content": r["content168"].encode("utf-8"), "label": random.randint(0, 10)})
+    inputs = [{"title": r["title"].encode("utf-8"), "content": r["content168"].encode("utf-8"), \
+            "label": random.randint(0, 10)} for r in results]
 
     results = extract_feature(inputs, title_term_weight=5, content_term_weight=1)
     for k in results:
