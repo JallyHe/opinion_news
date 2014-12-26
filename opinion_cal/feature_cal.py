@@ -17,10 +17,12 @@ def tfidf_cal(keywords_dict_list, topk=100):
     for keywords_dict in keywords_dict_list:
         tf_idf_dict = dict()
 
+        total_freq = sum(keywords_dict.values()) # 该类所有词的词频总和
+        total_document_count = len(keywords_dict_list) # 类别总数
         for keyword, count in keywords_dict.iteritems():
-            tf = float(count) / float(sum(keywords_dict.values()))
+            tf = float(count) / float(total_freq)
             document_count = sum([1 for kd in keywords_dict_list if keyword in kd.keys()])
-            idf = math.log(float(len(keywords_dict.keys())) / float(document_count))
+            idf = math.log(float(total_document_count)) / float(document_count))
             tf_idf = tf * idf
             tf_idf_dict[keyword] = tf_idf
 
