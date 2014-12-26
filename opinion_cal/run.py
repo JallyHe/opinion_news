@@ -7,8 +7,8 @@ from config import MONGO_DB_NAME, EVENTS_NEWS_COLLECTION_PREFIX, \
 from Info import News
 from Event import Event
 from Features import Feature
-from trace import subevent_classifier
-from duplicate_filter import max_same_rate, max_same_rate_shingle
+from classify import subevent_classifier
+from duplicate import max_same_rate, max_same_rate_shingle
 
 
 if __name__ == '__main__':
