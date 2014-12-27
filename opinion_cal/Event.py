@@ -15,30 +15,73 @@ class EventManager(object):
     def __init__(self):
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
-    def getActiveEvents(self):
-        return self.mongo[EVENTS_COLLECTION].find({"status": "active"})
+    def getActiveEventIDs(self, timestamp):
+        """获取活跃话题的ID
+           input:
+               timestamp: 检测的时间点, 话题的创建时间要小于检测的时间点
+           output:
+               活跃的话题ID
+        """
+        results = self.mongo[EVENTS_COLLECTION].find({"status": "active", "startts": {"$lte": timestamp}})
+        return [r['_id'] for r in results]
 
     def terminateEvent(self, eventid, endts=int(time.time())):
+        """终止事件
+           input:
+               eventid: 事件ID
+               endts: 终止时间
+        """
         event = Event(eventid)
         event.terminate()
         event.setEndts(endts)
 
-    def getEventByName(self, name):
-        return self.mongo[EVENTS_COLLECTION].find_one({"name": name})
+    def getEventIDByName(self, name):
+        result = self.mongo[EVENTS_COLLECTION].find_one({"topic": name})
+        if result:
+            return result['_id']
+        else:
+            return None
 
-    def upsertEvent(self, name, startts=int(time.time()), status="active"):
-        pass
+    def checkActive(self, timestamp):
+        """根据话题新文本数检查话题的活跃性
+           input:
+               timestamp: 检测的时间点
+           output:
+               活跃的话题ID
+        """
+        active_ids = []
+        ids = self.getActiveEventIDs(timestamp)
+        for id in ids:
+            event = Event(id)
+            if event.check_ifactive():
+                active_ids.append(id)
+            else:
+                event.terminate()
+                event.setEndts(timestamp)
+
+        return active_ids
+
+    def getInitializingEventIDs(self, timestamp):
+        """获取正在初始化的话题ID
+           input:
+               timestamp: 检测的时间点
+           output:
+               正在初始化的话题ID
+        """
+        print EVENTS_COLLECTION
+        results = self.mongo[EVENTS_COLLECTION].find({"status": "initializing", "startts": {"$lte": timestamp}})
+        return [r['_id'] for r in results]
 
 
 class Event(object):
     """话题类
     """
     def __init__(self, id):
-        """初始化话题实例，输入为话题ID，字符串类型
+        """初始化话题实例，输入为话题ID，ObjectID
         """
         self.id = id
         self.other_subeventid = self.getOtherSubEventID()
-        self.news_collection = EVENTS_NEWS_COLLECTION_PREFIX + self.id
+        self.news_collection = EVENTS_NEWS_COLLECTION_PREFIX + str(id)
         self.sub_events_collection = SUB_EVENTS_COLLECTION
         self.events_collection = EVENTS_COLLECTION
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
@@ -63,22 +106,27 @@ class Event(object):
         """获取其他类ID，该ID是预留的
            规则为eventid + '_other'
         """
-        return self.id + '_other'
+        return str(self.id) + '_other'
 
-    def terminate(self):
-        """终止话题
+    def initializing(self):
+        """初始化话题, 该状态下做初始聚类
         """
-        self.mongo[self.events_collection].upsert({"_id": self.id}, {"$set": {"status": "terminate"}})
+        self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"status": "initializing"}})
 
     def activate(self):
         """激活话题
         """
-        self.mongo[self.events_collection].upsert({"_id": self.id}, {"$set": {"status": "active"}})
+        self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"status": "active"}})
+
+    def terminate(self):
+        """终止话题
+        """
+        self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"status": "terminate"}})
 
     def setStartts(self, startts):
         """更新话题起始时间
         """
-        self.mongo[self.events_collection].upsert({"_id": self.id}, {"$set": {"startts": startts}})
+        self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"startts": startts}})
 
     def setEndts(self, endts):
         """更新话题终止时间
@@ -106,8 +154,29 @@ class Event(object):
 
         return avg
 
+    def getInitialInfos(self):
+        """获取初始聚类文本，默认取话题开始时间之前的文本
+        """
+        event = self.mongo[self.events_collection].find_one({"_id": self.id})
+        start_ts = event["startts"]
+        results = self.mongo[self.news_collection].find({"timestamp": {"$lt": start_ts}})
+        return [r for r in results]
+
+    def check_ifactive(self, timestamp, during=3600 * 24 * 3):
+        """根据话题信息数在给定时间判断是否活跃
+           input:
+               timestamp: 截止时间戳
+               during: 在during时间内没有新文本，则判定为不活跃
+           output:
+               True or False
+        """
+        if self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - during, "$lt": timestamp}}).count():
+            return True
+        else:
+            return False
+
     def check_ifsplit(self, timestamp):
-        """给定时间判断是否需要分裂子事件, 每小时执行一次
+        """给定时间判断其他类是否需要分裂子事件, 每小时执行一次
            input:
                timestamp: 截止时间戳, 整点
            output:

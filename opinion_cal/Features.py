@@ -23,7 +23,7 @@ class Feature(object):
         pass
 
     def get_newest(self):
-        """获取子事件最新的特征词
+        """获取子事件最新的特征词, top100
         """
         result = self.mongo[SUB_EVENTS_FEATURE_COLLECTION].find_one({"subeventid": self.subeventid, "pattern": "newest"})
         if result:
