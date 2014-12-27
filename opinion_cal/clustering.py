@@ -56,7 +56,7 @@ def process_for_cluto(inputs, cluto_input_folder="cluto"):
 
 
 def cluto_kmeans_vcluster(k=10, input_file=None, vcluster='./cluto-2.1.2/Linux-i686/vcluster', \
-        cluto_output_folder="cluto", cluto_input_folder="cluto"):
+        cluto_input_folder="cluto"):
     '''
     cluto kmeans聚类
     input：
@@ -67,11 +67,6 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster='./cluto-2.1.2/Linux-i
     output：
         cluto聚类结果, list
     '''
-    if not os.path.exists(cluto_output_folder):
-        os.makedirs(cluto_output_folder)
-    # 聚类效果输出文件
-    output_file = os.path.join(cluto_output_folder, '%s_other.txt' % os.getpid())
-
     # 聚类结果文件, result_file
     if not input_file:
         input_file = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
@@ -95,7 +90,7 @@ def label2uniqueid(labels):
     '''
     label2id = dict()
     for label in set(labels):
-        label2id[label] = uuid.uuid4()
+        label2id[label] = str(uuid.uuid4())
 
     return label2id
 
@@ -167,7 +162,7 @@ def cluster_evaluation(items, topk_freq=20, least_freq=10):
             for keyword, count in keywords_dict.iteritems():
                 tf = float(count) / float(total_freq) # 每个词的词频 / 该类所有词词频的总和
                 document_count = sum([1 if keyword in kd.keys() and kd[keyword] > least_freq else 0 for kd in keywords_count_list])
-                idf = math.log(float(total_document_count) / float(document_count))
+                idf = math.log(float(total_document_count) / float(document_count + 1))
                 tf_idf = tf * idf
                 tf_idf_list.append(tf_idf)
 

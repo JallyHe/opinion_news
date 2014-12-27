@@ -7,6 +7,32 @@ import time
 import pydablooms
 import Levenshtein
 
+def duplicate(items):
+    """批量文本去重, 输入的文本可以有部分已经去完重的，以duplicate字段标识
+       input:
+           items: 一推文本，[{"_id": , "title": , "content": }], 
+           文本以utf-8编码
+       output:
+           更新了duplicate字段的items， 如果duplicate为True，则有字段same_from链向相似的新闻的_id
+    """
+    not_same_items = [item for item in items if 'duplicate' in item and item['duplicate'] == False]
+    duplicate_items = [item for item in items if 'duplicate' in item and item['duplicate'] == True]
+    candidate_items = [item for item in items if 'duplicate' not in item]
+
+    for item in candidate_items:
+        idx, rate, flag = max_same_rate_shingle(not_same_items, item)
+        if flag:
+            item['duplicate'] = False
+            item['same_from'] = item['_id']
+            not_same_items.append(item)
+        else:
+            item['duplicate'] = True
+            item['same_from'] = not_same_items[idx]['_id']
+            duplicate_items.append(item)
+
+    return not_same_items + duplicate_items
+
+
 class ShingLing(object):
     """shingle算法
     """
@@ -41,7 +67,6 @@ class ShingLing(object):
             s.add(piece)
 
     def cal_jaccard(self):
-
         intersection_count = len(self.set1 & self.set2)
         union_count = len(self.set1 | self.set2)
 
@@ -68,22 +93,29 @@ def max_same_rate(items, item):
 
     return idx, max_rate, reserve
 
-def max_same_rate_shingle(items, item):
-    reserve = True
+def max_same_rate_shingle(items, item, rate_threshold=0.2):
+    """input:
+           items: 已有的不重复数据
+           item: 待检测的数据
+       output:
+           idx: 相似的下标
+           max_rate: 相似度
+           flag: True表示不相似
+    """
+    flag = True
     idx = 0
-    rate_threshold = 0.2
     max_rate = 0
     for i in items:
-        sl = ShingLing(i['text4duplicate'], item['text4duplicate'], n=3)
+        sl = ShingLing((i['title'] + i['content']).decode('utf-8'), (item['title'] + item['content']).decode('utf-8'), n=3)
         sl.cal_jaccard()
         if sl.jaccard >= rate_threshold:
             max_rate = sl.jaccard
-            reserve = False
+            flag = False
             break
 
         idx += 1
 
-    return idx, max_rate, reserve
+    return idx, max_rate, flag
 
 
 if __name__ == '__main__':

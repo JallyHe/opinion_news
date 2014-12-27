@@ -53,7 +53,7 @@ class EventManager(object):
         ids = self.getActiveEventIDs(timestamp)
         for id in ids:
             event = Event(id)
-            if event.check_ifactive():
+            if event.check_ifactive(timestamp):
                 active_ids.append(id)
             else:
                 event.terminate()
@@ -68,7 +68,6 @@ class EventManager(object):
            output:
                正在初始化的话题ID
         """
-        print EVENTS_COLLECTION
         results = self.mongo[EVENTS_COLLECTION].find({"status": "initializing", "startts": {"$lte": timestamp}})
         return [r['_id'] for r in results]
 
@@ -90,8 +89,13 @@ class Event(object):
         """获取子事件，非其他类
         """
         results = self.mongo[self.sub_events_collection].find({"eventid": self.id, "_id": {"$ne": self.other_subeventid}})
+        return [r for r in results]
 
-        return results
+    def getSubeventInfos(self, subeventid):
+        """获取一个子事件的相关信息
+        """
+        results = self.mongo[self.news_collection].find({"subeventid": subeventid})
+        return [r for r in results]
 
     def getInfos(self, start_ts, end_ts):
         """获取话题最新的文本
@@ -162,6 +166,10 @@ class Event(object):
         results = self.mongo[self.news_collection].find({"timestamp": {"$lt": start_ts}})
         return [r for r in results]
 
+    def getOtherSubEventInfos(self):
+        results = self.mongo[self.news_collection].find({"subeventid": self.other_subeventid})
+        return [r for r in results]
+
     def check_ifactive(self, timestamp, during=3600 * 24 * 3):
         """根据话题信息数在给定时间判断是否活跃
            input:
@@ -185,7 +193,7 @@ class Event(object):
         avg_subevent_size = self.getAvgSubEventSize(timestamp)
 
         # 每天0、6、12、18时检测, 其他类存量文本数 > avg, 则分裂
-        SIX_HOUR_SECONDS = 6 * 3600
+        SIX_HOUR_SECONDS = 3600
         six_hour_threshold = avg_subevent_size
         if timestamp % SIX_HOUR_SECONDS == 0:
             other_subevent_news_count = self.mongo[self.news_collection].find({"timestamp": {"$lt": timestamp}, "subeventid": self.other_subeventid}).count()
@@ -204,6 +212,21 @@ class Event(object):
 
         return False
 
+    def save_subevent(self, _id, timestamp):
+        """保存子事件
+           input:
+                _id: 子事件ID
+                timestamp: 子事件创建时间戳
+        """
+        subevent = {"_id": _id, "eventid": self.id, "timestamp": timestamp}
+        return self.mongo[self.sub_events_collection].save(subevent)
+
+    def clear_news_label(self):
+        results = self.mongo[self.news_collection].find()
+        for r in results:
+            if 'subeventid' in r:
+                del r['subeventid']
+            self.mongo[self.news_collection].update({"_id": r["_id"]}, r)
 
 if __name__ == "__main__":
     topicid = "54916b0d955230e752f2a94e"
