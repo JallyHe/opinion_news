@@ -4,6 +4,7 @@
 # Version: 0.2.0
 
 import time
+from multiprocessing import Pool
 from utils import datetime2ts
 from Info import News
 from Event import Event, EventManager
@@ -15,13 +16,16 @@ from sort import text_weight_cal
 from duplicate import duplicate
 
 
-def steps_calculation(eventids, initializing=True):
+def one_topic_calculation(eventid_initializing):
     """多步计算
        input:
-           eventids: 话题ID列表
+           eventid_initializing: (eventid, initializing)
+           eventid: 话题ID
            initializing： 是否做初始聚类
     """
-    def step1_cal(eventid):
+    eventid, initializing = eventid_initializing
+
+    def step1_cal():
         """第一步计算，获取子事件特征词，新文本与特征词匹配分类
         """
         print 'event ', eventid, ' start step1'
@@ -62,7 +66,7 @@ def steps_calculation(eventids, initializing=True):
 
         print 'event ', eventid, ' end step1'
 
-    def step2_cal(eventid):
+    def step2_cal():
         """第二步计算，判断其他类是否需要分裂，若需要，则对其他类进行文本聚类，并做聚类评价
         """
         # 根据话题ID初始化话题实例
@@ -102,7 +106,7 @@ def steps_calculation(eventids, initializing=True):
 
         print 'event ', eventid, ' end step2'
 
-    def step3_cal(eventid):
+    def step3_cal():
         """计算各簇的特征词、代表文本、去重
         """
         print 'event ', eventid, ' start step3'
@@ -144,28 +148,30 @@ def steps_calculation(eventids, initializing=True):
 
         print 'event ', eventid, ' end step3'
 
-    # 遍历每个话题，进行多步计算
-    for eventid in eventids:
-        step1_cal(eventid)
-        step2_cal(eventid)
-        step3_cal(eventid)
+    # 进行多步计算
+    step1_cal()
+    step2_cal()
+    step3_cal()
 
 
 if __name__ == '__main__':
+    em = EventManager()
+    event_ids_list = []
+
     # 时间戳
     timestamp = datetime2ts("2014-12-10 00:00:00")
 
-    em = EventManager()
-
-    """
-    from bson import ObjectId
-    steps_calculation([ObjectId('549d1de52253274b61368312')])
-    """
-    # 获取初始化的话题，做初始聚类
+    # 获取做初始聚类的话题
     initial_event_ids = em.getInitializingEventIDs(timestamp)
-    steps_calculation(initial_event_ids, initializing=True)
+    event_ids_list.extend([(id, True) for id in initial_event_ids])
 
-    # 检测话题活跃性, 获取活跃的话题
+    # 获取已做完初始聚类的话题
     active_event_ids = em.checkActive(timestamp)
-    steps_calculation(initial_event_ids, initializing=False)
+    event_ids_list.extend([(id, False) for id in active_event_ids])
+
+    # map并行计算
+    pool = Pool()
+    pool.map(one_topic_calculation, event_ids_list)
+    pool.close()
+    pool.join()
 
