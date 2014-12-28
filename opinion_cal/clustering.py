@@ -63,7 +63,6 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster='./cluto-2.1.2/Linux-i
         k: 聚簇数，默认取10
         input_file: cluto输入文件路径，如果不指定，以cluto_input_folder + pid.txt方式命名
         vcluster: cluto vcluster可执行文件路径
-
     output：
         cluto聚类结果, list
     '''
@@ -81,6 +80,9 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster='./cluto-2.1.2/Linux-i
 
     if os.path.isfile(result_file):
         os.remove(result_file)
+
+    if os.path.isfile(input_file):
+        os.remove(input_file)
 
     return results
 
