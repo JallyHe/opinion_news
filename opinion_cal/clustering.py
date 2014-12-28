@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# User: linhaobuaa
+# Date: 2014-12-28 10:00:00
+# Version: 0.2.0
+
 
 import os
 import time
