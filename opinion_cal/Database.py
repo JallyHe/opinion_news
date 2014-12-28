@@ -1,12 +1,15 @@
 #-*-coding=utf-8-*-
 # User: linhaobuaa
-# Date: 2014-12-22 10:00:00
-# Version: 0.1.0
+# Date: 2014-12-28 14:00:00
+# Version: 0.3.0
+"""数据库操作的封装
+"""
 
 import time
 from utils import _default_mongo
 from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION
+        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
+        SUB_EVENTS_FEATURE_COLLECTION
 
 
 class EventManager(object):
@@ -135,7 +138,7 @@ class Event(object):
     def setEndts(self, endts):
         """更新话题终止时间
         """
-        self.mongo[self.events_collection].upsert({"_id": self.id}, {"$set": {"endts": endts}})
+        self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"endts": endts}})
 
     def getAvgSubEventSize(self, timestamp):
         """获取子事件的平均大小
@@ -227,13 +230,80 @@ class Event(object):
         self.mongo[self.sub_events_collection].remove({"eventid": self.id})
 
     def clear_news_label(self):
-        """清除话题的所有新闻的subeventid字段
+        """清除话题的所有新闻的clear_labels字段
         """
+        clear_labels = ['subeventid', 'weight', 'duplicate', 'same_from']
         results = self.mongo[self.news_collection].find()
         for r in results:
-            if 'subeventid' in r:
-                del r['subeventid']
+            for key in clear_labels:
+                del r[key]
             self.mongo[self.news_collection].update({"_id": r["_id"]}, r)
+
+class News(object):
+    """新闻类
+    """
+    def __init__(self, id, topicid):
+        self.id = id
+        self.topicid = topicid
+        self.news_collection = EVENTS_NEWS_COLLECTION_PREFIX + str(topicid)
+        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+
+    def update_news_subeventid(self, label):
+        """更新单条信息的簇标签, subeventid
+        """
+        self.mongo[self.news_collection].update({"_id": self.id}, {"$set": {"subeventid": label}})
+
+    def update_news_weight(self, weight):
+        """更新单条信息的权重, weight
+        """
+        self.mongo[self.news_collection].update({"_id": self.id}, {"$set": {"weight": weight}})
+
+    def update_news_duplicate(self, duplicate, same_from):
+        """更新条信息的duplicate、same_from字段
+        """
+        self.mongo[self.news_collection].update({"_id": self.id}, {"$set": {"duplicate": duplicate, "same_from": same_from}})
+
+
+class Feature(object):
+    """特征词类, 按子事件组织
+    """
+    def __init__(self, subeventid):
+        """初始化特征词类
+           input
+               subeventid: 子事件ID
+        """
+        self.subeventid = subeventid
+        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+
+    def upsert_newest(self, words):
+        """存储子事件最新存量的特征词，pattern为"newest", top100, 为新文本分类服务, upsert模式
+        """
+        self.mongo[SUB_EVENTS_FEATURE_COLLECTION].update({"subeventid": self.subeventid, "pattern": "newest"}, \
+                {"subeventid": self.subeventid, "pattern": "newest", "feature": words}, upsert=True)
+
+    def get_newest(self):
+        """获取子事件最新存量的特征词, pattern为"newest", top100, 为新文本分类服务
+        """
+        result = self.mongo[SUB_EVENTS_FEATURE_COLLECTION].find_one({"subeventid": self.subeventid, "pattern": "newest"})
+        if result:
+            return result["feature"]
+        else:
+            return {}
+
+    def set_range(self, words, start_ts, end_ts):
+        """计算子事件某时间范围的特征词并存储
+        """
+        pass
+
+    def get_range(self):
+        """获取子事件某时间范围的特征词
+        """
+        pass
+
+    def clear_all_features(self):
+        """清除pattern为regular和newest的特征词
+        """
+        self.mongo[SUB_EVENTS_FEATURE_COLLECTION].remove({"subeventid": self.subeventid})
 
 if __name__ == "__main__":
     topicid = "54916b0d955230e752f2a94e"

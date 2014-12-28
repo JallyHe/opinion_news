@@ -1,19 +1,19 @@
 #-*-coding=utf-8-*-
 # User: linhaobuaa
-# Date: 2014-12-26 23:00:00
-# Version: 0.2.0
+# Date: 2014-12-28 12:00:00
+# Version: 0.3.0
+"""子事件演化聚类主文件
+"""
 
 import time
 from multiprocessing import Pool
-from utils import datetime2ts
-from Info import News
-from Event import Event, EventManager
-from Features import Feature
+from utils import datetime2ts, ts2datetime
 from clustering import kmeans, cluster_evaluation
 from classify import subevent_classifier
 from feature import extract_feature
 from sort import text_weight_cal
 from duplicate import duplicate
+from Database import News, Event, EventManager, Feature
 
 
 def one_topic_calculation(eventid_initializing):
@@ -28,7 +28,7 @@ def one_topic_calculation(eventid_initializing):
     def step1_cal():
         """第一步计算，获取子事件特征词，新文本与特征词匹配分类
         """
-        print 'event ', eventid, ' start step1'
+        print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' start step1'
 
         # 根据话题ID初始化话题实例
         event = Event(eventid)
@@ -64,7 +64,7 @@ def one_topic_calculation(eventid_initializing):
             news = News(r["_id"], event.id)
             news.update_news_subeventid(label)
 
-        print 'event ', eventid, ' end step1'
+        print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' end step1'
 
     def step2_cal():
         """第二步计算，判断其他类是否需要分裂，若需要，则对其他类进行文本聚类，并做聚类评价
@@ -74,7 +74,7 @@ def one_topic_calculation(eventid_initializing):
 
         # 判断其他类是否需要分裂
         ifsplit = event.check_ifsplit(timestamp)
-        print 'event ', eventid, ' split ', ifsplit, ' start step2'
+        print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' split ', ifsplit, ' start step2'
         if ifsplit:
             inputs = event.getOtherSubEventInfos()
             items = []
@@ -104,12 +104,12 @@ def one_topic_calculation(eventid_initializing):
                 # 更新事件状态由initializing变为active
                 event.activate()
 
-        print 'event ', eventid, ' end step2'
+        print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' end step2'
 
     def step3_cal():
         """计算各簇的特征词、代表文本、去重
         """
-        print 'event ', eventid, ' start step3'
+        print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' start step3'
 
         # 根据话题ID初始化话题实例
         event = Event(eventid)
@@ -128,13 +128,14 @@ def one_topic_calculation(eventid_initializing):
         # 计算各簇的存量特征词
         cluster_feature = extract_feature(inputs)
         for label, fwords in cluster_feature.iteritems():
-            print label
-            for k, v in fwords.iteritems():
-                print k, v
+            feature = Feature(label)
+            feature.upsert_newest(fwords)
 
         # 计算文本权重
         for r in inputs:
             weight = text_weight_cal(r, cluster_feature[r['label']])
+            news = News(r["_id"], event.id)
+            news.update_news_weight(weight)
 
         # 文本去重
         items_dict = {}
@@ -144,9 +145,13 @@ def one_topic_calculation(eventid_initializing):
             except KeyError:
                 items_dict[r["label"]] = [r]
 
-        results = duplicate(inputs)
+        for label, items in items_dict.iteritems():
+            results = duplicate(items)
+            for r in results:
+                news = News(r["_id"], event.id)
+                news.update_news_duplicate(r["duplicate"], r["same_from"])
 
-        print 'event ', eventid, ' end step3'
+        print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' end step3'
 
     # 进行多步计算
     step1_cal()

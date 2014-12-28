@@ -6,15 +6,14 @@
 """维护文件
 """
 
-from Features import Feature
 from utils import datetime2ts
-from Event import Event, EventManager
+from Database import Event, EventManager, Feature
 
 def initialize_topics():
     """重新初始化topic
        1. 把话题status变为initializing
        2. 设置话题起始时间
-       3. 清除新闻表中每条新闻的subeventid字段
+       3. 清除新闻表中每条新闻的subeventid字段、weight字段、duplicate字段、same_from字段
        4. 清除子事件表中话题的相关数据
        5. 清除子事件特征词表中话题的相关数据
     """

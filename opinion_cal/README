@@ -1,3 +1,15 @@
 #
 
-代码结构整理
+代码结构整理, 流程记录
+
+数据库结构整理：
+db：news
+collections:
+    news_topic: 话题表
+    news_subevent： 子事件表
+    post_{topicid}: 新闻表
+    news_subevent_feature: 特征词表
+
+todo:
+    时间在定时任务上的处理
+    广告、垃圾过滤
