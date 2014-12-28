@@ -1,7 +1,7 @@
 #-*-coding=utf-8-*-
 # User: linhaobuaa
-# Date: 2014-12-22 10:00:00
-# Version: 0.1.0
+# Date: 2014-12-28 17:00:00
+# Version: 0.3.0
 
 import time
 import pydablooms
@@ -13,7 +13,7 @@ def duplicate(items):
            items: 一推文本，[{"_id": , "title": , "content": }], 
            文本以utf-8编码
        output:
-           更新了duplicate字段的items， 如果duplicate为True，则有字段same_from链向相似的新闻的_id
+           更新了duplicate和same_from字段的items， same_from链向相似的新闻的_id
     """
     not_same_items = [item for item in items if 'duplicate' in item and item['duplicate'] == False]
     duplicate_items = [item for item in items if 'duplicate' in item and item['duplicate'] == True]

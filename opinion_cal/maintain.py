@@ -58,16 +58,10 @@ def initialize_topics():
 
     for topicname, start_datetime in topic_start:
         topicid = em.getEventIDByName(topicname)
-        event = Event(topicid)
-        event.initializing()
         start_ts = datetime2ts(start_datetime)
-        event.setStartts(start_ts)
-        event.clear_news_label()
-        subevents = event.getSubEvents()
-        event.clear_subevents()
-        for subevent in subevents:
-            feature = Feature(subevent["_id"])
-            feature.clear_all_features()
+
+        event = Event(topicid)
+        event.initialize(start_ts)
 
 
 if __name__ == '__main__':

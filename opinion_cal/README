@@ -11,5 +11,22 @@ collections:
     news_subevent_feature: 特征词表
 
 todo:
-    时间在定时任务上的处理
+    定时任务上的时间处理
+        t0: 事件的开始日期: news_topic表中各话题的startts，一个话题一个startts，startts的含义：初始聚类文本选择startts之前的所有文本
+            每个事件处理完之后加上完成的最新整点时间戳tc
+        ti: 检测的时间点
+            if success:
+                if ti > tc:
+                    选取ti - tc 时段的文本做计算
+                    if success:
+                        success = True, tc = ti, 每个事件处理完之后加上完成的最新整点时间戳tc
+                    else:
+                        success = False, tc = ti
+                else:
+                    pass, 不做计算， success不变，tc不变
+            else:
+                人工check
+
+    log日志处理
+        每小时检查上一次日志, 是否有Exception且进行到step3
     广告、垃圾过滤

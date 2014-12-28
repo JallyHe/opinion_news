@@ -46,7 +46,7 @@ class EventManager(object):
             return None
 
     def checkActive(self, timestamp):
-        """根据话题新文本数检查话题的活跃性
+        """根据话题新文本数检查话题的活跃性, 更新不再活跃的话题的status
            input:
                timestamp: 检测的时间点
            output:
@@ -115,13 +115,31 @@ class Event(object):
         """
         return str(self.id) + '_other'
 
-    def initializing(self):
-        """初始化话题, 该状态下做初始聚类
+    def initialize(self, start_ts):
+        """一键初始化, 对event表的操作
+           input:
+               start_ts: 事件开始的时间戳
+        """
+        self.initstatus()
+        self.setStartts(start_ts)
+        self.setLastmodify(start_ts - 1)
+        self.setModifysuccess(True)
+        self.clear_news_label()
+
+        subevents = self.getSubEvents()
+        for subevent in subevents:
+            feature = Feature(subevent["_id"])
+            feature.clear_all_features()
+
+        self.clear_subevents()
+
+    def initstatus(self):
+        """设置状态为initializing, 该状态下即将做初始聚类
         """
         self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"status": "initializing"}})
 
     def activate(self):
-        """激活话题
+        """激活话题, 让话题进入演化状态
         """
         self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"status": "active"}})
 
@@ -139,6 +157,16 @@ class Event(object):
         """更新话题终止时间
         """
         self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"endts": endts}})
+
+    def setModifysuccess(self, modify_success):
+        """更新事件的modify_success, 表示是否修改成功
+        """
+        self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"modify_success": modify_success}})
+
+    def setLastmodify(self, timestamp):
+        """更新事件的最后修改时间戳，整点, last_modify
+        """
+        self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"last_modify": timestamp}})
 
     def getAvgSubEventSize(self, timestamp):
         """获取子事件的平均大小
@@ -215,6 +243,23 @@ class Event(object):
 
         return False
 
+    def checkLastModify(self, timestamp):
+        """检测最后一次修改时间是否在检测的时间点之前，最后一次修改是否成功
+           input:
+               timestamp: 检测的时间戳，整点
+           output:
+               True or False
+        """
+        result = self.mongo[self.events_collection].find_one({"_id": self.id})
+        if 'last_modify' not in result and result['startts'] < timestamp:
+            # 可能是initializing的状态
+            return True
+        elif 'last_modify' in result and result['last_modify'] < timestamp \
+                and 'modify_success' in result and result['modify_success']:
+            return True
+        else:
+            return False
+
     def save_subevent(self, _id, timestamp):
         """保存子事件
            input:
@@ -236,7 +281,8 @@ class Event(object):
         results = self.mongo[self.news_collection].find()
         for r in results:
             for key in clear_labels:
-                del r[key]
+                if key in r:
+                    del r[key]
             self.mongo[self.news_collection].update({"_id": r["_id"]}, r)
 
 class News(object):

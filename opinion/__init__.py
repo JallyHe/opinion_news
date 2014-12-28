@@ -4,14 +4,14 @@ from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 from extensions import db, admin
 from model_view import SQLModelView
-from opinion.index.views import mod as indexModule
+from opinion.news.views import mod as newsModule
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config')
 
     # Create modules
-    app.register_blueprint(indexModule)
+    app.register_blueprint(newsModule)
 
     # Enable the toolbar?
     app.config['DEBUG_TB_ENABLED'] = app.debug
