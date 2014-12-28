@@ -77,7 +77,12 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster='./cluto-2.1.2/Linux-i
     command = "%s -niter=20 %s %s" % (vcluster, input_file, k)
     os.popen(command)
 
-    return [line.strip() for line in open(result_file)]
+    results = [line.strip() for line in open(result_file)]
+
+    if os.path.isfile(result_file):
+        os.remove(result_file)
+
+    return results
 
 
 def label2uniqueid(labels):
@@ -98,10 +103,14 @@ def label2uniqueid(labels):
 def kmeans(items, k=10):
     """kmeans聚类
        input:
+           cluto要求至少输入两条文本
            items: [{"title": "新闻标题", "content": "新闻内容"}], 以utf-8编码
        output:
            items: [{"title": "新闻标题", "content": "新闻内容", "label": "簇标签"}]
     """
+    if len(items) < 2:
+        raise ValueError("length of input items must be larger than 2")
+
     input_file = process_for_cluto(items)
     labels = cluto_kmeans_vcluster(k=k, input_file=input_file) # cluto聚类，生成文件，每行为一条记录的簇标签
     label2id = label2uniqueid(labels)
@@ -191,21 +200,19 @@ def cluster_evaluation(items, topk_freq=20, least_freq=10):
     tfidf_dict = dict(zip(labels_list, tfidf_list))
     keywords_dict = dict(zip(labels_list, keywords_count_list))
 
-    def choose_by_tfidf(top_num=5, last_num=2):
+    def choose_by_tfidf(top_num=5):
         """ 根据tfidf对簇进行选择
             input:
                 top_num: 保留top_num的tfidf类
-                last_num: 去除last_num的tfidf类
             output:
-
+                更新后的items_dict
         """
         cluster_num = len(tfidf_list)
-        if cluster_num < top_num + last_num:
-            raise ValueError("cluster number need to be larger than top_num + last_num")
+        if cluster_num < top_num:
+            raise ValueError("cluster number need to be larger than top_num")
 
         sorted_tfidf = sorted(tfidf_dict.iteritems(), key=lambda(k, v): v, reverse=True)
-        delete_labels = [l[0] for l in sorted_tfidf[-last_num:]]
-        middle_labels = [l[0] for l in sorted_tfidf[top_num:-last_num]]
+        delete_labels = [l[0] for l in sorted_tfidf[-top_num:]]
 
         other_items = []
         for label in items_dict.keys():
@@ -216,28 +223,6 @@ def cluster_evaluation(items, topk_freq=20, least_freq=10):
                     other_items.append(item)
 
                 items_dict.pop(label)
-
-            if label in middle_labels:
-                top_words_set = set(keywords_dict[label].keys())
-                after_items = []
-                for item in items:
-                    hit = False
-                    text = item['title'] + item['content']
-                    for w in top_words_set:
-                        if w in text:
-                            hit = True
-                            break
-
-                    if not hit:
-                        item['label'] = 'other'
-                        other_items.append(item)
-                    else:
-                        after_items.append(item)
-
-                if len(after_items) == 0:
-                    items_dict.pop(label)
-                else:
-                    items_dict[label] = after_items
 
         try:
             items_dict['other'].extend(other_items)
