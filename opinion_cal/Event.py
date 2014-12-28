@@ -221,7 +221,14 @@ class Event(object):
         subevent = {"_id": _id, "eventid": self.id, "timestamp": timestamp}
         return self.mongo[self.sub_events_collection].save(subevent)
 
+    def clear_subevents(self):
+        """清除子事件表中话题的相关子事件信息
+        """
+        self.mongo[self.sub_events_collection].remove({"eventid": self.id})
+
     def clear_news_label(self):
+        """清除话题的所有新闻的subeventid字段
+        """
         results = self.mongo[self.news_collection].find()
         for r in results:
             if 'subeventid' in r:

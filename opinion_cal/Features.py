@@ -17,13 +17,13 @@ class Feature(object):
         self.subeventid = subeventid
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
-    def set_newest(self, words, during):
-        """计算子事件最新的特征词并存储
+    def set_newest(self, words):
+        """存储子事件最新存量的特征词，pattern为"newest", top100, 为新文本分类服务
         """
-        pass
+        self.mongo[SUB_EVENTS_FEATURE_COLLECTION].save({"subeventid": self.subeventid, "pattern": "newest", "feature": words})
 
     def get_newest(self):
-        """获取子事件最新的特征词, top100
+        """获取子事件最新存量的特征词, pattern为"newest", top100, 为新文本分类服务
         """
         result = self.mongo[SUB_EVENTS_FEATURE_COLLECTION].find_one({"subeventid": self.subeventid, "pattern": "newest"})
         if result:
@@ -40,4 +40,9 @@ class Feature(object):
         """获取子事件某时间范围的特征词
         """
         pass
+
+    def clear_all_features(self):
+        """清除pattern为regular和newest的特征词
+        """
+        self.mongo[SUB_EVENTS_FEATURE_COLLECTION].remove({"subeventid": self.subeventid})
 
