@@ -4,102 +4,110 @@
 import json
 import time
 import datetime
-from opinion.model import *
-from opinion.extensions import db
-import search as searchModule
-from flask import Blueprint, url_for, render_template, request, abort, flash, session, redirect, make_response
-from get_result import *
-import heapq
+from collections import Counter
+from flask import Blueprint, url_for, render_template, request
+from Database import Event, EventManager, Feature
+from opinion.global_config import default_topic_name
 
-mod = Blueprint('opinion_news', __name__, url_prefix='/index')
+mod = Blueprint('news', __name__, url_prefix='/news')
 
-class TopkHeap(object):
-    def __init__(self, k):
-        self.k = k
-        self.data = []
- 
-    def Push(self, elem):
-        if len(self.data) < self.k:
-            heapq.heappush(self.data, elem)
-        else:
-            topk_small = self.data[0][0]
-            if elem[0] > topk_small:
-                heapq.heapreplace(self.data, elem)
- 
-    def TopK(self):
-        return [x for x in reversed([heapq.heappop(self.data) for x in xrange(len(self.data))])]
-
+em = EventManager()
 
 @mod.route('/')
-def meaning():
-    
-    topic = u'两会'
-    results = get_opinion_ratio(topic)
-    n = len(results)
+def index():
+    """返回页面
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+    n = event.getSubEventsLength() # 子事件的个数
 
+    # 话题简介
     content = u'在代表委员讨论里，在会内会外交流中，在达成的共识和成果里，改革，成为最强音，汇聚成澎湃激越的主旋律。从新的历史起点出发，全面深化改革的强劲引擎，将推动“中国号”巨轮，向着中国梦的美好目标奋勇前行.'
 
-    return render_template('index/semantic.html',topic = topic,n = n,content = content)
+    return render_template('index/semantic.html',topic=topic_name, n=n, content=content)
 
-@mod.route('/time/')
-def opinion_time():
-    topic = request.args.get('topic', '')
-    results = get_opinion_time(topic) # results=[[c_topic,start,end],....]
+@mod.route('/eventriver/')
+def eventriver():
+    """event river数据
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+    subeventlist = event.getEventRiverData()
 
-    if not results:
-        return 'no data in mysql'
-    
-    time_list = []
-    for i in range(0,len(results)):
-        k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
-        time_list.append([k,results[i][1],results[i][2]])
-    return json.dumps(time_list)
-
-@mod.route('/ratio/')
-def opinion_ratio():
-    topic = request.args.get('topic', '')
-    results = get_opinion_ratio(topic) # results=[[childtopic,ratio],....]
-
-    if not results:
-        return 'no data in mysql'
-    
-    ratio = dict()
-    for i in range(0,len(results)):
-        k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
-        ratio[k] = results[i][1]
-    return json.dumps(ratio)
+    return json.dumps({"name": topic_name, "type": "eventRiver", "eventlist": subeventlist})
 
 @mod.route('/keywords/')
 def opinion_keywords():
-    topic = request.args.get('topic', '')
-    results = get_opinion_keywords(topic) # results=[{childtopic:[(keywords,weight)]},.....]
+    """关键词云数据
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topk_keywords = request.args.get('topk', 50) # topk keywords
 
-    if not results:
-        return 'no data in mysql'
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+    subevents = event.getSubEvents()
 
-    ratio = dict()
-    for i in range(0,len(results)):
-        k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
-        ratio[k] = results[i][1]
-    return json.dumps(ratio)
+    subevent_keywords = dict()
+    counter = Counter()
+    for subevent in subevents:
+        feature = Feature(subevent["_id"])
+        counter.update(feature.get_newest())
+        top_keywords_count = counter.most_common(topk_keywords)
+        top5_keywords_count = counter.most_common(5)
+
+        subevent_top5_keywords = '-'.join([k for k, c in top5_keywords_count])
+        subevent_top5_count = sum([c for k, c in top5_keywords_count])
+        subevent_keywords[subevent["_id"]] = [(subevent_top5_keywords, subevent_top5_count), dict(top_keywords_count)]
+
+    return json.dumps(subevent_keywords)
+
+@mod.route('/ratio/')
+def opinion_ratio():
+    """子事件占比饼图数据
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+    subevents = event.getSubEvents()
+
+    subevent_keywords = dict()
+    counter = Counter()
+    for subevent in subevents:
+        feature = Feature(subevent["_id"])
+        counter.update(feature.get_newest())
+        top5_keywords_count = counter.most_common(5)
+        subevent_top5_keywords = '-'.join([k for k, c in top5_keywords_count])
+        subevent_keywords[subevent["_id"]] = subevent_top5_keywords
+
+    results = dict()
+    size_results = event.getSubEventSize(int(time.time()))
+    for label, size in size_results.iteritems():
+        keywords = subevent_keywords[label]
+        results[keywords] = size
+
+    return json.dumps(results)
 
 @mod.route('/weibos/')
 def opinion_weibos():
-    topic = request.args.get('topic', '')
-    results = get_opinion_weibos(topic) # results=[{childtopic:[{weibos,weight}]},.....]
+    """重要信息排序
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
 
-    if not results:
-        return 'no data in mysql'
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+    subevents = event.getSubEvents()
 
-    f_news = TopkHeap(10)
-    for i in range(0,len(results)):
-        k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
-        row = {'c_topic':k,'weight':results[i][1],'_id':results[i][2],'title':results[i][3],'content':results[i][4],'user':results[i][5],'time':results[i][6],'source':results[i][7],'c_source':results[i][8],'repeat':results[i][9]}
-        f_news.Push((results[i][1],row))
+    results = dict()
+    for subevent in subevents:
+        subeventid = subevent["_id"]
+        results[subeventid] = event.getSortedInfos(subeventid=subeventid)
 
-    data = f_news.TopK()
-    return json.dumps(data)
+    return json.dumps(results)
 
+"""
 @mod.route('/rank/')
 def opinion_rank():#自定义排序
     topic = request.args.get('topic', '')
@@ -144,5 +152,5 @@ def opinion_load_more():
     topic = request.args.get('topic', '')
 
     return render_template('index/load_more.html',topic=topic)    
-
+"""
     
