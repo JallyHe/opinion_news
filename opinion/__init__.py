@@ -2,8 +2,6 @@
 
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
-from extensions import db, admin
-from model_view import SQLModelView
 from opinion.news.views import mod as newsModule
 
 def create_app():
@@ -24,16 +22,15 @@ def create_app():
     # debug toolbar
     # toolbar = DebugToolbarExtension(app)
 
-    # Create database
-    db.init_app(app)
-    with app.test_request_context():
-        db.create_all()
+    # the debug toolbar is only enabled in debug mode
+    app.config['DEBUG'] = True
 
-    # # Create admin
-    # admin.init_app(app)
-    # for m in model.__all__:
-    #     m = getattr(model, m)
-    #     n = m._name()
-    #     admin.add_view(SQLModelView(m, db.session, name=n))
+    app.config['ADMINS'] = frozenset(['youremail@yourdomain.com'])
+    app.config['SECRET_KEY'] = 'SecretKeyForSessionSigning'
+    app.config['THREADS_PER_PAGE'] = 8
+
+    app.config['CSRF_ENABLED'] = True
+    app.config['CSRF_SESSION_KEY'] = 'somethingimpossibletoguess'
 
     return app
+

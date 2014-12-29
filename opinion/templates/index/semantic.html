@@ -11,8 +11,6 @@
     <link type="text/css" rel="stylesheet" href="/static/css/css/table.css">
     <link rel="stylesheet" href="/static/css/css/tab.css" type="text/css" media="all">
 
-
-
         <style type="text/css">
         /* keywords tag cloud */
         #keywords_cloud_div {
@@ -296,8 +294,8 @@
 {% endblock head_css %}
 
 {% block head_js %}
-    <script src="/static/css/js/miaov.js" type="text/javascript"></script>
-    <script src="/static/css/js/timeline.js"></script>
+    <!--<script src="/static/css/js/miaov.js" type="text/javascript"></script>
+    <script src="/static/css/js/timeline.js"></script>-->
     <script src="/static/css/js/echarts-all.js"></script>
 {% endblock head_js %}
 
@@ -433,10 +431,13 @@
         $("#table_pie_tooltip").tooltip();
         $("#weibo_tooltip").tooltip();
     </script>
+    <!--
     <script src="/static/css/js/tab.js" type="text/javascript"></script>
     <script src="/static/js/api/cloud_keywords.js" type="text/javascript"></script>
+    -->
     <script src="/static/css/js/timeline_pie_text.js" type="text/javascript"></script>
     <script type="text/javascript" charset="utf-8">
+        /*
   function display_drop(){
     var lis = document.getElementById("whole_rank_method_dropdown_menu");
     lis.style.display='block';
@@ -487,6 +488,6 @@
             }           
         });
                                   
-    });
+    });*/
     </script>
 {% endblock tail_js %}
