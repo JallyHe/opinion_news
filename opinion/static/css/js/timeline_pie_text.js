@@ -277,7 +277,7 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             html += '<div class="weibo_info">';
         	html += '<div class="weibo_pz" style="margin-right:10px;">';
         	html += '<span id="detail_' + d['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + d['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
-        	html += '<a class="undlin" href="javascript:;" target="_blank" onclick="open_same_list(\'' + d['_id'] + '\')";>相似新闻(' + same_text_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
+        	html += '<a class="undlin" href="javascript:;" target="_blank" onclick="open_same_list(\'' + d['_id'] + '\')";>相似新闻(' + same_text_count + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
         	html += "</div>";
         	html += '<div class="m">';
         	html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
@@ -289,7 +289,7 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             for (var i=0;i<same_text_count;i++){
                 var dd = d['same_list'][i];
                 html += '<div class="inner-same inner-same-' + d['_id'] + '" style="display:none;">';
-                html += '<li class="item" style="width:1010px">';
+                html += '<li class="item" style="width:1000px; border:2px solid">';
 	            html += '<div class="weibo_detail" >';
 	            html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + dd['source_from_name'] + '</a>&nbsp;&nbsp;发布:';
 	            html += '<span class="title" style="color:#0000FF" id="' + dd['_id'] + '"><b> ' + dd['title'] + ' </b></span>';
@@ -298,7 +298,7 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
 	            html += '</p>';
 	            html += '<div class="weibo_info">';
 	        	html += '<div class="weibo_pz" style="margin-right:10px;">';
-	        	html += '<span id="detail_' + dd['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + dd['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
+	        	html += '<span id="detail_' + dd['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + dd['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;&nbsp;&nbsp;';
 	        	html += "</div>";
 	        	html += '<div class="m">';
 	        	html += '<a class="undlin" target="_blank" >' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
