@@ -154,75 +154,142 @@
             color: #f367a7;
             border-color: #f367a7
         }
-        .weibo_list_height {
-            max-height: 670px;
-        }
+ 
+
         .scrolls {
+
             overflow: hidden;
+
         }
+
         .tang-scrollpanel {
+
             overflow: hidden;
+
         }
+
         .tang-scrollpanel .tang-scrollpanel-wrapper {
+
             position: relative;
+
             overflow: hidden;
-            height: 400px;
+
             width: 100%!important;
+
         }
+
         .tang-scrollpanel .tang-scrollpanel-content {
+
             position: absolute;
+
             left: 0;
+
             top: 0;
+
             width: 100%!important;
+
         }
+
         .tang-scrollpanel .tang-slider {
+
             position: absolute;
+
             top: 0;
+
             right: 0;
+
             font-size: 0;
+
         }
+
         .tang-scrollpanel .tang-slider-vtl {
+
             height: 100%;
+
         }
-        li.item {
+
+        .weibo_list li.item {
+
             line-height: 18px;
+
             border-bottom: 1px solid #f5f5f5;
+
             padding: 9px 10px 10px 0;
+
             min-height: 55px;
+
             _height: 55px;
+
         }
+
         .weibo_face {
+
             position: relative;
+
             float: left;
+
             width: 50px;
-            margin-top: 2px;
+
+            margin-top: 3px;
+
         }
+
         .weibo_list a {
+
             text-decoration: none;
+
         }
+
         .weibo_face img {
+
             width: 50px;
+
             height: 50px;
+
         }
+
         .weibo_detail {
-            margin-left: 65px;
+
+            margin-left: 0px;
+
         }
+
         .weibo_list a.undlin {
+
             text-decoration: underline;
+
         }
+
         .weibo_info {
+
             margin-top: 7px;
+
             color: #666;
+
         }
+
         .weibo_info .weibo_pz {
+
             float: right;
+
             color: #858585;
+
             height: 18px;
+
             line-height: 18px;
+
         }
+
         .weibo_info .m a {
+
             color: #666;
+
         }
+		a:-webkit-any-link {
+		color: -webkit-link;
+		text-decoration: underline;
+		cursor: auto;
+		}
         tr {
             height:23px;
         }
@@ -251,7 +318,6 @@
             box-sizing: border-box;
         }
         .inner-same {
-            padding: 15px;
             border: solid 1px #F3DDB3;
             background: #FFFEF4;
             color: #999;
@@ -416,9 +482,17 @@
                 </div>
             </div>
             <div class="tabConts">
-                <div id="weibos_div" style="height:1200px;float:left;">
+                <div id="weibos_div" style="width:1000px;float:left;">
                     <div class="tabCon">
-                        <div class="cur" id="vertical-ticker" style="height:400px; width:950px;"></div>
+                        <div id="weibo_list" class="weibo_list weibo_list_height scrolls tang-scrollpanel">
+                        	<div id="content_control_height" class="tang-scrollpanel-wrapper">
+                                <div class="tang-scrollpanel-content">
+                        			<ul id="weibo_ul">
+
+                            		</ul>
+                            	</div>
+                            </div>
+                        <div>
                     </div>
                 </div>
             </div>
