@@ -230,26 +230,16 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
 
 //把子话题输出
 function drawSubeventTab(data){
-	var result = [];
-	var result1 = [];
-	var result2 = [];            		
-	var html = "<tbody>";
+    data = data['eventList'];
+    var html = '<div class="btn-group btn-group-justified">';
     for (var i = 0;i < data.length;i++) {
-        result[i] = data[i][1]; //开始时间
-        result1[i] = data[i][2];  //结束时间                 
-        var s = i.toString();
-        result2[i] = data[i][0]; 
-        if ((i+1)%5 == 1){
-        	html+='<tr><td style ="padding:5px;padding-left:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td>';
-        }
-        else if ((i+1)%5 == 0){
-        	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td></tr>';
-        }
-        else{
-        	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td>';
-        }       
+        var begin_time = data[i]['evolution'][0]['time']; //开始时间
+        var name = data[i]['name']; 
+        html += '<div class="btn-group">';
+        html += '<button type="button" class="btn btn-default">' + name + '</button>';
+        html += '</div>';
     }
-    html+='</tbody>';
+    html += '</div>';
     $("#checkbox").append(html);
 }
 

@@ -18,6 +18,12 @@ class EventManager(object):
     def __init__(self):
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
+    def getEvents(self):
+        """获取话题
+        """
+        results = self.mongo[EVENTS_COLLECTION].find()
+        return [r for r in results]
+
     def getActiveEventIDs(self, timestamp):
         """获取活跃话题的ID
            input:
