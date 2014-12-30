@@ -311,7 +311,6 @@
         <div class="titlBar" style="padding-bottom:25px;">
             <h4><b style="font-size:20px">时间轴</b></h4>
             <i id="timeline_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="时间轴：可视化信息中子话题起止时间"></i>&nbsp;&nbsp;
-
         </div>
 
         <div class="tabUnit">
@@ -324,26 +323,20 @@
         </div>
     </div>
 
-    <div class="well">
-        &nbsp&nbsp&nbsp<p class="btn btn-warning btn-xs" style="font-size:16px;">排序标准</p>
-        <div class="btn-group">
-            <p id="whole_rank_method_choosen" class="btn btn-inverse" onClick="display_drop()" style="font-size:16px;">
-                代表性
-            <span class="caret"></span>
-            </p>
-            <ul id="whole_rank_method_dropdown_menu" class="dropdown-menu">
-                <li><p class="btn btn-inverse" onClick="choose_method('whole', 'represent');" style="font-size:16px;">代表性</p></li>
-                <li><p class="btn btn-inverse" onClick="choose_method('whole', 'time');" style="font-size:16px;">时间</a></li>
-            </ul>
+    <div class="blkUnit grpUnit" style="float:left;" id="subevent_sel">
+        <div class="titlBar" style="padding-bottom:25px;">
+            <h4><b style="font-size:20px">子话题选择</b></h4>
+            <i id="cloud_pie_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="关键词云:热点关键词信息；各类信息占比分析:4类信息-积极、悲伤、愤怒、新闻占比"></i>&nbsp;&nbsp;
+            <span id="peak_cloudpie_tooltip"></span>
+        </div>
 
-        </div>
-        <div style="padding-top:10px;">
-            &nbsp&nbsp&nbsp<p class="btn btn-success btn-xs" style="font-size:16px;">子话题选择</p>
-        </div>
-        <table id ="checkbox">
-        </table>
-        <div style="padding-top:5px;padding-right:50px;" align="right">
-            <p class="btn btn-info btn-xs" id="rank" style="font-size:16px;height:30px;width:60px;">确定</p>
+        <div class="tabUnit">
+            <div class="tabTitle" style="padding-top:1px;"></div>
+            <div class="tabConts">
+                <div style="width:1033px;">
+                    <div id ="checkbox"></div>
+                </div>
+            </div>
         </div>
     </div>
 

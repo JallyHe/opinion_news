@@ -5,6 +5,7 @@ import json
 import time
 import datetime
 from collections import Counter
+from utils import ts2datetime
 from flask import Blueprint, url_for, render_template, request
 from Database import Event, EventManager, Feature
 from opinion.global_config import default_topic_name
@@ -34,6 +35,31 @@ def mange():
     """
     content = u'在代表委员讨论里，在会内会外交流中，在达成的共识和成果里，改革，成为最强音，汇聚成澎湃激越的主旋律。从新的历史起点出发，全面深化改革的强劲引擎，将推动“中国号”巨轮，向着中国梦的美好目标奋勇前行.'
     return render_template('index/opinion.html',content=content )
+
+@mod.route('/topics/')
+def topics():
+    """返回话题数据
+    """
+    em = EventManager()
+    results = em.getEvents()
+    final = []
+    for r in results:
+        topic = dict()
+        try:
+            topic['_id'] = str(r['_id'])
+            topic['name'] = r['topic']
+            topic['start_datetime'] = ts2datetime(r['startts'])
+            if 'endts' in r:
+                topic['end_datetime'] = ts2datetime(r['endts'])
+
+            topic['status'] = r['status']
+            topic['last_modify'] = ts2datetime(r['last_modify'])
+            topic['modify_success'] = r['modify_success']
+            final.append(topic)
+        except KeyError:
+            pass
+
+    return json.dumps(final)
 
 @mod.route('/eventriver/')
 def eventriver():
