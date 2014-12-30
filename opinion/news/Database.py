@@ -110,10 +110,11 @@ class Event(object):
         cluster_date = dict()
         for r in results:
             label = r['subeventid']
+            date = time.strftime('%Y-%m-%d', time.localtime(r['timestamp']))
             try:
-                cluster_date[label].append(r['date'])
+                cluster_date[label].append(date)
             except KeyError:
-                cluster_date[label] = [r['date']]
+                cluster_date[label] = [date]
 
         from collections import Counter
         results = []
@@ -127,7 +128,7 @@ class Event(object):
             counter = Counter(dates)
             date_count_dict = dict(counter.most_common())
             sorted_date_count = sorted(date_count_dict.iteritems(), key=lambda(k, v): k, reverse=False)
-            evolution_list = [{"time": date, "value": count} for date, count in sorted_date_count]
+            evolution_list = [{"time": date, "value": count, "detail": {"text": str(count), "link": "#"}} for date, count in sorted_date_count]
             cluster_result = {"name": cluster_keywords, "weight": len(dates), "evolution": evolution_list}
             results.append(cluster_result)
 
@@ -271,6 +272,7 @@ class Event(object):
                     unique_ids.add(r['same_from'])
 
             sorted_results = sorted(unique_items.iteritems(), key=lambda(k, v): v[key], reverse=True)
+            sorted_results = [[news['weight'], news]  for id, news in sorted_results]
             return sorted_results
 
         if subeventid:

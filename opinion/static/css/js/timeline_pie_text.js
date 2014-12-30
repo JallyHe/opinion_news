@@ -28,16 +28,16 @@ function Opinion_timeline(query, start_ts, end_ts){
     this.min_keywords_size = 5;
     this.top_weibos_limit = 50; // 和计算相关的50，实际返回10
 	this.timeLine_ajax_url = function(query, start_ts, end_ts){
-		return "/index/time/?topic=" + query;
+		return "/news/eventriver/?query=" + query;
 	}
 	this.pie_ajax_url = function(query, start_ts, end_ts){
-		return "/index/ratio/?topic=" + query;
+		return "/news/ratio/?query=" + query;
 	}
 	this.cloud_ajax_url = function(query, start_ts, end_ts){
-		return "/index/keywords/?&topic=" + query;
+		return "/news/keywords/?query=" + query;
 	}
 	this.weibo_ajax_url = function(query, start_ts, end_ts){
-		return "/index/weibos/?&topic=" + query;
+		return "/news/weibos/?query=" + query;
 	}
 	this.ajax_method = "GET";
 	this.call_sync_ajax_request = function(url, method, callback){
@@ -54,12 +54,11 @@ function Opinion_timeline(query, start_ts, end_ts){
 Opinion_timeline.prototype.pull_timeline_data = function(){
 	var that = this; //向下面的函数传递获取的值
 	var ajax_url = this.timeLine_ajax_url(this.query, this.start_ts, this.end_ts); //传入参数，获取请求的地址
-	console.log('timeline');
+	//console.log('timeline');
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Timeline_function); //发起ajax的请求
 	
 	function Timeline_function(data){    //数据的处理函数
-		console.log(data);
-		drawTab(data);
+		drawSubeventTab(data);
 		event_river(data);
 	} 
 }
@@ -67,11 +66,11 @@ Opinion_timeline.prototype.pull_timeline_data = function(){
 Opinion_timeline.prototype.pull_pie_data = function(){
 	var that = this;
 	var ajax_url = this.pie_ajax_url(this.query, this.start_ts, this.end_ts);
-	console.log('pie');
+	//console.log('pie');
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Pie_function);
 	
 	function Pie_function(data){    //数据的处理函数
-		console.log(data);
+		//console.log(data);
 		refreshPiedata(data);
 	} 
 }
@@ -79,7 +78,7 @@ Opinion_timeline.prototype.pull_pie_data = function(){
 Opinion_timeline.prototype.pull_cloud_data = function(){
 	var that = this;
 	var ajax_url = this.cloud_ajax_url(this.query, this.start_ts, this.end_ts);
-	console.log('cloud');
+	//console.log('cloud');
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Cloud_function);
 
 	function Cloud_function(data){    //数据的处理函数
@@ -91,27 +90,27 @@ Opinion_timeline.prototype.pull_cloud_data = function(){
 Opinion_timeline.prototype.pull_weibo_data = function(){
 	var that = this;
 	var ajax_url = this.weibo_ajax_url(this.query, this.start_ts, this.end_ts);
-	console.log('weibo');
+
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Weibo_function);
 
-	function Weibo_function(data){    //数据的处理函数
-		console.log(data);
+	function Weibo_function(data){  
 		refreshWeibodata(data);
 	} 
 }
+
 //事件流的展示
 function event_river(data){
     option = {
 	    title : {
-	        text: 'Event River',
-	        subtext: '纯属虚构'
+	        text: '事件流',
+	        //subtext: '纯属虚构'
 	    },
 	    tooltip : {
 	        trigger: 'item',
 	        enterable: true
 	    },
 	    legend: {
-	        data:['财经事件', '政治事件']
+	        data:[data['name']]
 	    },
 	    toolbox: {
 	        show : true,
@@ -127,335 +126,14 @@ function event_river(data){
 	            boundaryGap: [0.05,0.1]
 	        }
 	    ],
-	    series : [
-	        {
-	            "name": "财经事件", 
-	            "type": "eventRiver", 
-	            "weight": 123, 
-	            "eventList": [
-	                {
-	                    "name": "阿里巴巴上市", 
-	                    "weight": 123, 
-	                    "evolution": [
-	                        {
-	                            "time": "2014-05-01", 
-	                            "value": 14, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-02", 
-	                            "value": 34, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-03", 
-	                            "value": 60, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-04", 
-	                            "value": 40, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-05", 
-	                            "value": 10, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }
-	                    ]
-	                }, 
-	                {
-	                    "name": "阿里巴巴上市2", 
-	                    "weight": 123, 
-	                    "evolution": [
-	                        {
-	                            "time": "2014-05-02", 
-	                            "value": 10, 
-	                            "detail": {
-	                                "link": "www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-03", 
-	                            "value": 34, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-04", 
-	                            "value": 40, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-05", 
-	                            "value": 10, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }
-	                    ]
-	                }, 
-	                {
-	                    "name": "三星业绩暴跌", 
-	                    "weight": 123, 
-	                    "evolution": [
-	                        {
-	                            "time": "2014-05-03", 
-	                            "value": 24, 
-	                            "detail": {
-	                                "link": "www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-04", 
-	                            "value": 34, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-05", 
-	                            "value": 50, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-06", 
-	                            "value": 30, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-07", 
-	                            "value": 20, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }
-	                    ]
-	                }
-	            ]
-	        }, 
-	        {
-	            "name": "政治事件", 
-	            "type": "eventRiver", 
-	            "weight": 123, 
-	            "eventList": [
-	                {
-	                    "name": "Apec峰会", 
-	                    "weight": 123, 
-	                    "evolution": [
-	                        {
-	                            "time": "2014-05-06", 
-	                            "value": 14, 
-	                            "detail": {
-	                                "link": "www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-07", 
-	                            "value": 34, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-08", 
-	                            "value": 60, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-09", 
-	                            "value": 40, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-10", 
-	                            "value": 20, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }
-	                    ]
-	                }, 
-	                {
-	                    "name": "运城官帮透视", 
-	                    "weight": 123, 
-	                    "evolution": [
-	                        {
-	                            "time": "2014-05-08", 
-	                            "value": 4, 
-	                            "detail": {
-	                                "link": "www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-09", 
-	                            "value": 14, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-10", 
-	                            "value": 30, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-11", 
-	                            "value": 20, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-12", 
-	                            "value": 10, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }
-	                    ]
-	                }, 
-	                {
-	                    "name": "底层公务员收入超过副部长", 
-	                    "weight": 123, 
-	                    "evolution": [
-	                        {
-	                            "time": "2014-05-11", 
-	                            "value": 4, 
-	                            "detail": {
-	                                "link": "www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-12", 
-	                            "value": 24, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-13", 
-	                            "value": 40, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-14", 
-	                            "value": 20, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-15", 
-	                            "value": 15, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }, 
-	                        {
-	                            "time": "2014-05-16", 
-	                            "value": 10, 
-	                            "detail": {
-	                                "link": "http://www.baidu.com", 
-	                                "text": "百度指数", 
-	                                "img": '../asset/ico/favicon.png'
-	                            }
-	                        }
-	                    ]
-	                }
-	            ]
-	        }
-	    ]
+	    series : [data]
 	};
     var myChart = echarts.init(document.getElementById('event_river'));
     myChart.setOption(option);       
 }
 
 function refreshPiedata(data){
-	console.log(data);
+	//console.log(data);
 	var pie_data = [];
 	var One_pie_data = {};
 	for (var key in data){ 
@@ -538,7 +216,7 @@ function refreshDrawKeywords(that, keywords_data){
 	        var size = defscale(count, min_count, max_count, min_keywords_size, max_keywords_size);
 	        $('#'+keywords_div_id).append('<a><font style="color:' + color +  '; font-size:' + size + 'px;">' + keyword + '</font></a>');
 	    }
-	    on_load(keywords_div_id);
+	    	on_load(keywords_div_id);
 	}
 }
 // 根据权重决定字体大小
@@ -549,8 +227,9 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
         return minsize + 1.0 * (maxsize - minsize) * Math.pow((count / (maxcount - mincount)), 2)
     }
 }
+
 //把子话题输出
-function drawTab(data){
+function drawSubeventTab(data){
 	var result = [];
 	var result1 = [];
 	var result2 = [];            		
@@ -562,7 +241,7 @@ function drawTab(data){
         result2[i] = data[i][0]; 
         if ((i+1)%5 == 1){
         	html+='<tr><td style ="padding:5px;padding-left:10px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td>';
-        }	
+        }
         else if ((i+1)%5 == 0){
         	html+='<td style ="padding:5px;width:180px;height:20px;font-size:14px;"><input type="checkbox" value = '+ s +' name="c_topic">'+result2[i]+'</td></tr>';
         }
@@ -577,34 +256,65 @@ function drawTab(data){
 function refreshWeibodata(data){  //需要传过来的是新闻的data
     $("#vertical-ticker").empty();
 	var html = "";
-	for(var i = 0; i < data.length; i += 1){
-		var da = data[i][1];
-		var c_topic = da['c_topic'];
-		var mid = da['_id'];
-		var user = da['user'];
-		var title = da['title'];
-		var content = da['content'];
-		if (content.length>200){
-			new_content = ''
-			for(var j=0; j<200; j+=1){
-				new_content += content[j];
-			}
-			new_content +=  '...';
-		}
-		var time = da['time'];
-		var new_data = new Date(time * 1000).format("yyyy年MM月dd日 hh:mm:ss")
-		var source = da['source'];
-		html += '<div class="inner">';
-		html += '<span class="title" style="color:#0000FF"><b>'+ mid +':'+ c_topic + '</b></span><br>';
-		html += '<span class="title" style="color:#0000FF"><b>'+ title + '</b></span><br/>';
-		html += '<span>'+ new_content+ '</span><br>'; 
-		html += '<span style="float:right;">'+new_data + user +"发布于"+source;                      
-		html +='</div>';
-	}
-	$("#vertical-ticker").append(html);
+	for(var c_topic in data){
+		var da = data[c_topic];
+        for ( e in da){
+            var d = da[e][1];
+            var content_summary = d['content168'].substring(0, 168) + '...';
+            if (d['same_list'] == undefined){
+                var same_text_count = 0;
+            }
+            else{
+                var same_text_count = d['same_list'].length;
+            }
+            html += '<div class="inner">';
+            html += '<span class="title" style="color:#0000FF" id="' + d['_id'] + '"><b>' + d['title'] + '</b></span><br>';
+            html += '<span id="content_summary_' + d['_id']  + '">' + content_summary + '&nbsp;&nbsp;</span>';
+            html += '<span style="display: none;" id="content_' + d['_id']  + '">' + d['content168'] + '&nbsp;&nbsp;</span>';
+            html += '<span id="detail_' + d['_id'] + '"><a onclick="detail_text(\'' + d['_id'] + '\');">阅读全文</a>&nbsp;&nbsp;</span>';
+            html += '<span><a onclick="open_same_list(\'' + d['_id']  + '\')">相似新闻(' + same_text_count + ')</a></span><br>';
+            html += '<span style="float:right;">' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss") +  " 发布于"+ d['source_from_name'] + " 转载于" + d["transmit_name"] + '</span>';
+            html += '</div>';
+            for (var i=0;i<same_text_count;i++){
+                var dd = d['same_list'][i];
+                html += '<div class="inner-same inner-same-' + d['_id'] + '" style="display:none;">';
+                html += '<span class="title" style="color:#0000FF" id="' + dd['_id'] + '"><b>' + dd['title'] + '</b></span><br>';
+                html += '<span id="content_summary_' + dd['_id']  + '">' + content_summary + '&nbsp;&nbsp;</span>';
+                html += '<span style="display: none;" id="content_' + dd['_id']  + '">' + dd['content168'] + '&nbsp;&nbsp;</span>';
+                html += '<span id="detail_' + dd['_id'] + '"><a onclick="detail_text(\'' + dd['_id'] + '\');">阅读全文</a>&nbsp;&nbsp;</span>';
+                html += '<span style="float:right;">' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss") +  " 发布于"+ dd['source_from_name'] + " 转载于" + dd["transmit_name"] + '</span>';
+                html += '</div>';
+            }
+        }
+    }
+    $("#vertical-ticker").append(html);
 }
+
+function summary_text(text_id){
+    $("#content_summary_" + text_id).css("display", "inline");
+    $("#content_" + text_id).css("display", "none");
+    $("#detail_" + text_id).html("<a onclick=\"detail_text(\'" + text_id + "\');\">阅读全文</a>&nbsp;&nbsp;");
+}
+
+function detail_text(text_id){
+    $("#content_summary_" + text_id).css("display", "none");
+    $("#content_" + text_id).css("display", "inline");
+    $("#detail_" + text_id).html("<a onclick=\"summary_text(\'" + text_id + "\');\">阅读概述</a>&nbsp;&nbsp;");
+}
+
+function open_same_list(text_id){
+    $(".inner-same-" + text_id).each(function(){
+        if( $(this).css("display") == "none"){
+            $(this).css("display", "inline");
+        }
+        else{
+            $(this).css("display", "none");
+        }
+    });
+}
+
 //画关键字表格的代码，现在已经没有了
-function drawtable(data){           
+function drawtable(data){
     var topic_child_keywords = {};
     var html = '';
     var target_html = '';
@@ -632,11 +342,11 @@ function drawtable(data){
     $("#alternatecolor").append(html);
 }
 
-var query = '两会';
+var query = QUERY;
 var start_ts = 1354896458;
 var end_ts = 154686446564;
 Timeline = new Opinion_timeline(query, start_ts, end_ts);
+Timeline.pull_timeline_data();
 Timeline.pull_cloud_data();
 Timeline.pull_weibo_data();
 Timeline.pull_pie_data();
-Timeline.pull_timeline_data();

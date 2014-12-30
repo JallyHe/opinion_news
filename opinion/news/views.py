@@ -23,9 +23,17 @@ def index():
     n = event.getSubEventsLength() # 子事件的个数
 
     # 话题简介
-    content = u'在代表委员讨论里，在会内会外交流中，在达成的共识和成果里，改革，成为最强音，汇聚成澎湃激越的主旋律。从新的历史起点出发，全面深化改革的强劲引擎，将推动“中国号”巨轮，向着中国梦的美好目标奋勇前行.'
+    # content = u'在代表委员讨论里，在会内会外交流中，在达成的共识和成果里，改革，成为最强音，汇聚成澎湃激越的主旋律。从新的历史起点出发，全面深化改革的强劲引擎，将推动“中国号”巨轮，向着中国梦的美好目标奋勇前行.'
+    content = ""
 
     return render_template('index/semantic.html',topic=topic_name, n=n, content=content)
+
+@mod.route('/mange/')
+def mange():
+    """返回页面
+    """
+    content = u'在代表委员讨论里，在会内会外交流中，在达成的共识和成果里，改革，成为最强音，汇聚成澎湃激越的主旋律。从新的历史起点出发，全面深化改革的强劲引擎，将推动“中国号”巨轮，向着中国梦的美好目标奋勇前行.'
+    return render_template('index/opinion.html',content=content )
 
 @mod.route('/eventriver/')
 def eventriver():
@@ -36,7 +44,7 @@ def eventriver():
     event = Event(topicid)
     subeventlist = event.getEventRiverData()
 
-    return json.dumps({"name": topic_name, "type": "eventRiver", "eventlist": subeventlist})
+    return json.dumps({"name": topic_name, "type": "eventRiver", "eventList": subeventlist})
 
 @mod.route('/keywords/')
 def opinion_keywords():
@@ -50,14 +58,14 @@ def opinion_keywords():
     subevents = event.getSubEvents()
 
     subevent_keywords = dict()
-    counter = Counter()
     for subevent in subevents:
         feature = Feature(subevent["_id"])
+        counter = Counter()
         counter.update(feature.get_newest())
         top_keywords_count = counter.most_common(topk_keywords)
-        top5_keywords_count = counter.most_common(5)
+        top5_keywords_count = counter.most_common(3)
 
-        subevent_top5_keywords = '-'.join([k for k, c in top5_keywords_count])
+        subevent_top5_keywords = ','.join([k for k, c in top5_keywords_count])
         subevent_top5_count = sum([c for k, c in top5_keywords_count])
         subevent_keywords[subevent["_id"]] = [(subevent_top5_keywords, subevent_top5_count), dict(top_keywords_count)]
 
@@ -68,25 +76,27 @@ def opinion_ratio():
     """子事件占比饼图数据
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
+    topk_keywords = request.args.get('topk', 3)
 
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
     subevents = event.getSubEvents()
 
     subevent_keywords = dict()
-    counter = Counter()
     for subevent in subevents:
         feature = Feature(subevent["_id"])
+        counter = Counter()
         counter.update(feature.get_newest())
-        top5_keywords_count = counter.most_common(5)
-        subevent_top5_keywords = '-'.join([k for k, c in top5_keywords_count])
+        top5_keywords_count = counter.most_common(topk_keywords)
+        subevent_top5_keywords = ','.join([k for k, c in top5_keywords_count])
         subevent_keywords[subevent["_id"]] = subevent_top5_keywords
 
     results = dict()
     size_results = event.getSubEventSize(int(time.time()))
+    total_size = sum(size_results.values())
     for label, size in size_results.iteritems():
         keywords = subevent_keywords[label]
-        results[keywords] = size
+        results[keywords] = float(size) / float(total_size)
 
     return json.dumps(results)
 

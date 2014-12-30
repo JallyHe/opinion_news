@@ -1,0 +1,462 @@
+{% extends "mbase.html" %}
+{% block module_title %}新闻评论观点分析{% endblock %}
+
+{% block head_css %}
+    <link type="text/css" rel="stylesheet" href="/static/css/css/timeline.css">
+    <link type="text/css" rel="stylesheet" href="/static/css/css/table.css">
+    <link rel="stylesheet" href="/static/css/css/tab.css" type="text/css" media="all">
+
+
+
+        <style type="text/css">
+        /* keywords tag cloud */
+        #keywords_cloud_div {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0px auto 0
+        }
+
+        #keywords_cloud_div a {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            font-family: Microsoft YaHei;
+            color: #AD12C2;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 3px 6px;
+        }
+
+        #keywords_cloud_div a:hover {
+            border: 1px solid #eee;
+            background: #000;
+        }
+        #keywords_cloud_div .blue {
+            color: blue;
+        }
+        #keywords_cloud_div .red {
+            color: red;
+        }
+        #keywords_cloud_div .yellow {
+            color: yellow;
+        }
+
+        #trend_div {
+            height: 270px;
+            width: 100%;
+            float: left;
+            border: 1px solid #F0F0F0;
+            background: #F0F0F0;
+        }
+
+        .blkUnit {
+            position: relative;
+            clear: both;
+            margin-top: 25px;
+            background-color: #fff;
+        }
+        .blkUnit .titlBar {
+            z-index: 4;
+            position: relative;
+            height: 16px;
+            padding: 20px;
+            background-color: #f6f6f6;
+        }
+        .titlBar h4 {
+            display: inline-block;
+            margin-top: -5px;
+            padding-right: 0px;
+            font-size: 15px;
+            color: #666;
+        }
+        .titlBar .compInfo {
+            padding-right: 15px;
+            color: #858585;
+        }
+        .stmTabs{
+            padding: 20px;
+        }
+        .stmTabs .tabTitle {
+            height: 22px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .stmTabs .tabLi .nmTab, .stmTabs .tabLi .hvTab {
+            max-width: 110px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .stmTabs .tabLi .nmTab, .stmTabs .tabLi .hvTab {
+            height: 23px;
+            padding: 0 14px;
+            _float: left;
+        }
+        .stmTabs .tabLi {
+            display: block;
+            float: left;
+            text-decoration: none;
+            color: #666;
+        }
+        .stmTabs .tabLi .hvTab {
+            display: none;
+            color: #6e87d7;
+            height: 21px;
+            border-bottom: 2px solid #6e87d7;
+        }
+        .stmTabs .tabLi:hover .hvTab,.stmTabs .tabLi.curr .hvTab {
+            display: block
+        }
+        .stmTabs .tabLi:hover .nmTab,.stmTabs .tabLi.curr .nmTab {
+            display:none
+        }
+        .stmTabs .tabConts {
+            padding-bottom: 10px
+        }
+        .stmTabs .moreLnk {
+            float: right;
+            margin-bottom: -10px;
+            _position:relative
+        }
+        .stmTabs .moreLnk a {
+            text-decoration: none
+        }
+        .stmTabs .moreLnk a:hover {
+            text-decoration: underline
+        }
+        .stmTabs .tabLi .nmTab, .stmTabs .tabLi .hvTab {
+            max-width: 110px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap
+        }
+        .stmTabs .gColor0:hover .hvTab,.stmTabs .gColor0.curr .hvTab {
+            color: #6e87d7;
+            border-color: #6e87d7
+        }
+        .stmTabs .gColor1:hover .hvTab,.stmTabs .gColor1.curr .hvTab {
+            color: #11c897;
+            border-color: #11c897
+        }
+        .stmTabs .gColor2:hover .hvTab,.stmTabs .gColor2.curr .hvTab {
+            color: #fa7256;
+            border-color: #fa7256;
+        }
+        .stmTabs .gColor3:hover .hvTab,.stmTabs .gColor3.curr .hvTab {
+            color: #b172c5;
+            border-color: #b172c5
+        }
+        .stmTabs .gColor4:hover .hvTab,.stmTabs .gColor4.curr .hvTab {
+            color: #f367a7;
+            border-color: #f367a7
+        }
+        .weibo_list_height {
+            max-height: 670px;
+        }
+        .scrolls {
+            overflow: hidden;
+        }
+        .tang-scrollpanel {
+            overflow: hidden;
+        }
+        .tang-scrollpanel .tang-scrollpanel-wrapper {
+            position: relative;
+            overflow: hidden;
+            height: 400px;
+            width: 100%!important;
+        }
+        .tang-scrollpanel .tang-scrollpanel-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%!important;
+        }
+        .tang-scrollpanel .tang-slider {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 0;
+        }
+        .tang-scrollpanel .tang-slider-vtl {
+            height: 100%;
+        }
+        li.item {
+            line-height: 18px;
+            border-bottom: 1px solid #f5f5f5;
+            padding: 9px 10px 10px 0;
+            min-height: 55px;
+            _height: 55px;
+        }
+        .weibo_face {
+            position: relative;
+            float: left;
+            width: 50px;
+            margin-top: 2px;
+        }
+        .weibo_list a {
+            text-decoration: none;
+        }
+        .weibo_face img {
+            width: 50px;
+            height: 50px;
+        }
+        .weibo_detail {
+            margin-left: 65px;
+        }
+        .weibo_list a.undlin {
+            text-decoration: underline;
+        }
+        .weibo_info {
+            margin-top: 7px;
+            color: #666;
+        }
+        .weibo_info .weibo_pz {
+            float: right;
+            color: #858585;
+            height: 18px;
+            line-height: 18px;
+        }
+        .weibo_info .m a {
+            color: #666;
+        }
+        tr {
+            height:23px;
+        }
+        table.altrowstable td {
+            border-width: 1px;
+            padding: 0px;
+            height: 22px;
+ 
+            border-color: #a9c6c9;
+        }
+        table.altrowstable th {
+            border-width: 1px;
+            padding-left: 5px;
+            border-style: solid;
+            border-color: #a9c6c9;
+        }
+        .tablecurrent {
+            background-color:#3385ff;
+        }
+        .input_curr{
+            checked: "checked";
+        }
+        .inner {
+            padding: 10px;
+            border: 1px #000 dotted solid;
+            box-sizing: border-box;
+        }
+        .navbar-inner {
+            background-color: #02C874;
+        }
+        .title {
+            color: #02C874;
+            font-size: 15px;
+            border: 1px #000 dotted solid;
+        }
+        #keywords_cloud_div {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0px auto 0
+        }
+
+        #keywords_cloud_div a {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            font-family: Microsoft YaHei;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 3px 6px;
+        }
+
+        #keywords_cloud_div a:hover {
+            border: 1px solid #eee;
+            background-color: #FFF;
+        }
+        #keywords_cloud_div .blue {
+            color: blue;
+        }
+        #keywords_cloud_div .red {
+            color: red;
+        }
+        #keywords_cloud_div .yellow {
+            color: yellow;
+        }
+
+		table {
+		    *border-collapse: collapse; /* IE7 and lower */
+		    border-spacing: 0;
+		    width: 100%;    
+		}
+
+		.bordered {
+		    border: solid #ccc 1px;
+		    -moz-border-radius: 6px;
+		    -webkit-border-radius: 6px;
+		    border-radius: 6px;
+		    -webkit-box-shadow: 0 1px 1px #ccc; 
+		    -moz-box-shadow: 0 1px 1px #ccc; 
+		    box-shadow: 0 1px 1px #ccc;         
+		}
+
+		.bordered tr:hover {
+		    background: #fbf8e9;
+		    -o-transition: all 0.1s ease-in-out;
+		    -webkit-transition: all 0.1s ease-in-out;
+		    -moz-transition: all 0.1s ease-in-out;
+		    -ms-transition: all 0.1s ease-in-out;
+		    transition: all 0.1s ease-in-out;     
+		}    
+		    
+		.bordered td, .bordered th {
+		    border-left: 1px solid #ccc;
+		    border-top: 1px solid #ccc;
+		    padding: 10px;
+		    text-align: left;    
+		}
+
+		.bordered th {
+		    background-color: #dce9f9;
+		    background-image: -webkit-gradient(linear, left top, left bottom, from(#ebf3fc), to(#dce9f9));
+		    background-image: -webkit-linear-gradient(top, #ebf3fc, #dce9f9);
+		    background-image:    -moz-linear-gradient(top, #ebf3fc, #dce9f9);
+		    background-image:     -ms-linear-gradient(top, #ebf3fc, #dce9f9);
+		    background-image:      -o-linear-gradient(top, #ebf3fc, #dce9f9);
+		    background-image:         linear-gradient(top, #ebf3fc, #dce9f9);
+		    -webkit-box-shadow: 0 1px 0 rgba(255,255,255,.8) inset; 
+		    -moz-box-shadow:0 1px 0 rgba(255,255,255,.8) inset;  
+		    box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;        
+		    border-top: none;
+		    text-shadow: 0 1px 0 rgba(255,255,255,.5); 
+		}
+
+		.bordered td:first-child, .bordered th:first-child {
+		    border-left: none;
+		}
+
+		.bordered th:first-child {
+		    -moz-border-radius: 6px 0 0 0;
+		    -webkit-border-radius: 6px 0 0 0;
+		    border-radius: 6px 0 0 0;
+		}
+
+		.bordered th:last-child {
+		    -moz-border-radius: 0 6px 0 0;
+		    -webkit-border-radius: 0 6px 0 0;
+		    border-radius: 0 6px 0 0;
+		}
+
+		.bordered th:only-child{
+		    -moz-border-radius: 6px 6px 0 0;
+		    -webkit-border-radius: 6px 6px 0 0;
+		    border-radius: 6px 6px 0 0;
+		}
+
+		.bordered tr:last-child td:first-child {
+		    -moz-border-radius: 0 0 0 6px;
+		    -webkit-border-radius: 0 0 0 6px;
+		    border-radius: 0 0 0 6px;
+		}
+
+		.bordered tr:last-child td:last-child {
+		    -moz-border-radius: 0 0 6px 0;
+		    -webkit-border-radius: 0 0 6px 0;
+		    border-radius: 0 0 6px 0;
+		}
+
+    </style>
+{% endblock head_css %}
+
+{% block head_js %}
+{% endblock head_js %}
+
+{% block content %}
+    <div class="blkUnit grpUnit" id="trendProfile">
+        <div class="titlBar" style="padding-bottom:25px;">
+            <h4><b style="font-size:20px">时间轴</b></h4>
+            <i id="timeline_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="时间轴：可视化信息中子话题起止时间"></i>&nbsp;&nbsp;
+
+        </div>
+
+        <div class="tabUnit">
+            <div class="tabTitle" style="padding-top:1px;background-color:#f6f6f6;" id="auto_gsid_3">
+            </div>
+            <div class="tabConts">
+                <div id="event_river"style="height:500px;width:1033px">
+					<table class="bordered">
+					    <thead>
+
+					    <tr>
+					        <th>#</th>        
+					        <th>IMDB Top 10 Movies</th>
+					        <th>Year</th>
+					    </tr>
+					    </thead>
+					    <tr>
+					        <td>1</td>        
+					        <td>The Shawshank Redemption</td>
+
+					        <td>1994</td>
+					    </tr>        
+					    <tr>
+					        <td>2</td>         
+					        <td>The Godfather</td>
+					        <td>1972</td>
+					    </tr>
+					    <tr>
+
+					        <td>3</td>         
+					        <td>The Godfather: Part II</td>
+					        <td>1974</td>
+					    </tr>    
+					    <tr>
+					        <td>4</td> 
+					        <td>The Good, the Bad and the Ugly</td>
+					        <td>1966</td>
+
+					    </tr>
+					    <tr>
+					        <td>5</td> 
+					        <td>Pulp Fiction</td>
+					        <td>1994</td>
+					    </tr>
+					    <tr>
+					        <td>6</td> 
+					        <td>12 Angry Men</td>
+
+					        <td>1957</td>
+					    </tr>
+					    <tr>
+					        <td>7</td> 
+					        <td>Schindler's List</td>
+					        <td>1993</td>
+					    </tr>    
+					    <tr>
+
+					        <td>8</td> 
+					        <td>One Flew Over the Cuckoo's Nest</td>
+					        <td>1975</td>
+					    </tr>
+					    <tr>
+					        <td>9</td> 
+					        <td>The Dark Knight</td>
+
+					        <td>2008</td>
+					    </tr>
+					    <tr>
+					        <td>10</td> 
+					        <td>The Lord of the Rings: The Return of the King</td>
+					        <td>2003</td>
+					    </tr> 
+
+					</table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
