@@ -254,7 +254,7 @@ function drawSubeventTab(data){
 }
 
 function refreshWeibodata(data){  //需要传过来的是新闻的data
-    $("#vertical-ticker").empty();
+    $("#weibo_ul").empty();
 	var html = "";
 	for(var c_topic in data){
 		var da = data[c_topic];
@@ -267,39 +267,66 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             else{
                 var same_text_count = d['same_list'].length;
             }
-            html += '<div class="inner">';
-            html += '<span class="title" style="color:#0000FF" id="' + d['_id'] + '"><b>' + d['title'] + '</b></span><br>';
-            html += '<span id="content_summary_' + d['_id']  + '">' + content_summary + '&nbsp;&nbsp;</span>';
+            html += '<li class="item" style="width:1010px">';
+            html += '<div class="weibo_detail" >';
+            html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + d['source_from_name'] + '</a>&nbsp;&nbsp;发布:';
+            html += '<span class="title" style="color:#0000FF" id="' + d['_id'] + '"><b>[' + d['title'] + ']</b></span>';
+            html += '&nbsp;&nbsp;发布内容：&nbsp;&nbsp;<span id="content_summary_' + d['_id']  + '">' + content_summary + '</span>';
             html += '<span style="display: none;" id="content_' + d['_id']  + '">' + d['content168'] + '&nbsp;&nbsp;</span>';
-            html += '<span id="detail_' + d['_id'] + '"><a onclick="detail_text(\'' + d['_id'] + '\');">阅读全文</a>&nbsp;&nbsp;</span>';
-            html += '<span><a onclick="open_same_list(\'' + d['_id']  + '\')">相似新闻(' + same_text_count + ')</a></span><br>';
-            html += '<span style="float:right;">' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss") +  " 发布于"+ d['source_from_name'] + " 转载于" + d["transmit_name"] + '</span>';
+            html += '</p>';
+            html += '<div class="weibo_info">';
+        	html += '<div class="weibo_pz" style="margin-right:10px;">';
+        	html += '<span id="detail_' + d['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + d['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
+        	html += '<a class="undlin" href="javascript:;" target="_blank" onclick="open_same_list(\'' + d['_id'] + '\')";>相似新闻(' + same_text_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
+        	html += "</div>";
+        	html += '<div class="m">';
+        	html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
+        	html += '<a target="_blank">转载于'+ d["transmit_name"] +'</a>&nbsp;&nbsp;';
+        	html += '</div>';
+        	html += '</div>' 
             html += '</div>';
+            html += '</li>';
             for (var i=0;i<same_text_count;i++){
                 var dd = d['same_list'][i];
                 html += '<div class="inner-same inner-same-' + d['_id'] + '" style="display:none;">';
-                html += '<span class="title" style="color:#0000FF" id="' + dd['_id'] + '"><b>' + dd['title'] + '</b></span><br>';
-                html += '<span id="content_summary_' + dd['_id']  + '">' + content_summary + '&nbsp;&nbsp;</span>';
-                html += '<span style="display: none;" id="content_' + dd['_id']  + '">' + dd['content168'] + '&nbsp;&nbsp;</span>';
-                html += '<span id="detail_' + dd['_id'] + '"><a onclick="detail_text(\'' + dd['_id'] + '\');">阅读全文</a>&nbsp;&nbsp;</span>';
-                html += '<span style="float:right;">' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss") +  " 发布于"+ dd['source_from_name'] + " 转载于" + dd["transmit_name"] + '</span>';
+                html += '<li class="item" style="width:1010px">';
+	            html += '<div class="weibo_detail" >';
+	            html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + dd['source_from_name'] + '</a>&nbsp;&nbsp;发布:';
+	            html += '<span class="title" style="color:#0000FF" id="' + dd['_id'] + '"><b> ' + dd['title'] + ' </b></span>';
+	            html += '&nbsp;&nbsp;发布内容：&nbsp;&nbsp;<span id="content_summary_' + d['_id']  + '">' + dd['content168'].substring(0, 168) + '...</span>';
+	            html += '<span style="display: none;" id="content_' + dd['_id']  + '">' + d['content168'] + '&nbsp;&nbsp;</span>';
+	            html += '</p>';
+	            html += '<div class="weibo_info">';
+	        	html += '<div class="weibo_pz" style="margin-right:10px;">';
+	        	html += '<span id="detail_' + dd['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + dd['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
+	        	html += "</div>";
+	        	html += '<div class="m">';
+	        	html += '<a class="undlin" target="_blank" >' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
+	        	html += '<a target="_blank">转载于'+ dd["transmit_name"] +'</a>&nbsp;&nbsp;';
+	        	html += '</div>';
+	        	html += '</div>' 
+	            html += '</div>';
+	            html += '</li>';
                 html += '</div>';
             }
         }
     }
-    $("#vertical-ticker").append(html);
+    $("#weibo_ul").append(html);
+    $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
 
 function summary_text(text_id){
     $("#content_summary_" + text_id).css("display", "inline");
     $("#content_" + text_id).css("display", "none");
-    $("#detail_" + text_id).html("<a onclick=\"detail_text(\'" + text_id + "\');\">阅读全文</a>&nbsp;&nbsp;");
+    $("#detail_" + text_id).html("<a href= 'javascript:;' target='_blank' onclick=\"detail_text(\'" + text_id + "\');\">阅读全文</a>&nbsp;&nbsp;");
+    $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
 
 function detail_text(text_id){
     $("#content_summary_" + text_id).css("display", "none");
     $("#content_" + text_id).css("display", "inline");
-    $("#detail_" + text_id).html("<a onclick=\"summary_text(\'" + text_id + "\');\">阅读概述</a>&nbsp;&nbsp;");
+    $("#detail_" + text_id).html("<a href= 'javascript:;' target='_blank' onclick=\"summary_text(\'" + text_id + "\');\">阅读概述</a>&nbsp;&nbsp;");
+    $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
 
 function open_same_list(text_id){
@@ -311,6 +338,7 @@ function open_same_list(text_id){
             $(this).css("display", "none");
         }
     });
+    $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
 
 //画关键字表格的代码，现在已经没有了
