@@ -20,10 +20,11 @@ Date.prototype.format = function(format) {
     return format;
 }
 
-function Opinion_timeline(query, start_ts, end_ts){
+function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 	this.query = query;
 	this.start_ts = start_ts;
 	this.end_ts = end_ts;
+    this.pointInterval = pointInterval; // 图上一点的时间间隔
 	this.max_keywords_size = 20; // 和计算相关的50，实际返回10
     this.min_keywords_size = 5;
     this.top_weibos_limit = 50; // 和计算相关的50，实际返回10
@@ -33,12 +34,15 @@ function Opinion_timeline(query, start_ts, end_ts){
 	this.pie_ajax_url = function(query, start_ts, end_ts){
 		return "/news/ratio/?query=" + query;
 	}
-	this.cloud_ajax_url = function(query, start_ts, end_ts){
-		return "/news/keywords/?query=" + query;
+	this.cloud_ajax_url = function(query, end_ts, during, subevent){
+		return "/news/keywords/?query=" + query + "&subevent=" + subevent + "&during=" + during + "&ts=" + end_ts;
 	}
 	this.weibo_ajax_url = function(query, start_ts, end_ts){
 		return "/news/weibos/?query=" + query;
 	}
+    this.peak_ajax_url = function(data, ts_list, during, subevent){
+        return "/news/peak/?lis=" + data.join(',') + "&ts=" + ts_list + '&during=' + during + "&subevent=" + subevent;
+    }
 	this.ajax_method = "GET";
 	this.call_sync_ajax_request = function(url, method, callback){
         $.ajax({
@@ -49,42 +53,98 @@ function Opinion_timeline(query, start_ts, end_ts){
             success: callback
         })
     }
+
+    this.trend_div_id = 'trend_div';
+    this.trend_title = '情绪走势图';
+    this.trend_chart;
+
+    this.event_river_data; // 接收eventriver的数据
+    this.subeventids = []; // 子事件的ID
+    this.select_subevent; // 当前选择的subevent
+
+    this.trend_count_obj = {
+        "ts": [],
+        "count": []
+    };
 }
 
 Opinion_timeline.prototype.pull_timeline_data = function(){
 	var that = this; //向下面的函数传递获取的值
 	var ajax_url = this.timeLine_ajax_url(this.query, this.start_ts, this.end_ts); //传入参数，获取请求的地址
-	//console.log('timeline');
+
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Timeline_function); //发起ajax的请求
 	
 	function Timeline_function(data){    //数据的处理函数
-		drawSubeventTab(data);
-		event_river(data);
-	} 
+        that.event_river_data = data;
+        that.select_subevent = 'global'; // 默认处理总体
+        subevent_list = data['eventList'];
+    }
+}
+
+// 绘制子事件Tab
+Opinion_timeline.prototype.drawSubeventsTab = function(){
+    drawSubeventTab(this.event_river_data); // 画子事件Tab
+}
+
+// 绘制eventriver
+Opinion_timeline.prototype.drawEventriver = function(){
+    drawEventriver(this.event_river_data); // 主题河
+}
+
+// instance method, 获取数据并绘制趋势图
+Opinion_timeline.prototype.drawTrendline = function(){
+    var trends_title = this.trend_title;
+    var trend_div_id = this.trend_div_id;
+    var pointInterval = this.pointInterval;
+    var start_ts = this.start_ts;
+    var end_ts = this.end_ts;
+    var xAxisTitleText = '时间';
+    var yAxisTitleText = '数量';
+    var series_data = [{
+            name: '新闻数',
+            data: [],
+            id: 'count',
+            color: '#11c897',
+            marker : {
+                enabled : false,
+            }
+        },
+        {
+            name: '拐点',
+            type : 'flags',
+            data : [],
+            cursor: 'pointer',
+            onSeries : 'count',
+            shape : 'circlepin',
+            width : 2,
+            color: '#fa7256',
+            visible: true, // 默认显示绝对
+            showInLegend: true
+        }]
+
+    var that = this;
+    myChart = display_trend(that, trend_div_id, this.query, pointInterval, start_ts, end_ts, trends_title, series_data, xAxisTitleText, yAxisTitleText);
+    this.trend_chart = myChart;
 }
 
 Opinion_timeline.prototype.pull_pie_data = function(){
 	var that = this;
 	var ajax_url = this.pie_ajax_url(this.query, this.start_ts, this.end_ts);
-	//console.log('pie');
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Pie_function);
 	
 	function Pie_function(data){    //数据的处理函数
-		//console.log(data);
 		refreshPiedata(data);
 	} 
 }
 
 Opinion_timeline.prototype.pull_cloud_data = function(){
 	var that = this;
-	var ajax_url = this.cloud_ajax_url(this.query, this.start_ts, this.end_ts);
-	//console.log('cloud');
+	var ajax_url = this.cloud_ajax_url(this.query, this.end_ts, this.end_ts - this.start_ts, this.select_subevent);
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Cloud_function);
 
-	function Cloud_function(data){    //数据的处理函数
-	
-		refreshDrawKeywords(that, data);
-	} 
+    function Cloud_function(data){    //数据的处理函数
+        refreshDrawKeywords(that, data);
+    }
 }
 
 Opinion_timeline.prototype.pull_weibo_data = function(){
@@ -93,13 +153,201 @@ Opinion_timeline.prototype.pull_weibo_data = function(){
 
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Weibo_function);
 
-	function Weibo_function(data){  
-		refreshWeibodata(data);
-	} 
+    function Weibo_function(data){  
+        refreshWeibodata(data);
+    } 
+}
+
+// 走势图
+function display_trend(that, trend_div_id, query, during, begin_ts, end_ts, trends_title, series_data, xAxisTitleText, yAxisTitleText){
+    Highcharts.setOptions({
+        global: {
+            useUTC: false
+        }
+    });
+
+    var chart_obj = $('#' + trend_div_id).highcharts({
+        chart: {
+            type: 'spline',// line,
+            animation: Highcharts.svg, // don't animate in old IE
+            style: {
+                fontSize: '12px',
+                fontFamily: 'Microsoft YaHei'
+            },
+            events: {
+                load: function() {
+                    var total_nodes = (end_ts - begin_ts) / during;
+                    var times_init = 0;
+
+                    var count_series = this.series[0];
+                    var absolute_peak_series = this.series[1];
+                    pull_emotion_count(that, query, that.select_subevent, total_nodes, times_init, begin_ts, during, count_series, absolute_peak_series);
+                }
+            }
+        },
+        plotOptions:{
+            line:{
+                events: {
+                    legendItemClick: function () {
+                    }
+                }
+            }
+        },
+        title : {
+            text: '走势分析图', // trends_title
+            margin: 20,
+            style: {
+                color: '#666',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                fontFamily: 'Microsoft YaHei'
+            }
+        },
+        // 导出按钮汉化
+        lang: {
+            printChart: "打印",
+            downloadJPEG: "下载JPEG 图片",
+            downloadPDF: "下载PDF文档",
+            downloadPNG: "下载PNG 图片",
+            downloadSVG: "下载SVG 矢量图",
+            exportButtonTitle: "导出图片"
+        },
+        rangeSelector: {
+            selected: 4,
+            inputEnabled: false,
+            buttons: [{
+                type: 'week',
+                count: 1,
+                text: '1w'
+            }, {
+                type: 'month',
+                count: 1,
+                text: '1m'
+            }, {
+                type: 'month',
+                count: 3,
+                text: '3m'
+            }]
+        },
+        xAxis: {
+            title: {
+                enabled: true,
+                text: xAxisTitleText,
+                style: {
+                    color: '#666',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    fontFamily: 'Microsoft YaHei'
+                }
+            },
+            type: 'datetime',
+            tickPixelInterval: 150
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                enabled: true,
+                text: yAxisTitleText,
+                style: {
+                    color: '#666',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    fontFamily: 'Microsoft YaHei'
+                }
+            },
+        },
+        tooltip: {
+            valueDecimals: 2,
+            xDateFormat: '%Y-%m-%d %H:%M:%S'
+        },
+        legend: {
+            layout: 'horizontal',
+            //verticalAlign: true,
+            //floating: true,
+            align: 'center',
+            verticalAlign: 'bottom',
+            x: 0,
+            y: -2,
+            borderWidth: 1,
+            itemStyle: {
+                color: '#666',
+                fontWeight: 'bold',
+                fontSize: '12px',
+                fontFamily: 'Microsoft YaHei'
+            }
+            //enabled: true,
+            //itemHiddenStyle: {
+                //color: 'white'
+            //}
+        },
+        exporting: {
+            enabled: true
+        },
+        series: series_data
+    });
+    return chart_obj;
+}
+
+function pull_emotion_count(that, query, emotion_type, total_days, times, begin_ts, during, count_series, absolute_peak_series){
+    if(times > total_days){
+        get_peaks(that, absolute_peak_series, that.trend_count_obj['count'], that.trend_count_obj['ts'], during);
+        return;
+    }
+
+    var ts = begin_ts + times * during;
+    var ajax_url = "/news/timeline/?ts=" + ts + '&during=' + during + '&subevent=' + emotion_type + '&query=' + query;
+    $.ajax({
+        url: ajax_url,
+        type: "GET",
+        dataType:"json",
+        success: function(data){
+            var isShift = false;
+            var name = that.select_subevent;
+            var ts = data[name][0];
+            var count = data[name][1];
+            count_series.addPoint([ts * 1000, count], true, isShift);
+            that.trend_count_obj['ts'].push(ts);
+            that.trend_count_obj['count'].push([ts * 1000, count]);
+            times++;
+            pull_emotion_count(that, query, emotion_type, total_days, times, begin_ts, during, count_series, absolute_peak_series);
+        }
+    });
+}
+
+function get_peaks(that, series, data_obj, ts_list, during){
+    var name = that.select_subevent;
+    var select_series = series;
+    var data_list = data_obj;
+    call_peak_ajax(that, select_series, data_list, ts_list, during, name);
+}
+
+function call_peak_ajax(that, series, data_list, ts_list, during, subevent){
+    var data = [];
+    for(var i in data_list){
+        data.push(data_list[i][1]);
+    }
+
+    var ajax_url = that.peak_ajax_url(data, ts_list, during, subevent);
+    that.call_sync_ajax_request(ajax_url, that.ajax_method, peak_callback);
+
+    function peak_callback(data){
+        if ( data != 'Null Data'){
+            var isShift = false;
+            var flagClick = function(event){
+                var click_ts = this.x / 1000;
+                var title = this.title;
+            }
+            for(var i in data){
+                var x = data[i]['ts'];
+                var title = data[i]['title'];
+                series.addPoint({'x': x, 'title': title, 'text': title, 'events': {'click': flagClick}}, true, isShift);
+            }
+        }
+    }
 }
 
 //事件流的展示
-function event_river(data){
+function drawEventriver(data){
     option = {
 	    title : {
 	        text: '事件流',
@@ -133,7 +381,6 @@ function event_river(data){
 }
 
 function refreshPiedata(data){
-	//console.log(data);
 	var pie_data = [];
 	var One_pie_data = {};
 	for (var key in data){ 
@@ -179,38 +426,27 @@ function refreshDrawKeywords(that, keywords_data){
     var max_keywords_size = that.max_keywords_size;
     var keywords_div_id = 'keywords_cloud_div';
    	var color = '#11c897';
-   	var data = keywords_data;
    	var value = [];
 	var key = [];
     $("#"+keywords_div_id).empty();	
-	if (data=={}){
+	if (keywords_data=={}){
 	    $('#'+div_id_cloud).append("<a style='font-size:1ex'>关键词云数据为空</a>");
 	}
 	else{
 	    var min_count, max_count = 0, words_count_obj = {};
-		for (var subeventid in data){
-			value = data[subeventid];
-			word = value[0][0];
-			count = value[0][1];
-
-		// for (var subeventid in data){
-		// 	value = data[subeventid];
-		// 	one_subevent = value[1];
-		// for (var word in one_subevent){
-		// 	count = one_subevent(word);
-		// }
-		// }
+		for (var word in keywords_data){
+            var count = keywords_data[word];
 	      	if(count > max_count){
-	                max_count = count;
+	            max_count = count;
 	        }
 	      	if(!min_count){
-	                min_count = count;
+	            min_count = count;
 	        }
 	      	if(count < min_count){
-	                min_count = count;
+	            min_count = count;
 	        }
-	    	words_count_obj[word] = count;
 		}
+        words_count_obj = keywords_data;
 	    for(var keyword in words_count_obj){
 	        var count = words_count_obj[keyword];
 	        var size = defscale(count, min_count, max_count, min_keywords_size, max_keywords_size);
@@ -231,7 +467,10 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
 //把子话题输出
 function drawSubeventTab(data){
     data = data['eventList'];
-    var html = '<div class="btn-group btn-group-justified">';
+    var html = '';
+    html += '<div class="btn-group">';
+    html += '<button type="button" class="btn btn-success">' + query + '</button>';
+    html += '</div>';
     for (var i = 0;i < data.length;i++) {
         var begin_time = data[i]['evolution'][0]['time']; //开始时间
         var name = data[i]['name']; 
@@ -239,8 +478,7 @@ function drawSubeventTab(data){
         html += '<button type="button" class="btn btn-default">' + name + '</button>';
         html += '</div>';
     }
-    html += '</div>';
-    $("#checkbox").append(html);
+    $("#subevent_tab").append(html);
 }
 
 function refreshWeibodata(data){  //需要传过来的是新闻的data
@@ -361,10 +599,14 @@ function drawtable(data){
 }
 
 var query = QUERY;
-var start_ts = 1354896458;
-var end_ts = 154686446564;
-Timeline = new Opinion_timeline(query, start_ts, end_ts);
-Timeline.pull_timeline_data();
-Timeline.pull_cloud_data();
-Timeline.pull_weibo_data();
-Timeline.pull_pie_data();
+var start_ts = 1414771200;
+var end_ts = 1418140800;
+var pointInterval = 3600 * 24;
+var opinion = new Opinion_timeline(query, start_ts, end_ts, pointInterval);
+opinion.pull_timeline_data();
+opinion.drawSubeventsTab();
+opinion.drawEventriver();
+opinion.drawTrendline();
+opinion.pull_cloud_data();
+opinion.pull_weibo_data();
+opinion.pull_pie_data();

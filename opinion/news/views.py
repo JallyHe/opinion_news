@@ -9,10 +9,13 @@ from utils import ts2datetime
 from flask import Blueprint, url_for, render_template, request
 from Database import Event, EventManager, Feature
 from opinion.global_config import default_topic_name
+from xapian_case.utils import cut, load_scws
 
 mod = Blueprint('news', __name__, url_prefix='/news')
 
 em = EventManager()
+
+scws = load_scws()
 
 @mod.route('/')
 def index():
@@ -77,15 +80,16 @@ def opinion_keywords():
     """关键词云数据
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
+    end_ts = request.args.get('ts', None)
+    during = request.args.get('during', None)
+
+    subevent_status = request.args.get('subevent', 'global')
+    print subevent_status
     topk_keywords = request.args.get('topk', 50) # topk keywords
 
-    topicid = em.getEventIDByName(topic_name)
-    event = Event(topicid)
-    subevents = event.getSubEvents()
-
-    subevent_keywords = dict()
-    for subevent in subevents:
-        feature = Feature(subevent["_id"])
+    if subevent_status != 'global':
+        subeventid = subevent_status
+        feature = Feature(subeventid)
         counter = Counter()
         counter.update(feature.get_newest())
         top_keywords_count = counter.most_common(topk_keywords)
@@ -93,9 +97,29 @@ def opinion_keywords():
 
         subevent_top5_keywords = ','.join([k for k, c in top5_keywords_count])
         subevent_top5_count = sum([c for k, c in top5_keywords_count])
-        subevent_keywords[subevent["_id"]] = [(subevent_top5_keywords, subevent_top5_count), dict(top_keywords_count)]
+        subevent_keywords = {subeventid: [(subevent_top5_keywords, subevent_top5_count), dict(top_keywords_count)]}
 
-    return json.dumps(subevent_keywords)
+        return json.dumps(subevent_keywords)
+    else:
+        topicid = em.getEventIDByName(topic_name)
+        event = Event(topicid)
+        if end_ts:
+            end_ts = int(end_ts)
+
+        if during:
+            during = int(during)
+
+        items = event.getInfos(end_ts - during, end_ts)
+
+        counter = Counter()
+        for r in items:
+            text = (r['title'] + r['content168']).encode('utf-8')
+            terms = cut(scws, text)
+            counter.update(terms)
+
+        top_words_count = counter.most_common(topk_keywords)
+        return json.dumps({w: c for w, c in top_words_count})
+
 
 @mod.route('/ratio/')
 def opinion_ratio():
@@ -142,6 +166,55 @@ def opinion_weibos():
         results[subeventid] = event.getSortedInfos(subeventid=subeventid)
 
     return json.dumps(results)
+
+@mod.route('/timeline/')
+def timeline():
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    timestamp = int(request.args.get('ts'))
+    subevent_status = request.args.get('subevent', 'global')
+    during = int(request.args.get('during', 3600 * 24))
+
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+
+    if subevent_status == 'global':
+        count = event.getInfoCount(timestamp - during, timestamp)
+
+        return json.dumps({"global": [timestamp, count]})
+
+@mod.route('/peak/')
+def getPeaks():
+    '''获取拐点数据
+    '''
+    from peak_detection import detect_peaks
+    limit = int(request.args.get('limit', 10))
+    query = request.args.get('query', None)
+    during = int(request.args.get('during', 24 * 3600))
+
+    subevent_status = request.args.get('subevent', 'global')
+    lis = request.args.get('lis', '')
+
+    try:
+        lis = [float(da) for da in lis.split(',')]
+    except:
+        lis = []
+
+    ts_lis = request.args.get('ts', '')
+    ts_lis = [float(da) for da in ts_lis.split(',')]
+
+    new_zeros = detect_peaks(lis)
+
+    time_lis = {}
+    for idx, point_idx in enumerate(new_zeros):
+        ts = ts_lis[point_idx]
+        end_ts = ts
+
+        time_lis[idx] = {
+            'ts': end_ts * 1000,
+            'title': str(idx)
+        }
+
+    return json.dumps(time_lis)
 
 """
 @mod.route('/rank/')
