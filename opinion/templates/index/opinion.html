@@ -181,110 +181,6 @@
         .tang-scrollpanel .tang-slider-vtl {
             height: 100%;
         }
-        li.item {
-            line-height: 18px;
-            border-bottom: 1px solid #f5f5f5;
-            padding: 9px 10px 10px 0;
-            min-height: 55px;
-            _height: 55px;
-        }
-        .weibo_face {
-            position: relative;
-            float: left;
-            width: 50px;
-            margin-top: 2px;
-        }
-        .weibo_list a {
-            text-decoration: none;
-        }
-        .weibo_face img {
-            width: 50px;
-            height: 50px;
-        }
-        .weibo_detail {
-            margin-left: 65px;
-        }
-        .weibo_list a.undlin {
-            text-decoration: underline;
-        }
-        .weibo_info {
-            margin-top: 7px;
-            color: #666;
-        }
-        .weibo_info .weibo_pz {
-            float: right;
-            color: #858585;
-            height: 18px;
-            line-height: 18px;
-        }
-        .weibo_info .m a {
-            color: #666;
-        }
-        tr {
-            height:23px;
-        }
-        table.altrowstable td {
-            border-width: 1px;
-            padding: 0px;
-            height: 22px;
- 
-            border-color: #a9c6c9;
-        }
-        table.altrowstable th {
-            border-width: 1px;
-            padding-left: 5px;
-            border-style: solid;
-            border-color: #a9c6c9;
-        }
-        .tablecurrent {
-            background-color:#3385ff;
-        }
-        .input_curr{
-            checked: "checked";
-        }
-        .inner {
-            padding: 10px;
-            border: 1px #000 dotted solid;
-            box-sizing: border-box;
-        }
-        .navbar-inner {
-            background-color: #02C874;
-        }
-        .title {
-            color: #02C874;
-            font-size: 15px;
-            border: 1px #000 dotted solid;
-        }
-        #keywords_cloud_div {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            margin: 0px auto 0
-        }
-
-        #keywords_cloud_div a {
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            font-family: Microsoft YaHei;
-            font-weight: bold;
-            text-decoration: none;
-            padding: 3px 6px;
-        }
-
-        #keywords_cloud_div a:hover {
-            border: 1px solid #eee;
-            background-color: #FFF;
-        }
-        #keywords_cloud_div .blue {
-            color: blue;
-        }
-        #keywords_cloud_div .red {
-            color: red;
-        }
-        #keywords_cloud_div .yellow {
-            color: yellow;
-        }
 
 		table {
 		    *border-collapse: collapse; /* IE7 and lower */
@@ -386,77 +282,40 @@
             </div>
             <div class="tabConts">
                 <div id="event_river"style="height:500px;width:1033px">
-					<table class="bordered">
-					    <thead>
-
-					    <tr>
-					        <th>#</th>        
-					        <th>IMDB Top 10 Movies</th>
-					        <th>Year</th>
-					    </tr>
-					    </thead>
-					    <tr>
-					        <td>1</td>        
-					        <td>The Shawshank Redemption</td>
-
-					        <td>1994</td>
-					    </tr>        
-					    <tr>
-					        <td>2</td>         
-					        <td>The Godfather</td>
-					        <td>1972</td>
-					    </tr>
-					    <tr>
-
-					        <td>3</td>         
-					        <td>The Godfather: Part II</td>
-					        <td>1974</td>
-					    </tr>    
-					    <tr>
-					        <td>4</td> 
-					        <td>The Good, the Bad and the Ugly</td>
-					        <td>1966</td>
-
-					    </tr>
-					    <tr>
-					        <td>5</td> 
-					        <td>Pulp Fiction</td>
-					        <td>1994</td>
-					    </tr>
-					    <tr>
-					        <td>6</td> 
-					        <td>12 Angry Men</td>
-
-					        <td>1957</td>
-					    </tr>
-					    <tr>
-					        <td>7</td> 
-					        <td>Schindler's List</td>
-					        <td>1993</td>
-					    </tr>    
-					    <tr>
-
-					        <td>8</td> 
-					        <td>One Flew Over the Cuckoo's Nest</td>
-					        <td>1975</td>
-					    </tr>
-					    <tr>
-					        <td>9</td> 
-					        <td>The Dark Knight</td>
-
-					        <td>2008</td>
-					    </tr>
-					    <tr>
-					        <td>10</td> 
-					        <td>The Lord of the Rings: The Return of the King</td>
-					        <td>2003</td>
-					    </tr> 
-
-					</table>
                 </div>
             </div>
         </div>
     </div>
-
-
 {% endblock content %}
+
+{% block tail_js %}
+	<script type="text/javascript">
+		function draw_table(){
+			$.ajax({   
+	            type:"GET",  
+	            url:"/news/topics/",
+	            dataType: "json",
+	            async:false,
+	            success: function(data){
+	            	var html = '';
+					html += '<table class="bordered">';   
+					html += '<thead><tr><th>话题id</th><th>话题名称</th><th>话题状态</th><th>开始时间</th><th>结束时间</th><th>最新操作日期</th><th>是否操作成功</th></tr></thead>';
+					for(var i = 0; i < data.length; i++){
+						data[i]['end_time'] = "无";
+						html += '<tr><td>'+ data[i]['_id']+'</td><td>'+data[i]['name'] +'</td><td>'+data[i]['status'] +'</td><td>'+data[i]['start_datetime'] +'</td><td>'+data[i]['end_time'] +'</td><td>'+data[i]['last_modify'] +'</td><td>'+data[i]['modify_success'] +'</td></tr>';		
+					}
+			        $('#event_river').append(html);
+			    }           
+			});
+
+
+		}
+		
+		$(document).ready(function(){
+				draw_table();
+				console.log('123445');
+			}			
+		)
+	</script>
+	
+{% endblock tail_js %}
