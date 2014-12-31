@@ -317,12 +317,12 @@
             border: 1px #000 dotted solid;
             box-sizing: border-box;
         }
-        .inner-same {
+        /*.inner-same {
             border: solid 1px #F3DDB3;
             background: #FFFEF4;
             color: #999;
             margin-top: -1px;
-        }
+        }*/
         .navbar-inner {
             background-color: #02C874;
         }
@@ -367,15 +367,15 @@
 {% endblock head_css %}
 
 {% block head_js %}
-    <!--<script src="/static/css/js/miaov.js" type="text/javascript"></script>
-    <script src="/static/css/js/timeline.js"></script>-->
+    <script src="{{ url_for('static', filename='js/highstock.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/exporting.js') }}"></script>
     <script src="/static/css/js/echarts-all.js"></script>
 {% endblock head_js %}
 
 {% block content %}
     <div class="blkUnit grpUnit" id="trendProfile">
         <div class="titlBar" style="padding-bottom:25px;">
-            <h4><b style="font-size:20px">时间轴</b></h4>
+            <h4>主题河</h4>
             <i id="timeline_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="时间轴：可视化信息中子话题起止时间"></i>&nbsp;&nbsp;
         </div>
 
@@ -389,9 +389,9 @@
         </div>
     </div>
 
-    <div class="blkUnit grpUnit" style="float:left;" id="subevent_sel">
+    <div class="blkUnit grpUnit" style="float:left;margin-bottom: 20px;" id="subevent_sel">
         <div class="titlBar" style="padding-bottom:25px;">
-            <h4><b style="font-size:20px">子话题选择</b></h4>
+            <h4>总体/子话题选择</h4>
             <i id="cloud_pie_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="关键词云:热点关键词信息；各类信息占比分析:4类信息-积极、悲伤、愤怒、新闻占比"></i>&nbsp;&nbsp;
             <span id="peak_cloudpie_tooltip"></span>
         </div>
@@ -400,15 +400,37 @@
             <div class="tabTitle" style="padding-top:1px;"></div>
             <div class="tabConts">
                 <div style="width:1033px;">
-                    <div id ="checkbox"></div>
+                    <div id="subevent_tab" style="margin: 20px;"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="blkUnit grpUnit" id="trendTimeline">
+        <div class="titlBar" style="padding-bottom:15px;">
+            <h4>走势分析</h4>
+            <i id="trend_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="情感分类：可视化信息中蕴含的情感走势"></i>&nbsp;&nbsp;
+            <span id="peak_trend_tooltip"></span>
+            <span class="pull-right" style="margin: -14px -9px -10px auto;" data-animated="false">
+                <input type="checkbox" name="abs_rel_switch" checked>
+            </span>
+            <!--<span class="compInfo" style="display: none;"> </span>
+            <span class="compInfo">2014-08-07 至 2014-08-13</span>
+            <span class="compInfo">全国</span>-->
+        </div>
+
+        <div class="tabUnit">
+            <div class="tabTitle" style="padding-top:1px;background-color:#f6f6f6;" id="auto_gsid_3">
+            </div>
+            <div class="tabConts">
+                <div id="trend_div"></div>
             </div>
         </div>
     </div>
 
     <div class="blkUnit grpUnit" style="float:left;" id="cloudpie">
         <div class="titlBar" style="padding-bottom:25px;">
-            <h4><b style="font-size:20px">关键词云|各类信息占比分析</b></h4>
+            <h4>关键词云/各类信息占比分析</h4>
             <i id="cloud_pie_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="关键词云:热点关键词信息；各类信息占比分析:4类信息-积极、悲伤、愤怒、新闻占比"></i>&nbsp;&nbsp;
             <span id="peak_cloudpie_tooltip"></span>
         </div>
@@ -427,53 +449,9 @@
             </div>
         </div>
     </div>
-        <!-- <div class="well"style='padding:0px;margin-top:20px;margin-bottom:4px;min-height:30px'>
-            &nbsp&nbsp&nbsp<p class="btn btn-warning btn-xs" style="font-size:20px;">时间选择</p>
-            
-                <span class="dropdown">
-                  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
-                    Dropdown
-                    <span class="caret"></span>
-                  </button>
-                  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Action</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Another action</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Something else here</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Separated link</a></li>
-                  </ul>
-                </span>
-
-        </div> -->
-    <!-- <div class="blkUnit grpUnit" style="float:left;margin-top:0px" id="cloudpie">
-        <div class="titlBar" style="padding-bottom:25px;">
-            <h4><b style="font-size:20px">子话题占比分析|子话题列表</b></h4>
-             <i id="table_pie_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="各类信息占比分析:子话题信息占比；各类子话题的关键词对"></i>&nbsp;&nbsp;
-        </div>
-        <div class="tabUnit">
-            <div class="tabTitle" style="padding-top:1px;">
-            </div>
-            <div class="tabConts">
-                <div style="width:1033px;">
-                <div id="pie_div" style="width:50%;float:left;height:330px;margin-right:-200px;background-color:#FFF">
-                </div>
-                 <div id="list" style="width:50%;height:330px;float:right;margin-top:10px;"> 
-                
-                    <table  rules=rows frame= hsides class="altrowstable" id="alternatecolor" style = "padding-top:10px;margin-left :15px;height : 250px;width:500px;">
-                        <tr style="height:30px"><td><b>子话题</b></td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
-                    </table>
-                    <div style="padding-top:5px;padding-right:50px;" align="right">
-                        <span class="btn btn btn-large" data-toggle="modal" style="font-size:16px;" onClick="load_more()">查看更多</span> 
-                    </div>
-                </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
     <div class="blkUnit grpUnit" style="float:left;" id="news_rec">
         <div class="titlBar" style="padding-bottom:25px;">
-
-            <h4><b style="font-size:20px">重要新闻</b></h4>
+            <h4>重要新闻</h4>
             <i id="weibo_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="重要新闻:各类子话题的重要新闻"></i>&nbsp;&nbsp;
         </div>
         <div class="stmTabs tabUnit" style="width:1033px;">
@@ -483,9 +461,8 @@
                         <div class="nav_inner clearfix">
                             <div class="search_type clearfix">
                             </div>
-                            <div class="r_v2"> 
-                                <a href="/?q=%CB%D5%C3%EE%C1%E1&amp;c=news&amp;from=channel&amp;col=&amp;range=all&amp;source=&amp;country=&amp;size=&amp;time=&amp;a=&amp;sort=rel" suda-uatrack="key=SearchBody&amp;value=correlation">
-                                    按时间</a> | 按相关度
+                            <div class="r_v2" style="float: right;">
+                                <a href="#news_rec">按时间</a> | 按相关度
                             </div>
                         </div>
                     </div>

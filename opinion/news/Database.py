@@ -100,10 +100,28 @@ class Event(object):
         results = self.mongo[self.sub_events_collection].find({"eventid": self.id, "_id": {"$ne": self.other_subeventid}})
         return [r for r in results]
 
+    def getInfoCount(self, startts, endts):
+        """获取信息条数
+           startts:
+           endts:
+        """
+        count = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}, "subeventid": {"$ne": self.other_subeventid}}).count()
+        return count
+
     def getSubEventsLength(self):
         """获取子事件的个数
         """
         return self.mongo[self.sub_events_collection].find({"eventid": self.id, "_id": {"$ne": self.other_subeventid}}).count()
+
+    def getEventStartts(self):
+        """获取开始时间 startts - 7 days
+        """
+        topic = self.mongo[self.events_collection].find_one({"_id": self.id})
+        if topic:
+            startts = topic['startts'] - 7 * 24 * 3600
+            return startts
+        else:
+            return None
 
     def getEventRiverData(self, topk_keywords=5):
         """获取echarts event river的数据
@@ -114,9 +132,13 @@ class Event(object):
                 [{"subeventid": {"$ne": self.other_subeventid}}, \
                 {"subeventid": {"$exists": True}}]})
         cluster_date = dict()
+        startts = self.getEventStartts()
         for r in results:
             label = r['subeventid']
-            date = time.strftime('%Y-%m-%d', time.localtime(r['timestamp']))
+            timestamp = r['timestamp']
+            if timestamp < startts:
+                continue
+            date = time.strftime('%Y-%m-%d', time.localtime(timestamp))
             try:
                 cluster_date[label].append(date)
             except KeyError:
@@ -135,7 +157,7 @@ class Event(object):
             date_count_dict = dict(counter.most_common())
             sorted_date_count = sorted(date_count_dict.iteritems(), key=lambda(k, v): k, reverse=False)
             evolution_list = [{"time": date, "value": count, "detail": {"text": str(count), "link": "#"}} for date, count in sorted_date_count]
-            cluster_result = {"name": cluster_keywords, "weight": len(dates), "evolution": evolution_list}
+            cluster_result = {"id": label, "name": cluster_keywords, "weight": len(dates), "evolution": evolution_list}
             results.append(cluster_result)
 
         return results
@@ -153,7 +175,7 @@ class Event(object):
                end_ts:   终止时间戳
         """
         results = self.mongo[self.news_collection].find({"timestamp": {"$gte": start_ts, "$lt": end_ts}})
-        return results
+        return [r for r in results]
 
     def getOtherSubEventID(self):
         """获取其他类ID，该ID是预留的
