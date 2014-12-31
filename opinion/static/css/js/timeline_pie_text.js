@@ -62,6 +62,8 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
     this.subeventids = []; // 子事件的ID
     this.select_subevent; // 当前选择的subevent
 
+    this.click_status = 'global'; // 标识当前的状态，global表示全局，peak表示点击了某个拐点后的情况
+
     this.trend_count_obj = {
         "ts": [],
         "count": []
@@ -336,11 +338,13 @@ function call_peak_ajax(that, series, data_list, ts_list, during, subevent){
             var flagClick = function(event){
                 var click_ts = this.x / 1000;
                 var title = this.title;
+                $("#cloudpie").css("display", "none");
+                that.click_status = 'peak';
             }
             for(var i in data){
                 var x = data[i]['ts'];
                 var title = data[i]['title'];
-                series.addPoint({'x': x, 'title': title, 'text': title, 'events': {'click': flagClick}}, true, isShift);
+                series.addPoint({'x': x, 'title': title, 'text': '拐点' + title, 'events': {'click': flagClick}}, true, isShift);
             }
         }
     }
@@ -466,16 +470,16 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
 
 //把子话题输出
 function drawSubeventTab(data){
-    data = data['eventList'];
+    var data = data['eventList'];
     var html = '';
     html += '<div class="btn-group">';
-    html += '<button type="button" class="btn btn-success">' + query + '</button>';
+    html += '<button id="global" type="button" class="btn btn-success">' + query + '</button>';
     html += '</div>';
     for (var i = 0;i < data.length;i++) {
-        var begin_time = data[i]['evolution'][0]['time']; //开始时间
-        var name = data[i]['name']; 
+        var name = data[i]['name'];
+        var subeventid = data[i]['id'];
         html += '<div class="btn-group">';
-        html += '<button type="button" class="btn btn-default">' + name + '</button>';
+        html += '<button id="' + subeventid + '" type="button" class="btn btn-default">' + name + '</button>';
         html += '</div>';
     }
     $("#subevent_tab").append(html);
