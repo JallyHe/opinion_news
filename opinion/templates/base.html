@@ -314,28 +314,34 @@
 
     <div class="mw1300">
         <div id="lTools" class="lTools">
-
+        	<div class="tabTitle">
+                <ul id="compTab" class="tabUl">
+                    <li class="tabLi curr"><i class="icons byWord"></i><span>选项面板</span></li>
+                    <!--<li class="tabLi"><i class="icons byArea"></i><span>按地域</span></li>-->
+                </ul>
+            </div>
 
             <div class="tabConts">
+                <div style="margin: 20px auto 10px 20px;border-bottom: 1px dotted #666;width: 182px;font-weight: bold;font-size: 14px;">参数选择</div>
 
-                <div style="margin: 20px auto 10px 20px;border-bottom: 1px dotted #666;width: 182px;font-weight:    
-                bold;font-size: 20px;">话题概述</div>
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">关键词</span>
+                    <input id="keyword_input" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ topic }}" disabled>
+                </div>
 
-                <p>
-                    <div style="padding-left:10px;padding-top:10px;">
-                        <label style="font-size:16px">子话题数：<div class="btn btn-warning btn-xs"style="border-bottom: 1px dotted #666;font-weight: bold;font-size: 15px;">{{ n }}</div> </label>
-                    </div>
-                    <!--<div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">子话题数：</div>
-                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="1">{{n}}</textarea>-->
-                </p> 
+                <div class="compVsplit"></div>
 
-                <p>
-                    <div style="padding-left:10px;padding-top:10px;">
-                        <label style="font-size:15px">简介：<textarea name="content" id="content" cols="25" style="padding-top:10px" rows="10">{{content}}</textarea> </label>
-                    </div>
-                    <!--<div class="btn btn-primary btn-xs"style="margin: 20px auto 10px 25px;border-bottom: 1px dotted #666;font-weight: bold;font-size: 12px;">简介：</div>
-                <textarea name="content" id="content" cols="34" style="margin-left:15px" rows="5">{{content}}</textarea>-->
-                </p>
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">时间段</span>
+                        <div id="reportrange" class="form-control" style="padding: 5px;">
+                            <span id="all_time">{{ time_range }}</span>
+                            <b class="caret"></b>
+                        </div>
+                </div>
+
+                <div class="compVsplit"></div>
+
+                <div class="compVsplit"></div>
             </div>
         </div>
 
@@ -350,6 +356,49 @@
 {% endblock navbar %}
     <script>
         var QUERY = "{{topic}}";
+        var all_startDate = new Date('09/01/2013');
+        var all_endDate = new Date('09/21/2013');
+        var all_maxDate = new Date('09/21/2013');
+        var all_minDate = new Date('09/01/2013');
+        var week_ago = subtract(all_endDate,7);
+        //var month_ago = subtract(all_endDate,30);
+        //var 3month_ago = subtract(all_endDate,90);
+
+        function subtract(date,days){
+            var nd = new Date(date);
+            nd = nd.valueOf();
+            nd = nd - days * 24 * 60 * 60 * 1000;
+            nd = new Date(nd);
+            var y = nd.getFullYear();
+            var m = nd.getMonth()+1;
+            var d = nd.getDate();
+            if(m <= 9) m = "0"+m;
+            if(d <= 9) d = "0"+d; 
+            var cdate = y+"-"+m+"-"+d;
+            return cdate;
+        }
+        $('#reportrange').daterangepicker({
+            ranges: {
+                '今天': [all_endDate, all_endDate],
+                '最近7天': [week_ago, all_endDate],
+            },
+            startDate: all_startDate,
+            endDate: all_endDate,
+            minDate: all_minDate,
+            maxDate: all_maxDate
+        },
+        function(start, end) {
+            $('#reportrange span').html(start.format('YYYYMMDD') + '-' + end.format('YYYYMMDD'));
+        }
+        );
+
+        function date2ts(date){
+            // 20130901
+            var year = date.substring(0, 4);
+            var month = date.substring(4, 6);
+            var day = date.substring(6, 8);
+            return new Date(year, month-1, day).getTime() / 1000;
+        }
     </script>
     {% block tail_js %}
 
