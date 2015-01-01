@@ -273,9 +273,11 @@ class Event(object):
 
         return avg
 
-    def getSortedInfos(self, subeventid=None, key="weight", removeDuplicate=True, limit=10):
+    def getSortedInfos(self, startts, endts, subeventid=None, key="weight", removeDuplicate=True, limit=10):
         """获取各簇排序后的信息
            input:
+               startts: 起时间
+               endts: 结束时间
                subeventid: 子事件的ID，默认不指定，则计算所有子事件
                key: 排序的标准, 默认是按照文本相关度，weight
                removeDuplicate: True or False，是否移除重复的文本
@@ -285,10 +287,11 @@ class Event(object):
         """
         # items: 一个簇下的items，每个item需要包含same_from一个字段
         def handle_subevent(subeventid):
-            results = self.mongo[self.news_collection].find({"subeventid": subeventid}).sort(key, -1).limit(limit)
+            results = self.mongo[self.news_collection].find({"subeventid": subeventid, "timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).limit(limit)
             unique_ids = set()
             unique_items = {}
             for r in results:
+                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-')
                 if r['same_from'] in unique_ids:
                     try:
                         unique_items[r['same_from']]['same_list'].append(r)
@@ -301,18 +304,34 @@ class Event(object):
 
             sorted_results = sorted(unique_items.iteritems(), key=lambda(k, v): v[key], reverse=True)
             sorted_results = [[news['weight'], news]  for id, news in sorted_results]
+
+            return sorted_results
+
+        def handle_global():
+            results = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).limit(limit)
+            unique_ids = set()
+            unique_items = {}
+            for r in results:
+                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-')
+                if r['same_from'] in unique_ids:
+                    try:
+                        unique_items[r['same_from']]['same_list'].append(r)
+                    except KeyError:
+                        unique_items[r['same_from']]['same_list'] = [r]
+
+                else:
+                    unique_items[r['same_from']] = r
+                    unique_ids.add(r['same_from'])
+
+            sorted_results = sorted(unique_items.iteritems(), key=lambda(k, v): v[key], reverse=True)
+            sorted_results = [[news['weight'], news]  for id, news in sorted_results]
+
             return sorted_results
 
         if subeventid:
             return handle_subevent(subeventid)
         else:
-            s_dict = dict()
-            subevents = self.getSubEvents()
-            for subevent in subevents:
-                subeventid = subevent["_id"]
-                s_dict[subeventid] = handle_subevent(subeventid)
-
-            return s_dict
+            return handle_global()
 
     def getInitialInfos(self):
         """获取初始聚类文本，默认取话题开始时间之前的文本

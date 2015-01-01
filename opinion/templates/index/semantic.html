@@ -411,12 +411,9 @@
             <h4>走势分析</h4>
             <i id="trend_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="情感分类：可视化信息中蕴含的情感走势"></i>&nbsp;&nbsp;
             <span id="peak_trend_tooltip"></span>
-            <span class="pull-right" style="margin: -14px -9px -10px auto;" data-animated="false">
-                <input type="checkbox" name="abs_rel_switch" checked>
+            <span id="clickalltime" class="pull-right" style="margin:-3px -2px -10px auto;cursor: pointer;">
+                <h4>全时段</h4>
             </span>
-            <!--<span class="compInfo" style="display: none;"> </span>
-            <span class="compInfo">2014-08-07 至 2014-08-13</span>
-            <span class="compInfo">全国</span>-->
         </div>
 
         <div class="tabUnit">
@@ -498,58 +495,4 @@
     <script src="/static/js/api/cloud_keywords.js" type="text/javascript"></script>
  	<script src="/static/css/js/comment.js" type="text/javascript"></script>
     <script src="/static/css/js/timeline_pie_text.js" type="text/javascript"></script>
-    <script type="text/javascript">
-        /*
-  function display_drop(){
-    var lis = document.getElementById("whole_rank_method_dropdown_menu");
-    lis.style.display='block';
-
-  }
-  function choose_method(range, method) {
-    $("#"+range+"_rank_method").val(method);
-    cn_method = '';
-    if(method=='represent')
-        cn_method = '代表性';
-    else if(method=='time')
-        cn_method = '时间';
-    $("#"+range+"_rank_method_choosen").text(cn_method);
-    $("#"+range+"_rank_method_choosen").append(' <span class="caret"></span>');
-    //close dropdown
-    $("#"+range+"_rank_method_choosen").parent().removeClass('open');
-    $("#"+range+"_rank_method_dropdown_menu").children().removeClass('active');
-    var lis = document.getElementById("whole_rank_method_dropdown_menu");
-    lis.style.display='none';
-    }
-
-  function load_more(){
-    topic = "两会";
-    window.open("/index/load_more/?topic=" +  topic, "_blank");
-  }
-
-  $("#rank").click(function() {
-        var rank_type = $("#whole_rank_method_choosen").text();
-        var str = []
-        var topic = '两会'
-        $("[name='c_topic']").each(function(){
-                              
-            if(this.checked)
-            {
-                var fa = $(this).parent();
-                var ne = $(fa).text();
-                str.push(ne);
-            }
-        });
-
-        $.ajax({   
-            type:"GET",  
-            url:"/index/rank/?topic="+topic+"&c_topic="+str+"&r_type="+rank_type,
-            dataType: "json",
-            async:false,
-            success: function(data){
-                chg_weibos(data);
-            }           
-        });
-                                  
-    });*/
-    </script>
 {% endblock tail_js %}

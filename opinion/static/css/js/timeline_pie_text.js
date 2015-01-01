@@ -37,8 +37,8 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 	this.cloud_ajax_url = function(query, end_ts, during, subevent){
 		return "/news/keywords/?query=" + query + "&subevent=" + subevent + "&during=" + during + "&ts=" + end_ts;
 	}
-	this.weibo_ajax_url = function(query, start_ts, end_ts){
-		return "/news/weibos/?query=" + query;
+	this.weibo_ajax_url = function(query, end_ts, during, subevent){
+		return "/news/weibos/?query=" + query + "&topk=10" + "&ts=" + end_ts + "&during=" + during + "&subevent=" + subevent;
 	}
     this.peak_ajax_url = function(data, ts_list, during, subevent){
         return "/news/peak/?lis=" + data.join(',') + "&ts=" + ts_list + '&during=' + during + "&subevent=" + subevent;
@@ -63,6 +63,12 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
     this.select_subevent; // 当前选择的subevent
 
     this.click_status = 'global'; // 标识当前的状态，global表示全局，peak表示点击了某个拐点后的情况
+
+    var that = this;
+    $("#clickalltime").click(function(){
+        $("#cloudpie").css("display", "block");
+        that.click_status = "global";
+    });
 
     this.trend_count_obj = {
         "ts": [],
@@ -151,7 +157,7 @@ Opinion_timeline.prototype.pull_cloud_data = function(){
 
 Opinion_timeline.prototype.pull_weibo_data = function(){
 	var that = this;
-	var ajax_url = this.weibo_ajax_url(this.query, this.start_ts, this.end_ts);
+	var ajax_url = this.weibo_ajax_url(this.query, this.end_ts, this.end_ts - this.start_ts, "global");
 
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Weibo_function);
 

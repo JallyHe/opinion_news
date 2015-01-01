@@ -9,13 +9,10 @@ from utils import ts2datetime
 from flask import Blueprint, url_for, render_template, request
 from Database import Event, EventManager, Feature
 from opinion.global_config import default_topic_name
-from xapian_case.utils import cut, load_scws
 
 mod = Blueprint('news', __name__, url_prefix='/news')
 
 em = EventManager()
-
-scws = load_scws()
 
 @mod.route('/')
 def index():
@@ -32,7 +29,7 @@ def index():
 
     return render_template('index/semantic.html',topic=topic_name, n=n, content=content)
 
-@mod.route('/mange/')
+@mod.route('/manage/')
 def mange():
     """返回页面
     """
@@ -84,7 +81,6 @@ def opinion_keywords():
     during = request.args.get('during', None)
 
     subevent_status = request.args.get('subevent', 'global')
-    print subevent_status
     topk_keywords = request.args.get('topk', 50) # topk keywords
 
     if subevent_status != 'global':
@@ -93,11 +89,8 @@ def opinion_keywords():
         counter = Counter()
         counter.update(feature.get_newest())
         top_keywords_count = counter.most_common(topk_keywords)
-        top5_keywords_count = counter.most_common(3)
 
-        subevent_top5_keywords = ','.join([k for k, c in top5_keywords_count])
-        subevent_top5_count = sum([c for k, c in top5_keywords_count])
-        subevent_keywords = {subeventid: [(subevent_top5_keywords, subevent_top5_count), dict(top_keywords_count)]}
+        subevent_keywords = dict(top_keywords_count)
 
         return json.dumps(subevent_keywords)
     else:
@@ -109,16 +102,15 @@ def opinion_keywords():
         if during:
             during = int(during)
 
-        items = event.getInfos(end_ts - during, end_ts)
-
         counter = Counter()
-        for r in items:
-            text = (r['title'] + r['content168']).encode('utf-8')
-            terms = cut(scws, text)
-            counter.update(terms)
+        subevents = event.getSubEvents()
+        for subevent in subevents:
+            feature = Feature(subevent["_id"])
+            counter.update(feature.get_newest())
 
-        top_words_count = counter.most_common(topk_keywords)
-        return json.dumps({w: c for w, c in top_words_count})
+        top_keywords_count = counter.most_common(topk_keywords)
+
+        return json.dumps(dict(top_keywords_count))
 
 
 @mod.route('/ratio/')
@@ -155,17 +147,32 @@ def opinion_weibos():
     """重要信息排序
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
+    end_ts = request.args.get('ts', None)
+    during = request.args.get('during', None)
+    topk = int(request.args.get('topk', 10))
+    subevent_status = request.args.get('subevent', 'global')
+
+    if end_ts:
+        end_ts = int(end_ts)
+
+    if during:
+        during = int(during)
+        start_ts = end_ts - during
 
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
-    subevents = event.getSubEvents()
 
     results = dict()
-    for subevent in subevents:
-        subeventid = subevent["_id"]
-        results[subeventid] = event.getSortedInfos(subeventid=subeventid)
+    if subevent_status != 'global':
+        subeventid = subevent_status
+        results[subeventid] = event.getSortedInfos(start_ts, end_ts, subeventid=subeventid, limit=10)
 
-    return json.dumps(results)
+        return json.dumps(results)
+    else:
+        results['global'] = event.getSortedInfos(start_ts, end_ts, subeventid=None, limit=10)
+
+        return json.dumps(results)
+
 
 @mod.route('/timeline/')
 def timeline():
