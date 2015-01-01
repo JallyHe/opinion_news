@@ -5,7 +5,7 @@ import json
 import time
 import datetime
 from collections import Counter
-from utils import ts2datetime
+from utils import ts2datetime, ts2date
 from flask import Blueprint, url_for, render_template, request
 from Database import Event, EventManager, Feature
 from opinion.global_config import default_topic_name
@@ -21,13 +21,22 @@ def index():
     topic_name = request.args.get('query', default_topic_name) # 话题名
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
-    n = event.getSubEventsLength() # 子事件的个数
 
-    # 话题简介
-    # content = u'在代表委员讨论里，在会内会外交流中，在达成的共识和成果里，改革，成为最强音，汇聚成澎湃激越的主旋律。从新的历史起点出发，全面深化改革的强劲引擎，将推动“中国号”巨轮，向着中国梦的美好目标奋勇前行.'
-    content = ""
+    start_ts = event.getStartts()
+    default_startts = start_ts - 3600 * 24 * 30
+    last_modify = event.getLastmodify()
+    status = event.getStatus()
+    end_ts = event.getEndts()
+    if end_ts:
+        end_date = ts2date(end_ts)
+    else:
+        end_date = u'无'
+    modify_success = event.getModifysuccess()
 
-    return render_template('index/semantic.html',topic=topic_name, n=n, content=content)
+    time_range = request.args.get('time_range', ts2date(default_startts) + '-' + ts2date(last_modify))
+
+    return render_template('index/semantic.html', topic=topic_name, time_range=time_range, status=status, \
+            start_date=ts2datetime(start_ts), end_date=end_date, last_modify=ts2datetime(last_modify), modify_success=modify_success)
 
 @mod.route('/manage/')
 def mange():
@@ -66,9 +75,19 @@ def eventriver():
     """event river数据
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
+    end_ts = request.args.get('ts', None)
+    during = request.args.get('during', None)
+
+    if end_ts:
+        end_ts = int(end_ts)
+
+    if during:
+        during = int(during)
+        start_ts = end_ts - during
+
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
-    subeventlist = event.getEventRiverData()
+    subeventlist = event.getEventRiverData(start_ts, end_ts)
 
     return json.dumps({"name": topic_name, "type": "eventRiver", "eventList": subeventlist})
 
@@ -115,32 +134,39 @@ def opinion_keywords():
 
 @mod.route('/ratio/')
 def opinion_ratio():
-    """子事件占比饼图数据
+    """饼图数据
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
-    topk_keywords = request.args.get('topk', 3)
+    topk = request.args.get('topk', 10)
+    end_ts = request.args.get('ts', None)
+    during = request.args.get('during', None)
+    subevent_status = request.args.get('subevent', 'global')
+
+    if end_ts:
+        end_ts = int(end_ts)
+
+    if during:
+        during = int(during)
+        start_ts = end_ts - during
 
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
-    subevents = event.getSubEvents()
 
-    subevent_keywords = dict()
-    for subevent in subevents:
-        feature = Feature(subevent["_id"])
-        counter = Counter()
-        counter.update(feature.get_newest())
-        top5_keywords_count = counter.most_common(topk_keywords)
-        subevent_top5_keywords = ','.join([k for k, c in top5_keywords_count])
-        subevent_keywords[subevent["_id"]] = subevent_top5_keywords
+    if subevent_status != 'global':
+        subeventid = subevent_status
+        results = event.getMediaCount(start_ts, end_ts, subeventid)
+    else:
+        results = event.getMediaCount(start_ts, end_ts)
 
-    results = dict()
-    size_results = event.getSubEventSize(int(time.time()))
-    total_size = sum(size_results.values())
-    for label, size in size_results.iteritems():
-        keywords = subevent_keywords[label]
-        results[keywords] = float(size) / float(total_size)
+    from collections import Counter
+    results = Counter(results)
+    results = dict(results.most_common(topk))
+
+    total_weight = sum(results.values())
+    results = {k: float(v) / float(total_weight) for k, v in results.iteritems()}
 
     return json.dumps(results)
+
 
 @mod.route('/weibos/')
 def opinion_weibos():
@@ -165,11 +191,11 @@ def opinion_weibos():
     results = dict()
     if subevent_status != 'global':
         subeventid = subevent_status
-        results[subeventid] = event.getSortedInfos(start_ts, end_ts, subeventid=subeventid, limit=10)
+        results = event.getSortedInfos(start_ts, end_ts, subeventid=subeventid, limit=10)
 
         return json.dumps(results)
     else:
-        results['global'] = event.getSortedInfos(start_ts, end_ts, subeventid=None, limit=10)
+        results = event.getSortedInfos(start_ts, end_ts, subeventid=None, limit=10)
 
         return json.dumps(results)
 
@@ -184,10 +210,16 @@ def timeline():
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
 
+    results = dict()
     if subevent_status == 'global':
         count = event.getInfoCount(timestamp - during, timestamp)
+        results["global"] = [timestamp, count]
+    else:
+        subeventid = subevent_status
+        count = event.getInfoCount(timestamp - during, timestamp, subevent=subeventid)
+        results[subeventid] = [timestamp, count]
 
-        return json.dumps({"global": [timestamp, count]})
+    return json.dumps(results)
 
 @mod.route('/peak/')
 def getPeaks():

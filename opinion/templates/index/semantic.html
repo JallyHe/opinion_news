@@ -458,8 +458,9 @@
                         <div class="nav_inner clearfix">
                             <div class="search_type clearfix">
                             </div>
-                            <div class="r_v2" style="float: right;">
-                                <a href="#news_rec">按时间</a> | 按相关度
+                            <div id="sort_news" class="r_v2" style="float: right;">
+                                <a id="sort_by_timestamp" href="javascript: ;" >按时间</a> |
+                                <a id="sort_by_weight" href="javascript: ;" style="color: #333;">按相关度</a>
                             </div>
                         </div>
                     </div>
@@ -493,6 +494,6 @@
    
     <script src="/static/css/js/tab.js" type="text/javascript"></script>
     <script src="/static/js/api/cloud_keywords.js" type="text/javascript"></script>
- 	<script src="/static/css/js/comment.js" type="text/javascript"></script>
+    <!--<script src="/static/css/js/comment.js" type="text/javascript"></script>-->
     <script src="/static/css/js/timeline_pie_text.js" type="text/javascript"></script>
 {% endblock tail_js %}

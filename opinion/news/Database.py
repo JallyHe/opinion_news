@@ -100,12 +100,43 @@ class Event(object):
         results = self.mongo[self.sub_events_collection].find({"eventid": self.id, "_id": {"$ne": self.other_subeventid}})
         return [r for r in results]
 
-    def getInfoCount(self, startts, endts):
-        """获取信息条数
-           startts:
-           endts:
+    def getStatus(self):
+        """获取话题状态
         """
-        count = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}, "subeventid": {"$ne": self.other_subeventid}}).count()
+        result = self.mongo[self.events_collection].find_one({"_id": self.id})
+        return result['status']
+
+    def getMediaCount(self, startts, endts, subevent=None):
+        """高频转载媒体统计
+        """
+        func='''
+                function(obj,prev)
+                {
+                    prev.count++;
+                }
+        '''
+        if subevent:
+            results = self.mongo[self.news_collection].group({"transmit_name": 1}, {"subeventid": subevent, 'timestamp': {'$gte': startts, '$lt': endts}}, {"count": 0}, func)
+            count_dict = {r["transmit_name"]: r['count'] for r in results if r["transmit_name"] != ''}
+        else:
+            results = self.mongo[self.news_collection].group({"transmit_name": 1}, {"timestamp": {'$gte': startts, '$lt': endts}}, {"count": 0}, func)
+            count_dict = {r["transmit_name"]: r['count'] for r in results if r["transmit_name"] != ''}
+
+        return count_dict
+
+    def getInfoCount(self, startts, endts, subevent=None):
+        """获取信息条数
+           startts: 起时间戳
+           endts: 止时间戳
+           subevent
+        """
+        if subevent:
+            count = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}, "subeventid": subevent}).count()
+        else:
+            count = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}, "$and": \
+                    [{"subeventid": {"$ne": self.other_subeventid}}, \
+                    {"subeventid": {"$exists": True}}]}).count()
+
         return count
 
     def getSubEventsLength(self):
@@ -123,21 +154,21 @@ class Event(object):
         else:
             return None
 
-    def getEventRiverData(self, topk_keywords=5):
+    def getEventRiverData(self, startts, endts, topk_keywords=5):
         """获取echarts event river的数据
            input:
+               startts: 起时间戳
+               endts: 止时间戳
                topk_keywords: 取每个子事件的topk keywords
         """
-        results = self.mongo[self.news_collection].find({"$and": \
+        results = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}, "$and": \
                 [{"subeventid": {"$ne": self.other_subeventid}}, \
                 {"subeventid": {"$exists": True}}]})
+
         cluster_date = dict()
-        startts = self.getEventStartts()
         for r in results:
             label = r['subeventid']
             timestamp = r['timestamp']
-            if timestamp < startts:
-                continue
             date = time.strftime('%Y-%m-%d', time.localtime(timestamp))
             try:
                 cluster_date[label].append(date)
@@ -221,20 +252,47 @@ class Event(object):
         """
         self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"startts": startts}})
 
+    def getStartts(self):
+        """话题起始时间
+        """
+        result = self.mongo[self.events_collection].find_one({"_id": self.id})
+        return result['startts']
+
     def setEndts(self, endts):
         """更新话题终止时间
         """
         self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"endts": endts}})
+
+    def getEndts(self):
+        """话题截止时间
+        """
+        result = self.mongo[self.events_collection].find_one({"_id": self.id})
+        if 'endts' in result:
+            return result['endts']
+        else:
+            return None
 
     def setModifysuccess(self, modify_success):
         """更新事件的modify_success, 表示是否修改成功
         """
         self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"modify_success": modify_success}})
 
+    def getModifysuccess(self):
+        """
+        """
+        result = self.mongo[self.events_collection].find_one({"_id": self.id})
+        return result['modify_success']
+
     def setLastmodify(self, timestamp):
         """更新事件的最后修改时间戳，整点, last_modify
         """
         self.mongo[self.events_collection].update({"_id": self.id}, {"$set": {"last_modify": timestamp}})
+
+    def getLastmodify(self):
+        """事件的最后修改时间戳, last_modify
+        """
+        result = self.mongo[self.events_collection].find_one({"_id": self.id})
+        return result['last_modify']
 
     def getSubEventSize(self, timestamp):
         """获取子事件的大小
@@ -303,12 +361,12 @@ class Event(object):
                     unique_ids.add(r['same_from'])
 
             sorted_results = sorted(unique_items.iteritems(), key=lambda(k, v): v[key], reverse=True)
-            sorted_results = [[news['weight'], news]  for id, news in sorted_results]
+            sorted_results = [news for id, news in sorted_results]
 
             return sorted_results
 
         def handle_global():
-            results = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).limit(limit)
+            results = self.mongo[self.news_collection].find({"$and": [{"subeventid": {"$ne": self.other_subeventid}}, {"subeventid": {"$exists": True}}], "timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).limit(limit)
             unique_ids = set()
             unique_items = {}
             for r in results:
@@ -324,7 +382,7 @@ class Event(object):
                     unique_ids.add(r['same_from'])
 
             sorted_results = sorted(unique_items.iteritems(), key=lambda(k, v): v[key], reverse=True)
-            sorted_results = [[news['weight'], news]  for id, news in sorted_results]
+            sorted_results = [news for id, news in sorted_results]
 
             return sorted_results
 

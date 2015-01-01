@@ -20,6 +20,8 @@ def _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb='boat'):
 def ts2datetime(timestamp):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
 
+def ts2date(timestamp):
+    return time.strftime('%Y%m%d', time.localtime(timestamp))
 
 def datetime2ts(date):
     return int(time.mktime(time.strptime(date, '%Y-%m-%d %H:%M:%S')))

@@ -212,7 +212,7 @@
         .lTools {
             z-index: 1000;
             position: absolute;
-            height:590px;
+            height:473px;
             width: 222px;
             top: 61px;
             display: block;
@@ -328,6 +328,41 @@
                     <span class="input-group-addon">关键词</span>
                     <input id="keyword_input" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ topic }}" disabled>
                 </div>
+ 
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">话题状态</span>
+                    <input id="status" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ status }}" disabled>
+                </div>
+
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">开始日</span>
+                    <input id="start_date" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ start_date }}" disabled>
+                </div>
+
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">终止日</span>
+                    <input id="end_date" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ end_date }}" disabled>
+                </div>
+
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">最后更新</span>
+                    <input id="last_modify" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ last_modify }}" disabled>
+                </div>
+
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">最后更新是否成功</span>
+                    <input id="modify_success" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ modify_success }}" disabled>
+                </div>
 
                 <div class="compVsplit"></div>
 
@@ -341,7 +376,7 @@
 
                 <div class="compVsplit"></div>
 
-                <div class="compVsplit"></div>
+                <span id="submit_request"><a class="compOK" ><i class="glyphicon glyphicon-ok icons iOK"></i>搜索</a></span>
             </div>
         </div>
 
@@ -355,14 +390,21 @@
 
 {% endblock navbar %}
     <script>
+        $("#submit_request").click(function(){
+            var QUERY = document.getElementById('keyword_input').value;
+            var TIME_RANGE = $('#all_time').html();
+            window.location.href = "/news/?query=" + QUERY + "&time_range=" + TIME_RANGE;
+        });
         var QUERY = "{{topic}}";
-        var all_startDate = new Date('09/01/2013');
-        var all_endDate = new Date('09/21/2013');
-        var all_maxDate = new Date('09/21/2013');
-        var all_minDate = new Date('09/01/2013');
+        var TIME_RANGE = $('#all_time').html();
+        var START_TS = date2ts(TIME_RANGE.split('-')[0]);
+        var END_TS = date2ts(TIME_RANGE.split('-')[1]);
+
+        //var all_startDate = new Date('09/01/2013');
+        var all_endDate = new Date();
+        //var all_maxDate = new Date('09/21/2013');
+        //var all_minDate = new Date('09/01/2013');
         var week_ago = subtract(all_endDate,7);
-        //var month_ago = subtract(all_endDate,30);
-        //var 3month_ago = subtract(all_endDate,90);
 
         function subtract(date,days){
             var nd = new Date(date);
@@ -382,10 +424,10 @@
                 '今天': [all_endDate, all_endDate],
                 '最近7天': [week_ago, all_endDate],
             },
-            startDate: all_startDate,
+            //startDate: all_startDate,
             endDate: all_endDate,
-            minDate: all_minDate,
-            maxDate: all_maxDate
+            //minDate: all_minDate,
+            //maxDate: all_maxDate
         },
         function(start, end) {
             $('#reportrange span').html(start.format('YYYYMMDD') + '-' + end.format('YYYYMMDD'));
@@ -393,7 +435,6 @@
         );
 
         function date2ts(date){
-            // 20130901
             var year = date.substring(0, 4);
             var month = date.substring(4, 6);
             var day = date.substring(6, 8);
