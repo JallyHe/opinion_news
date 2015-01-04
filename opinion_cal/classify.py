@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # User: linhaobuaa
-# Date: 2014-12-26 22:00:00
-# Version: 0.2.0
+# Date: 2015-01-02 17:00:00
+# Version: 0.3.0
 
 
 def subevent_classifier(text, labels, feature_words):
@@ -15,6 +15,11 @@ def subevent_classifier(text, labels, feature_words):
     """
     if len(labels) != len(feature_words):
         raise ValueError("labels and feature words list must have same length")
+
+    for fwords in feature_words:
+        for w, c in fwords.iteritems():
+            if not isinstance(w, str):
+                raise ValueError("feature words must be encode utf-8")
 
     if not isinstance(text, str):
         raise ValueError("text must be encode utf-8")
@@ -32,7 +37,7 @@ def subevent_classifier(text, labels, feature_words):
     if label_score != {}:
         results = sorted(label_score.iteritems(), key=lambda(k, v): v, reverse=True)
         # 归为类得分最高的一类
-        return results[0][1]
+        return results[0][0]
     else:
         # 归为其他类
         return 'other'

@@ -119,7 +119,9 @@ class Event(object):
             results = self.mongo[self.news_collection].group({"transmit_name": 1}, {"subeventid": subevent, 'timestamp': {'$gte': startts, '$lt': endts}}, {"count": 0}, func)
             count_dict = {r["transmit_name"]: r['count'] for r in results if r["transmit_name"] != ''}
         else:
-            results = self.mongo[self.news_collection].group({"transmit_name": 1}, {"timestamp": {'$gte': startts, '$lt': endts}}, {"count": 0}, func)
+            results = self.mongo[self.news_collection].group({"transmit_name": 1}, {"timestamp": {'$gte': startts, '$lt': endts}, "$and": \
+                    [{"subeventid": {"$ne": self.other_subeventid}}, \
+                    {"subeventid": {"$exists": True}}]}, {"count": 0}, func)
             count_dict = {r["transmit_name"]: r['count'] for r in results if r["transmit_name"] != ''}
 
         return count_dict
@@ -144,6 +146,43 @@ class Event(object):
         """
         return self.mongo[self.sub_events_collection].find({"eventid": self.id, "_id": {"$ne": self.other_subeventid}}).count()
 
+    def get_subevent_startts(self, subeventid):
+        """获取子事件的创建时间
+        """
+        result = self.mongo[SUB_EVENTS_COLLECTION].find_one({"_id": subeventid})
+        if result:
+            return result['timestamp']
+
+    def get_subevent_size(self, subeventid):
+        """获取子事件的大小
+        """
+        result = self.mongo[SUB_EVENTS_COLLECTION].find_one({"_id": subeventid})
+        if result:
+            if "size" in result:
+                return result["size"]
+
+        return 0
+
+    def get_subevent_tfidf(self, subeventid):
+        """获取子事件的tfidf
+        """
+        result = self.mongo[SUB_EVENTS_COLLECTION].find_one({"_id": subeventid})
+        if result:
+            if "tfidf" in result:
+                return result["tfidf"]
+
+        return 0
+
+    def get_subevent_addsize(self, subeventid):
+        """获取子事件的增幅
+        """
+        result = self.mongo[SUB_EVENTS_COLLECTION].find_one({"_id": subeventid})
+        if result:
+            if "addsize" in result:
+                return result["addsize"]
+
+        return 0
+
     def getEventStartts(self):
         """获取开始时间 startts - 7 days
         """
@@ -154,30 +193,75 @@ class Event(object):
         else:
             return None
 
-    def getEventRiverData(self, startts, endts, topk_keywords=5):
+    def getTrendData(self):
+        """获取按天走势数据
+        """
+        results = self.mongo[self.news_collection].find()
+
+        dates = dict()
+        for r in results:
+            timestamp = r['timestamp']
+            date = time.strftime('%Y-%m-%d', time.localtime(timestamp))
+            try:
+                dates[date] += 1
+            except KeyError:
+                dates[date] = 1
+
+        return sorted(dates.iteritems(), key=lambda(k, v): k, reverse=False)
+
+    def getHourData(self):
+        """获取按小时的数据
+        """
+        results = self.mongo[self.news_collection].find()
+
+        dates = dict()
+        for r in results:
+            timestamp = r['timestamp']
+            date = time.strftime('%Y-%m-%d %H:00:00', time.localtime(timestamp))
+            try:
+                dates[date] += 1
+            except KeyError:
+                dates[date] = 1
+
+        return sorted(dates.iteritems(), key=lambda(k, v): k, reverse=False)
+
+    def getEventRiverData(self, startts, endts, topk_keywords=5, sort="weight"):
         """获取echarts event river的数据
            input:
                startts: 起时间戳
                endts: 止时间戳
                topk_keywords: 取每个子事件的topk keywords
+               sort: 子事件排序的依据, 默认是weight，热度，可选的包括"addweight", "created_at", "tfidf"
         """
         results = self.mongo[self.news_collection].find({"timestamp": {"$gte": startts, "$lt": endts}, "$and": \
                 [{"subeventid": {"$ne": self.other_subeventid}}, \
                 {"subeventid": {"$exists": True}}]})
 
         cluster_date = dict()
+        cluster_news = dict()
+        global_dates_set = set()
         for r in results:
             label = r['subeventid']
             timestamp = r['timestamp']
             date = time.strftime('%Y-%m-%d', time.localtime(timestamp))
+            global_dates_set.add(date)
             try:
                 cluster_date[label].append(date)
             except KeyError:
                 cluster_date[label] = [date]
 
+            try:
+                cluster_news[label].append(r)
+            except KeyError:
+                cluster_news[label] = [r]
+
         from collections import Counter
         results = []
+        total_weight = 0
         for label, dates in cluster_date.iteritems():
+            news_list = cluster_news[label]
+            subevent_news = sorted(news_list, key=lambda news: news['weight'], reverse=True)[0]
+
             feature = Feature(label)
             fwords = feature.get_newest()
             counter = Counter(fwords)
@@ -188,10 +272,17 @@ class Event(object):
             date_count_dict = dict(counter.most_common())
             sorted_date_count = sorted(date_count_dict.iteritems(), key=lambda(k, v): k, reverse=False)
             evolution_list = [{"time": date, "value": count, "detail": {"text": str(count), "link": "#"}} for date, count in sorted_date_count]
-            cluster_result = {"id": label, "name": cluster_keywords, "weight": len(dates), "evolution": evolution_list}
+            added_count = self.get_subevent_addsize(label)
+            tfidf = self.get_subevent_tfidf(label)
+            created_at = self.get_subevent_startts(label)
+            total_weight += len(dates)
+            cluster_result = {"id": label, "news": subevent_news, "name": cluster_keywords, "weight": len(dates), "addweight": added_count, "created_at": created_at, 'tfidf': tfidf, "evolution": evolution_list}
             results.append(cluster_result)
 
-        return results
+        results = sorted(results, key=lambda k: k[sort], reverse=True)
+        sorted_dates = sorted(list(global_dates_set))
+
+        return results, sorted_dates, total_weight
 
     def getSubeventInfos(self, subeventid):
         """获取一个子事件的相关信息
@@ -331,7 +422,8 @@ class Event(object):
 
         return avg
 
-    def getSortedInfos(self, startts, endts, subeventid=None, key="weight", removeDuplicate=True, limit=10):
+    def getSortedInfos(self, startts, endts, subeventid=None, key="weight", \
+            removeDuplicate=True, limit=10, skip=0):
         """获取各簇排序后的信息
            input:
                startts: 起时间
@@ -339,17 +431,18 @@ class Event(object):
                subeventid: 子事件的ID，默认不指定，则计算所有子事件
                key: 排序的标准, 默认是按照文本相关度，weight
                removeDuplicate: True or False，是否移除重复的文本
-               limit: 默认返回前10
+               limit: 返回的信息条数
+               skip: 跳过的条数
            output:
                排完序的items
         """
         # items: 一个簇下的items，每个item需要包含same_from一个字段
         def handle_subevent(subeventid):
-            results = self.mongo[self.news_collection].find({"subeventid": subeventid, "timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).limit(limit)
+            results = self.mongo[self.news_collection].find({"subeventid": subeventid, "timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).skip(skip).limit(limit)
             unique_ids = set()
             unique_items = {}
             for r in results:
-                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-')
+                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-').replace('%', '-').replace('?', '-').replace('&', '-').replace('=', '-')
                 if r['same_from'] in unique_ids:
                     try:
                         unique_items[r['same_from']]['same_list'].append(r)
@@ -366,11 +459,11 @@ class Event(object):
             return sorted_results
 
         def handle_global():
-            results = self.mongo[self.news_collection].find({"$and": [{"subeventid": {"$ne": self.other_subeventid}}, {"subeventid": {"$exists": True}}], "timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).limit(limit)
+            results = self.mongo[self.news_collection].find({"$and": [{"subeventid": {"$ne": self.other_subeventid}}, {"subeventid": {"$exists": True}}], "timestamp": {"$gte": startts, "$lt": endts}}).sort(key, -1).skip(skip).limit(limit)
             unique_ids = set()
             unique_items = {}
             for r in results:
-                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-')
+                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-').replace('%', '-').replace('?', '-').replace('&', '-').replace('=', '-')
                 if r['same_from'] in unique_ids:
                     try:
                         unique_items[r['same_from']]['same_list'].append(r)

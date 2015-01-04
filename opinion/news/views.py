@@ -33,17 +33,41 @@ def index():
         end_date = u'无'
     modify_success = event.getModifysuccess()
 
-    time_range = request.args.get('time_range', ts2date(default_startts) + '-' + ts2date(last_modify))
+    time_range = request.args.get('time_range', ts2date(default_startts) + '-' + ts2date(last_modify + 24 * 3600))
 
     return render_template('index/semantic.html', topic=topic_name, time_range=time_range, status=status, \
             start_date=ts2datetime(start_ts), end_date=end_date, last_modify=ts2datetime(last_modify), modify_success=modify_success)
 
+@mod.route('/trend/')
+def trend():
+    """返回话题趋势页面
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    mode = request.args.get('mode', 'day')
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+
+    start_ts = event.getStartts()
+    default_startts = start_ts - 3600 * 24 * 30
+    last_modify = event.getLastmodify()
+    status = event.getStatus()
+    end_ts = event.getEndts()
+    if end_ts:
+        end_date = ts2date(end_ts)
+    else:
+        end_date = u'无'
+    modify_success = event.getModifysuccess()
+
+    time_range = request.args.get('time_range', ts2date(default_startts) + '-' + ts2date(last_modify + 24 * 3600))
+
+    return render_template('index/trend.html', mode=mode, topic=topic_name, time_range=time_range, status=status, \
+            start_date=ts2datetime(start_ts), end_date=end_date, last_modify=ts2datetime(last_modify), modify_success=modify_success)
+
 @mod.route('/manage/')
 def mange():
-    """返回页面
+    """返回话题管理页面
     """
-    content = u'在代表委员讨论里，在会内会外交流中，在达成的共识和成果里，改革，成为最强音，汇聚成澎湃激越的主旋律。从新的历史起点出发，全面深化改革的强劲引擎，将推动“中国号”巨轮，向着中国梦的美好目标奋勇前行.'
-    return render_template('index/opinion.html',content=content )
+    return render_template('index/opinion.html')
 
 @mod.route('/topics/')
 def topics():
@@ -70,11 +94,51 @@ def topics():
 
     return json.dumps(final)
 
+@mod.route('/trenddata/')
+def trenddata():
+    """获取每个话题按天走势
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    mode = request.args.get('mode', 'day')
+
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+    if mode == 'day':
+        raw = event.getTrendData()
+    else:
+        raw = event.getHourData()
+
+    dates = []
+    counts = []
+    f = open('dates_count.txt', 'w')
+    for date, count in raw:
+        f.write('%s\t%s\n' % (date, count))
+        dates.append(date)
+        counts.append(count)
+    f.close()
+
+    return json.dumps({"dates": dates, "counts": counts})
+
+@mod.route('/othertext/')
+def othertext():
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+
+    topicid = em.getEventIDByName(topic_name)
+    event = Event(topicid)
+    results = event.getOtherSubEventInfos()
+    f = open('results.txt', 'w')
+    for r in results:
+        f.write('%s\t%s\n' % (r['title'].encode('utf-8'), r['content168'].encode('utf-8')))
+    f.close()
+
+    return json.dumps(results)
+
 @mod.route('/eventriver/')
 def eventriver():
     """event river数据
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
+    sort = request.args.get('sort', 'tfidf') # weight, addweight, created_at, tfidf
     end_ts = request.args.get('ts', None)
     during = request.args.get('during', None)
 
@@ -87,9 +151,9 @@ def eventriver():
 
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
-    subeventlist = event.getEventRiverData(start_ts, end_ts)
+    subeventlist, dates, total_weight = event.getEventRiverData(start_ts, end_ts, sort=sort)
 
-    return json.dumps({"name": topic_name, "type": "eventRiver", "eventList": subeventlist})
+    return json.dumps({"dates": dates, "name": topic_name, "type": "eventRiver", "weight": total_weight, "eventList": subeventlist})
 
 @mod.route('/keywords/')
 def opinion_keywords():
@@ -154,7 +218,7 @@ def opinion_ratio():
 
     if subevent_status != 'global':
         subeventid = subevent_status
-        results = event.getMediaCount(start_ts, end_ts, subeventid)
+        results = event.getMediaCount(start_ts, end_ts, subevent=subeventid)
     else:
         results = event.getMediaCount(start_ts, end_ts)
 
@@ -175,7 +239,9 @@ def opinion_weibos():
     topic_name = request.args.get('query', default_topic_name) # 话题名
     end_ts = request.args.get('ts', None)
     during = request.args.get('during', None)
-    topk = int(request.args.get('topk', 10))
+    sort = request.args.get('sort', 'weight')
+    limit = int(request.args.get('limit', 10))
+    skip = int(request.args.get('skip', 10))
     subevent_status = request.args.get('subevent', 'global')
 
     if end_ts:
@@ -191,11 +257,11 @@ def opinion_weibos():
     results = dict()
     if subevent_status != 'global':
         subeventid = subevent_status
-        results = event.getSortedInfos(start_ts, end_ts, subeventid=subeventid, limit=10)
+        results = event.getSortedInfos(start_ts, end_ts, key=sort, subeventid=subeventid, limit=limit, skip=skip)
 
         return json.dumps(results)
     else:
-        results = event.getSortedInfos(start_ts, end_ts, subeventid=None, limit=10)
+        results = event.getSortedInfos(start_ts, end_ts, key=sort, subeventid=None, limit=limit, skip=skip)
 
         return json.dumps(results)
 
@@ -255,50 +321,3 @@ def getPeaks():
 
     return json.dumps(time_lis)
 
-"""
-@mod.route('/rank/')
-def opinion_rank():#自定义排序
-    topic = request.args.get('topic', '')
-    c_topic = request.args.get('c_topic', '')
-    r_type = request.args.get('r_type', '')
-
-    r_type = r_type.strip('\r\t')
-    if r_type == u'时间':
-        r_type = 'time'
-    else:
-        r_type = 'weight'
-        
-    if not r_type:#异常返回
-        return 'ranking type is wrong'
-
-    f_news = TopkHeap(10)
-    item = c_topic.split(',')
-    for i in range(0,len(item)):
-        sub = item[i].strip('\r\t')
-        results = get_opinion_weibos_rank(topic,sub)
- 
-        if not results:
-            continue
-
-        if r_type == 'weight':#按代表性排序
-            for i in range(0,len(results)):
-                k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
-                row = {'c_topic':k,'weight':results[i][1],'_id':results[i][2],'title':results[i][3],'content':results[i][4],'user':results[i][5],'time':results[i][6],'source':results[i][7],'c_source':results[i][8],'repeat':results[i][9]}
-                f_news.Push((results[i][1],row))
-        else:#按时间排序
-            for i in range(0,len(results)):
-                k = results[i][0][0].encode('utf-8')+'-'+results[i][0][1].encode('utf-8')+'-'+results[i][0][2].encode('utf-8')
-                row = {'c_topic':k,'weight':results[i][1],'_id':results[i][2],'title':results[i][3],'content':results[i][4],'user':results[i][5],'time':results[i][6],'source':results[i][7],'c_source':results[i][8],'repeat':results[i][9]}
-                f_news.Push((results[i][5],row))
-
-    data = f_news.TopK()
-    return json.dumps(data)
-    
-@mod.route('/load_more/')
-def opinion_load_more():
-
-    topic = request.args.get('topic', '')
-
-    return render_template('index/load_more.html',topic=topic)    
-"""
-    

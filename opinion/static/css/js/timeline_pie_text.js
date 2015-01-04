@@ -25,6 +25,9 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 	this.start_ts = start_ts;
 	this.end_ts = end_ts;
     this.pointInterval = pointInterval; // 图上一点的时间间隔
+    this.weibo_limit_count = 10; // 每次加载10条微博
+    this.weibo_skip = 0; // 当前页面已显示的微博数
+    this.weibo_sort = "weight"; // 当前页面微博排序依据
 	this.eventriver_ajax_url = function(query, end_ts, during){
 		return "/news/eventriver/?query=" + query + "&during=" + during + "&ts=" + end_ts;
 	}
@@ -34,8 +37,10 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 	this.cloud_ajax_url = function(query, end_ts, during, subevent){
 		return "/news/keywords/?query=" + query + "&subevent=" + subevent + "&during=" + during + "&ts=" + end_ts;
 	}
-	this.weibo_ajax_url = function(query, end_ts, during, subevent){
-		return "/news/weibos/?query=" + query + "&topk=10" + "&ts=" + end_ts + "&during=" + during + "&subevent=" + subevent;
+	this.weibo_ajax_url = function(query, end_ts, during, subevent, skip, limit, sort){
+		var url = "/news/weibos/?query=" + query + "&limit=" + limit + "&skip=" + skip + "&ts=" + end_ts + "&during=" + during + "&subevent=" + subevent + "&sort=" + sort;
+        console.log(url);
+        return url
 	}
     this.peak_ajax_url = function(data, ts_list, during, subevent){
         return "/news/peak/?lis=" + data.join(',') + "&ts=" + ts_list + '&during=' + during + "&subevent=" + subevent;
@@ -74,29 +79,97 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         "count": []
     };
 
-    this.weibo_data = []; // 存储新闻信息，便于前端排序
-    $("#sort_by_timestamp").click(function(){
-        that.weibo_data.sort(news_timestamp_comparator);
-        refreshWeibodata(that.weibo_data);
-        $("#sort_by_timestamp").css("color", "#333");
-        $("#sort_by_weight").css("color", "-webkit-link");
+    $("#sort_by_tfidf").click(function(){
+        console.log(that.event_river_data);
+        that.event_river_data['eventList'].sort(tfidf_comparator);
+        drawSubeventTab(that.event_river_data, that); // 画子事件Tab
     });
+
     $("#sort_by_weight").click(function(){
-        that.weibo_data.sort(news_weight_comparator);
-        refreshWeibodata(that.weibo_data);
+        that.event_river_data['eventList'].sort(weight_comparator);
+        drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+    });
+
+    $("#sort_by_addweight").click(function(){
+        that.event_river_data['eventList'].sort(addweight_comparator);
+        drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+    });
+
+    $("#sort_by_created_at").click(function(){
+        that.event_river_data['eventList'].sort(createdat_comparator);
+        drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+    });
+
+    $("#sort_by_timestamp").click(function(){
+        $("#sort_by_timestamp").css("color", "#333");
+        $("#sort_by_weight").css("color", "#428bca");
+        console.log($("#sort_by_weight").css("color"));
+        that.weibo_skip = 0;
+        that.weibo_sort = 'timestamp';
+
+        var ajax_url = that.weibo_ajax_url(that.query, that.end_ts, that.end_ts - that.start_ts, that.select_subevent, that.weibo_skip, that.weibo_limit_count, that.weibo_sort);
+
+        that.call_sync_ajax_request(ajax_url, that.ajax_method, Weibo_function);
+
+        function Weibo_function(data){
+            $("#weibo_ul").empty();
+            that.weibo_skip += that.weibo_limit_count;
+            refreshWeibodata(data);
+        }
+    });
+
+    $("#sort_by_weight").click(function(){
         $("#sort_by_weight").css("color", "#333");
-        $("#sort_by_timestamp").css("color", "-webkit-link");
+        $("#sort_by_timestamp").css("color", "#428bca");
+        that.weibo_skip = 0;
+        that.weibo_sort = 'weight';
+
+        var ajax_url = that.weibo_ajax_url(that.query, that.end_ts, that.end_ts - that.start_ts, that.select_subevent, that.weibo_skip, that.weibo_limit_count, that.weibo_sort);
+
+        that.call_sync_ajax_request(ajax_url, that.ajax_method, Weibo_function);
+
+        function Weibo_function(data){
+            $("#weibo_ul").empty();
+            that.weibo_skip += that.weibo_limit_count;
+            refreshWeibodata(data);
+        }
+    });
+
+    $("#more_information").click(function(){
+        var ajax_url = that.weibo_ajax_url(that.query, that.end_ts, that.end_ts - that.start_ts, that.select_subevent, that.weibo_skip, that.weibo_limit_count, that.weibo_sort);
+
+        that.call_sync_ajax_request(ajax_url, that.ajax_method, Weibo_function);
+
+        function Weibo_function(data){
+            if(data.length == 0){
+                $("#more_information").html("加载完毕");
+            }
+            else{
+                that.weibo_skip += that.weibo_limit_count;
+                refreshWeibodata(data);
+                $("#more_information").html("加载更多");
+            }
+        }
     });
 }
 
-function news_timestamp_comparator(a, b) {
-    return parseInt(b.timestamp) - parseInt(a.timestamp);
+function tfidf_comparator(a, b) {
+    return parseInt(b.tfidf) - parseInt(a.tfidf);
 }
 
-function news_weight_comparator(a, b) {
+function weight_comparator(a, b) {
     return parseInt(b.weight) - parseInt(a.weight);
 }
 
+function addweight_comparator(a, b) {
+    return parseInt(b.addweight) - parseInt(a.addweight);
+}
+
+function createdat_comparator(a, b) {
+    return parseInt(b.created_at) - parseInt(a.created_at);
+}
+
+// pull eventriver data
 Opinion_timeline.prototype.pull_eventriver_data = function(){
 	var that = this; //向下面的函数传递获取的值
 	var ajax_url = this.eventriver_ajax_url(this.query, this.end_ts, this.end_ts - this.start_ts); //传入参数，获取请求的地址
@@ -159,7 +232,7 @@ Opinion_timeline.prototype.drawTrendline = function(){
 
 Opinion_timeline.prototype.pullDrawPiedata = function(){
 	var that = this;
-	var ajax_url = this.pie_ajax_url(this.query, this.start_ts, this.end_ts, this.select_subevent);
+	var ajax_url = this.pie_ajax_url(this.query, this.end_ts, this.end_ts - this.start_ts, this.select_subevent);
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Pie_function);
 	
 	function Pie_function(data){    //数据的处理函数
@@ -179,12 +252,17 @@ Opinion_timeline.prototype.pullDrawClouddata = function(){
 
 Opinion_timeline.prototype.pullDrawWeibodata = function(){
 	var that = this;
-	var ajax_url = this.weibo_ajax_url(this.query, this.end_ts, this.end_ts - this.start_ts, this.select_subevent);
+    this.weibo_skip = 0;
+    this.weibo_sort = 'weight';
+    $("#sort_by_weight").css("color", "#333");
+    $("#sort_by_timestamp").css("color", "-webkit-link");
+	var ajax_url = this.weibo_ajax_url(this.query, this.end_ts, this.end_ts - this.start_ts, this.select_subevent, this.weibo_skip, this.weibo_limit_count, this.weibo_sort);
 
 	this.call_sync_ajax_request(ajax_url, this.ajax_method, Weibo_function);
 
     function Weibo_function(data){
-        that.weibo_data = data;
+        $("#weibo_ul").empty();
+        that.weibo_skip += that.weibo_limit_count;
         refreshWeibodata(data);
     }
 }
@@ -375,11 +453,12 @@ function call_peak_ajax(that, series, data_list, ts_list, during, subevent){
             var title = this.title;
             $("#cloudpie").css("display", "none");
             that.click_status = 'peak';
-            var ajax_url = that.weibo_ajax_url(that.query, click_ts, that.pointInterval, that.select_subevent);
+            that.weibo_skip = 0;
+            var ajax_url = that.weibo_ajax_url(that.query, click_ts, that.pointInterval, that.select_subevent, that.weibo_skip, that.weibo_limit, that.weibo_sort);
             that.call_sync_ajax_request(ajax_url, that.ajax_method, Weibo_function);
 
             function Weibo_function(data){
-                that.weibo_data = data;
+                $("#weibo_ul").empty();
                 refreshWeibodata(data);
             }
         }
@@ -426,11 +505,11 @@ function drawEventriver(data){
 }
 
 function drawEventstack(data){
+	var x_data = data['dates'];
 	var data = data['eventList'];
 	var series_data = [];
 	var series_name = [];
 	var One_series_data = {};
-	var x_data = [];
 	var temp_data = [];
 	for (var k= 0; k < data.length; k++){
 		One_series_value = [];
@@ -440,9 +519,6 @@ function drawEventstack(data){
 			One_series_value.push(data[k]['evolution'][i]['value']);
 			temp_data.push(data[k]['evolution'][i]['value']);
 			One_series_time.push(data[k]['evolution'][i]['time']);
-			if(k == 0){
-				x_data.push(data[k]['evolution'][i]['time']);
-			}
 		}
 		if(One_series_value.length < x_data.length){
 			for(var j = 0; j < x_data.length; j++){
@@ -455,7 +531,7 @@ function drawEventstack(data){
 			}
 		}
 
-		One_series_data = {'name':data[k]['name'], 'type':'line', 'stack':'总量','itemStyle':{'normal': {'areaStyle': {'type': 'default'}}},  'data':One_series_value};
+		One_series_data = {'name':data[k]['name'], 'type':'line', 'smooth':true,'itemStyle':{'normal': {'areaStyle': {'type': 'default'}}},  'data':One_series_value};
 		series_name.push(One_series_data['name']);
 		series_data.push(One_series_data);
 	}
@@ -481,7 +557,6 @@ function drawEventstack(data){
 	        }
 	    ],
 	    series : series_data
-	        
 	};
 	var myChart = echarts.init(document.getElementById('event_river'));
     myChart.setOption(option); 
@@ -575,17 +650,22 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
 
 //把子话题输出
 function drawSubeventTab(data, that){
+    $("#subevent_tab").empty();
+    var topic_weight = data['weight'];
     var data = data['eventList'];
     var html = '';
     html += '<div class="btn-group" id="global">';
-    html += '<button type="button" class="btn btn-success" style="margin: 5px;">' + query + '</button>';
+    html += '<button type="button" class="btn btn-success" style="margin: 5px;">' + query + '(' + topic_weight + ')</button>';
     html += '</div>';
     for (var i = 0;i < data.length;i++) {
         var name = data[i]['name'];
         var weight = data[i]['weight'];
+        var addweight = data[i]['addweight'];
+        var date = new Date(data[i]['created_at'] * 1000).format("yyyy-MM-dd hh:mm:ss");
+        var tfidf = data[i]['tfidf'];
         var subeventid = data[i]['id'];
         html += '<div class="btn-group" id="' + subeventid + '">';
-        html += '<button type="button" class="btn btn-default" style="margin: 5px;">' + name + '(' + weight + ')</button>';
+        html += '<button type="button" class="btn btn-default" style="margin: 5px;">' + name + '(' + tfidf.toFixed(3) + ', ' + weight + ', ' + addweight  + ', ' + date  + ')</button>';
         html += '</div>';
     }
     $("#subevent_tab").append(html);
@@ -617,7 +697,6 @@ function change_subevent_stat(subeventid, that){
 
 // 画重要微博
 function refreshWeibodata(data){  //需要传过来的是新闻的data
-    $("#weibo_ul").empty();
 	var html = "";
     for ( e in data){
         var d = data[e];
@@ -638,11 +717,13 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span id="detail_' + d['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + d['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
-        html += '<a class="undlin" href="javascript:;" target="_blank" onclick="open_same_list(\'' + d['_id'] + '\')";>相似新闻(' + same_text_count + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
+        html += '<a class="undlin" href="javascript:;" target="_blank" onclick="open_same_list(\'' + d['_id'] + '\')";>相似新闻(' + same_text_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
+        html += '<a href="javascript:;" target="_blank">相关度(' + d['weight'] + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
-        html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
-        html += '<a target="_blank">转载于'+ d["transmit_name"] +'</a>&nbsp;&nbsp;';
+        html += '<a>' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
+        html += '<a>转载于'+ d["transmit_name"] +'</a>&nbsp;&nbsp;';
+        html += '<a target="_blank" href="'+ d["url"] +'">新闻</a>&nbsp;&nbsp;';
         html += '</div>';
         html += '</div>' 
         html += '</div>';
@@ -659,11 +740,13 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             html += '</p>';
             html += '<div class="weibo_info">';
             html += '<div class="weibo_pz" style="margin-right:10px;">';
-            html += '<span id="detail_' + dd['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + dd['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;&nbsp;&nbsp;';
+            html += '<span id="detail_' + dd['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + dd['_id'] + '\')";>阅读全文</a></span>&nbsp;|&nbsp;&nbsp;&nbsp;';
+            html += '<a href="javascript:;" target="_blank">相关度(' + dd['weight'] + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
             html += "</div>";
             html += '<div class="m">';
-            html += '<a class="undlin" target="_blank" >' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
-            html += '<a target="_blank">转载于'+ dd["transmit_name"] +'</a>&nbsp;&nbsp;';
+            html += '<a>' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
+            html += '<a>转载于'+ dd["transmit_name"] +'</a>&nbsp;&nbsp;';
+            html += '<a target="_blank" href="'+ dd["url"] +'">新闻</a>&nbsp;&nbsp;';
             html += '</div>';
             html += '</div>' 
             html += '</div>';
@@ -714,7 +797,7 @@ function drawtable(data){
             topic_child_keywords[key].push(data[key][i][1]);
         }
     }
-    
+
     for (var topic in topic_child_keywords){
         m++;
         if( m > 10) {

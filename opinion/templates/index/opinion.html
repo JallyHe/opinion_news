@@ -299,10 +299,10 @@
 	            success: function(data){
 	            	var html = '';
 					html += '<table class="bordered">';   
-					html += '<thead><tr><th>话题id</th><th>话题名称</th><th>话题状态</th><th>开始时间</th><th>结束时间</th><th>最新操作日期</th><th>是否操作成功</th></tr></thead>';
+                    html += '<thead><tr><th>话题id</th><th>话题名称</th><th>话题状态</th><th>开始时间</th><th>结束时间</th><th>最新操作日期</th><th>是否操作成功</th><th>话题新闻分类</th></tr></thead>';
 					for(var i = 0; i < data.length; i++){
 						data[i]['end_time'] = "无";
-						html += '<tr><td>'+ data[i]['_id']+'</td><td>'+data[i]['name'] +'</td><td>'+data[i]['status'] +'</td><td>'+data[i]['start_datetime'] +'</td><td>'+data[i]['end_time'] +'</td><td>'+data[i]['last_modify'] +'</td><td>'+data[i]['modify_success'] +'</td></tr>';		
+                        html += '<tr><td>'+ data[i]['_id']+'</td><td>'+data[i]['name'] +'</td><td>'+data[i]['status'] +'</td><td>'+data[i]['start_datetime'] +'</td><td>'+data[i]['end_time'] +'</td><td>'+data[i]['last_modify'] +'</td><td>'+data[i]['modify_success'] +'</td><td><a href="/news/?query=' + data[i]['name']  + '"></a>分析</td></tr>';
 					}
 			        $('#event_river').append(html);
 			    }           
