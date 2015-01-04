@@ -18,14 +18,19 @@ class EventManager(object):
     def __init__(self):
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
-    def getActiveEventIDs(self, timestamp):
+    def getFalseEventIDs(self):
+        """获取最近更新不成功的eventid
+        """
+        results = self.mongo[EVENTS_COLLECTION].find({"status": "active", "modify_success": False})
+        return [r['_id'] for r in results]
+
+    def getActiveEventIDs(self):
         """获取活跃话题的ID
            input:
-               timestamp: 检测的时间点, 话题的创建时间要小于检测的时间点
            output:
                活跃的话题ID
         """
-        results = self.mongo[EVENTS_COLLECTION].find({"status": "active", "startts": {"$lte": timestamp}})
+        results = self.mongo[EVENTS_COLLECTION].find({"status": "active"})
         return [r['_id'] for r in results]
 
     def terminateEvent(self, eventid, endts=int(time.time())):
@@ -45,18 +50,19 @@ class EventManager(object):
         else:
             return None
 
-    def checkActive(self, timestamp):
+    def checkActive(self):
         """根据话题新文本数检查话题的活跃性, 更新不再活跃的话题的status
            input:
-               timestamp: 检测的时间点
            output:
                活跃的话题ID
         """
         active_ids = []
-        ids = self.getActiveEventIDs(timestamp)
+        ids = self.getActiveEventIDs()
         for id in ids:
             event = Event(id)
-            if event.check_ifactive(timestamp):
+            last_modify = event.getLastmodify()
+            timestamp = last_modify + 3600
+            if event.check_ifactive():
                 active_ids.append(id)
             else:
                 event.terminate()
@@ -64,14 +70,13 @@ class EventManager(object):
 
         return active_ids
 
-    def getInitializingEventIDs(self, timestamp):
+    def getInitializingEventIDs(self):
         """获取正在初始化的话题ID
            input:
-               timestamp: 检测的时间点
            output:
                正在初始化的话题ID
         """
-        results = self.mongo[EVENTS_COLLECTION].find({"status": "initializing", "startts": {"$lte": timestamp}})
+        results = self.mongo[EVENTS_COLLECTION].find({"status": "initializing"})
         return [r['_id'] for r in results]
 
 
@@ -122,7 +127,7 @@ class Event(object):
         """
         self.initstatus()
         self.setStartts(start_ts)
-        self.setLastmodify(start_ts - 1)
+        self.setLastmodify(start_ts - 3600)
         self.setModifysuccess(True)
         self.clear_news_label()
 
@@ -189,67 +194,118 @@ class Event(object):
 
         return avg
 
-    def getInitialInfos(self):
-        """获取初始聚类文本，默认取话题开始时间之前的文本
+    def getInitialInfos(self, during=3600 * 24 * 30):
+        """获取初始聚类文本，默认取话题开始时间之前往前推一个月的文本
         """
         event = self.mongo[self.events_collection].find_one({"_id": self.id})
         start_ts = event["startts"]
-        results = self.mongo[self.news_collection].find({"timestamp": {"$lt": start_ts}})
+        results = self.mongo[self.news_collection].find({"timestamp": {"$gte": start_ts - during, "$lt": start_ts}})
         return [r for r in results]
 
-    def getOtherSubEventInfos(self):
-        results = self.mongo[self.news_collection].find({"subeventid": self.other_subeventid})
-        return [r for r in results]
+    def getOtherSubEventInfos(self, initializing=False):
+        """
+           初始化：其他类文本取往前推30天的
+           24h: 前两天其他类文本 + 当天增量文本
+           1h: 当天凌晨到该小时内其他类文本
+           output:
+               cluster_num: 聚类数量
+               results: 新闻字典list
+               reserve_num: 评价时取的tfidf最大的类个数
+        """
+        import math
+        MAX_CLUSTER_NUM = 10
+        MIN_CLUSTER_NUM = 5
 
-    def check_ifactive(self, timestamp, during=3600 * 24 * 3):
+        last_modify = self.getLastmodify()
+        timestamp = last_modify + 3600
+        now_hour = int(time.strftime('%H', time.localtime(timestamp)))
+
+        if initializing:
+            results = self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$lt": timestamp}})
+
+        elif now_hour == 0:
+            results = self.mongo[self.news_collection].find({"$or": [{"timestamp": {"$gte": timestamp - 24 * 3600 * 3, "$lt": timestamp - 24 * 3600}, "subeventid": self.other_subeventid}, \
+                    {"timestamp": {"$gte": timestamp - 24 * 3600, "$lt": timestamp}}]})
+
+        else:
+            zero_timestamp = timestamp - now_hour * 3600 # 当天0时
+            results = self.mongo[self.news_collection].find({"timestamp": {"$gte": zero_timestamp, "$lt": timestamp}, "subeventid": self.other_subeventid})
+
+        results = [r for r in results]
+        items_length = len(results)
+
+        cluster_num = int(math.ceil(float(items_length) / 20.0))
+
+        if cluster_num < MIN_CLUSTER_NUM:
+            cluster_num = MIN_CLUSTER_NUM
+
+        if cluster_num > MAX_CLUSTER_NUM:
+            cluster_num = MAX_CLUSTER_NUM
+
+        reserve_num = int(math.ceil(float(cluster_num) / 2.0))
+
+        return results, cluster_num, reserve_num
+
+    def getLastmodify(self):
+        """事件的最后修改时间戳, last_modify
+        """
+        result = self.mongo[self.events_collection].find_one({"_id": self.id})
+        return result['last_modify']
+
+    def check_ifactive(self, during=3600 * 24 * 3):
         """根据话题信息数在给定时间判断是否活跃
            input:
-               timestamp: 截止时间戳
-               during: 在during时间内没有新文本，则判定为不活跃
+               during: 在last_modify + 3600 往前推during时间内没有新文本，则判定为不活跃
            output:
                True or False
         """
-        if self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - during, "$lt": timestamp}}).count():
+        last_modify = self.getLastmodify()
+        if self.mongo[self.news_collection].find({"timestamp": {"$gte": last_modify + 3600 - during, "$lt": last_modify + 3600}}).count():
             return True
         else:
             return False
 
-    def check_ifsplit(self, timestamp):
+    def check_ifsplit(self, initializing=False):
         """给定时间判断其他类是否需要分裂子事件, 每小时执行一次
            input:
                timestamp: 截止时间戳, 整点
+               initializing: 是否在初始化
            output:
                True or False
         """
-        avg_subevent_size = self.getAvgSubEventSize(timestamp)
+        import time
+        if initializing:
+            return True
 
-        # 每天0、6、12、18时检测, 其他类存量文本数 > avg, 则分裂
-        SIX_HOUR_SECONDS = 3600
-        six_hour_threshold = avg_subevent_size
-        if timestamp % SIX_HOUR_SECONDS == 0:
-            other_subevent_news_count = self.mongo[self.news_collection].find({"timestamp": {"$lt": timestamp}, "subeventid": self.other_subeventid}).count()
-            if other_subevent_news_count > six_hour_threshold:
+        last_modify = self.getLastmodify()
+        timestamp = last_modify + 3600
+        now_hour = int(time.strftime('%H', time.localtime(timestamp)))
+
+        if now_hour == 0:
+            # 24时检测
+            two_days_other_subevent_news_count = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 24 * 3600 * 3, "$lt": timestamp - 24 * 3600}, "subeventid": self.other_subeventid}).count()
+            one_day_news_count = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 24 * 3600, "$lt": timestamp}}).count()
+            total_count = two_days_other_subevent_news_count + one_day_news_count
+            if total_count > 30:
                 return True
 
-        # 每小时检测，该小时内其他类文本数 > avg * 5 或 该小时内其他类文本数-上个小时内其他类文本数 > avg * 2, 则分裂
-        one_hour_threshold = avg_subevent_size * 5
-        one_hour_added_threshold = avg_subevent_size * 2
-        count_in_hour = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 3600, "$lt": timestamp}, "subeventid": self.other_subeventid}).count()
-        count_before_hour = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 7200, "$lt": timestamp - 3600}, "subeventid": self.other_subeventid}).count()
-        added_count = count_in_hour - count_before_hour
-
-        if count_in_hour > one_hour_threshold or added_count > one_hour_added_threshold:
-            return True
+        else:
+            # 每小时判断0时至当前点其他类文本数是否大于10, 大于10则分裂
+            zero_timestamp = timestamp - now_hour * 3600 # 当天0时
+            if self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$gte": zero_timestamp, "lt": timestamp}}).count() > 10:
+                return True
 
         return False
 
-    def checkLastModify(self, timestamp):
+    def checkLastModify(self):
         """检测最后一次修改时间是否在检测的时间点之前，最后一次修改是否成功
            input:
                timestamp: 检测的时间戳，整点
            output:
                True or False
         """
+        last_modify = self.getLastmodify()
+        timestamp = last_modify + 3600
         result = self.mongo[self.events_collection].find_one({"_id": self.id})
         if 'last_modify' not in result and result['startts'] < timestamp:
             # 可能是initializing的状态
@@ -284,6 +340,42 @@ class Event(object):
                 if key in r:
                     del r[key]
             self.mongo[self.news_collection].update({"_id": r["_id"]}, r)
+
+    def update_subevent_size(self, subeventid, size):
+        """更新子事件的大小
+        """
+        self.mongo[SUB_EVENTS_COLLECTION].update({"_id": subeventid}, {"$set": {"size": size}})
+
+    def get_subevent_size(self, subeventid):
+        """获取子事件的大小
+        """
+        result = self.mongo[SUB_EVENTS_COLLECTION].find_one({"_id": subeventid})
+        if result:
+            if "size" in result:
+                return result["size"]
+
+        return 0
+
+    def update_subevent_addsize(self, subeventid, addsize):
+        """更新子事件的增幅
+        """
+        self.mongo[SUB_EVENTS_COLLECTION].update({"_id": subeventid}, {"$set": {"addsize": addsize}})
+
+    def update_subevent_tfidf(self, subeventid, tfidf):
+        """更新子事件的tfidf
+        """
+        self.mongo[SUB_EVENTS_COLLECTION].update({"_id": subeventid}, {"$set": {"tfidf": tfidf}})
+
+    def get_min_tfidf(self):
+        """获取最小的tfidf
+        """
+        result = self.mongo[SUB_EVENTS_COLLECTION].find({"eventid": self.id}).sort("tfidf", 1).limit(1)
+        for r in result:
+            if 'tfidf' in r:
+                return r['tfidf']
+
+        return 0
+
 
 class News(object):
     """新闻类
@@ -350,6 +442,8 @@ class Feature(object):
         """清除pattern为regular和newest的特征词
         """
         self.mongo[SUB_EVENTS_FEATURE_COLLECTION].remove({"subeventid": self.subeventid})
+
+
 
 if __name__ == "__main__":
     topicid = "54916b0d955230e752f2a94e"
