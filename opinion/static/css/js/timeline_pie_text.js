@@ -61,7 +61,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
     this.trend_chart;
 
     this.event_river_data; // 接收eventriver的数据
-    this.select_subevent; // 当前选择的subevent, global表示总体，subeventid表示各子事件
+    this.select_subevent = "global"; // 当前选择的subevent, global表示总体，subeventid表示各子事件
 
     this.click_status = 'global'; // 标识当前的状态，global表示全局，peak表示点击了某个拐点后的情况
 
@@ -80,30 +80,44 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
     };
 
     $("#sort_by_tfidf").click(function(){
-        console.log(that.event_river_data);
+        $("#sort_by_tfidf").css("color", "#333");
+        $("#sort_by_total_weight").css("color", "-webkit-link");
+        $("#sort_by_addweight").css("color", "-webkit-link");
+        $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(tfidf_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
     });
 
-    $("#sort_by_weight").click(function(){
+    $("#sort_by_total_weight").click(function(){
+        $("#sort_by_tfidf").css("color", "-webkit-link");
+        $("#sort_by_total_weight").css("color", "#333");
+        $("#sort_by_addweight").css("color", "-webkit-link");
+        $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(weight_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
     });
 
     $("#sort_by_addweight").click(function(){
+        $("#sort_by_tfidf").css("color", "-webkit-link");
+        $("#sort_by_total_weight").css("color", "-webkit-link");
+        $("#sort_by_addweight").css("color", "#333");
+        $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(addweight_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
     });
 
     $("#sort_by_created_at").click(function(){
+        $("#sort_by_tfidf").css("color", "-webkit-link");
+        $("#sort_by_total_weight").css("color", "-webkit-link");
+        $("#sort_by_addweight").css("color", "-webkit-link");
+        $("#sort_by_created_at").css("color", "#333");
         that.event_river_data['eventList'].sort(createdat_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
     });
 
     $("#sort_by_timestamp").click(function(){
         $("#sort_by_timestamp").css("color", "#333");
-        $("#sort_by_weight").css("color", "#428bca");
-        console.log($("#sort_by_weight").css("color"));
+        $("#sort_by_weight").css("color", "-webkit-link");
         that.weibo_skip = 0;
         that.weibo_sort = 'timestamp';
 
@@ -120,7 +134,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 
     $("#sort_by_weight").click(function(){
         $("#sort_by_weight").css("color", "#333");
-        $("#sort_by_timestamp").css("color", "#428bca");
+        $("#sort_by_timestamp").css("color", "-webkit-link");
         that.weibo_skip = 0;
         that.weibo_sort = 'weight';
 
@@ -154,7 +168,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 }
 
 function tfidf_comparator(a, b) {
-    return parseInt(b.tfidf) - parseInt(a.tfidf);
+    return parseFloat(b.tfidf) - parseFloat(a.tfidf);
 }
 
 function weight_comparator(a, b) {
@@ -655,7 +669,12 @@ function drawSubeventTab(data, that){
     var data = data['eventList'];
     var html = '';
     html += '<div class="btn-group" id="global">';
-    html += '<button type="button" class="btn btn-success" style="margin: 5px;">' + query + '(' + topic_weight + ')</button>';
+    if(that.select_subevent == 'global'){
+        html += '<button type="button" class="btn btn-success" style="margin: 5px;">' + query + '(' + topic_weight + ')</button>';
+    }
+    else{
+        html += '<button type="button" class="btn btn-default" style="margin: 5px;">' + query + '(' + topic_weight + ')</button>';
+    }
     html += '</div>';
     for (var i = 0;i < data.length;i++) {
         var name = data[i]['name'];
@@ -665,7 +684,12 @@ function drawSubeventTab(data, that){
         var tfidf = data[i]['tfidf'];
         var subeventid = data[i]['id'];
         html += '<div class="btn-group" id="' + subeventid + '">';
-        html += '<button type="button" class="btn btn-default" style="margin: 5px;">' + name + '(' + tfidf.toFixed(3) + ', ' + weight + ', ' + addweight  + ', ' + date  + ')</button>';
+        if(that.select_subevent == subeventid){
+            html += '<button type="button" class="btn btn-success" style="margin: 5px;">' + name + '(' + tfidf.toFixed(3) + ', ' + weight + ', ' + addweight  + ', ' + date  + ')</button>';
+        }
+        else{
+            html += '<button type="button" class="btn btn-default" style="margin: 5px;">' + name + '(' + tfidf.toFixed(3) + ', ' + weight + ', ' + addweight  + ', ' + date  + ')</button>';
+        }
         html += '</div>';
     }
     $("#subevent_tab").append(html);
@@ -681,8 +705,17 @@ function subevent_tab_click(that){
                     $("#" + this.id + " :button").removeClass("btn btn-success").addClass("btn btn-default");
                 }
             });
-            $("#" + this.id + " :button").removeClass("btn btn-default").addClass("btn btn-success");
-            change_subevent_stat(this.id, that);
+            if($("#" + this.id + " :button").hasClass("btn btn-default")){
+                console.log($("#" + this.id + " :button").attr('class'));
+                $("#" + this.id + " :button").removeClass("btn btn-default").addClass("btn btn-success");
+                change_subevent_stat(this.id, that);
+            }
+            else{
+                $("#" + this.id + " :button").removeClass("btn btn-success").addClass("btn btn-default");
+                $("#trendTimeline").css("display", "none");
+                $("#cloudpie").css("display", "none");
+                $("#news_rec").css("display", "none");
+            }
         })
     })
 }

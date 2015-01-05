@@ -72,7 +72,9 @@ def one_topic_calculation(eventid_initializing):
 
             if label == "other":
                 label = event.getOtherSubEventID()
+                print r['_id'], ' other ',  label
 
+            print r['_id'], label
             news = News(r["_id"], event.id)
             news.update_news_subeventid(label)
 

@@ -280,6 +280,7 @@ class Event(object):
         last_modify = self.getLastmodify()
         timestamp = last_modify + 3600
         now_hour = int(time.strftime('%H', time.localtime(timestamp)))
+        print last_modify, now_hour
 
         if now_hour == 0:
             # 24时检测
@@ -292,7 +293,8 @@ class Event(object):
         else:
             # 每小时判断0时至当前点其他类文本数是否大于10, 大于10则分裂
             zero_timestamp = timestamp - now_hour * 3600 # 当天0时
-            if self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$gte": zero_timestamp, "lt": timestamp}}).count() > 10:
+            print self.other_subeventid, zero_timestamp, self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$gte": zero_timestamp, "$lt": timestamp}}).count()
+            if self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$gte": zero_timestamp, "$lt": timestamp}}).count() > 10:
                 return True
 
         return False

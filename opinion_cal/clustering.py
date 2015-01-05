@@ -176,10 +176,8 @@ def cluster_tfidf(keywords_count_list, total_weight_list, least_freq=10):
             document_count = sum([1 if keyword in kd.keys() and kd[keyword] > least_freq else 0 for kd in keywords_count_list])
             idf = math.log(float(total_document_count) / float(document_count + 1))
             tf_idf = tf * idf
-            print keyword, tf, idf, tf_idf
             tf_idf_list.append(tf_idf)
 
-        print sum(tf_idf_list)
         cluster_tf_idf.append(sum(tf_idf_list))
 
     return cluster_tf_idf
@@ -221,8 +219,6 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
     # 计算每类的tfidf
     tfidf_list = cluster_tfidf(keywords_count_list, total_weight_list, least_freq=least_freq)
     tfidf_dict = dict(zip(labels_list, tfidf_list))
-    for k, v in tfidf_dict.iteritems():
-        print k, v
     keywords_dict = dict(zip(labels_list, keywords_count_list))
 
     def choose_by_tfidf():
