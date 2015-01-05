@@ -206,9 +206,9 @@ function timestamp_comparator(a, b){
     return parseInt(a.news.timestamp) - parseInt(b.news.timestamp);
 }
 
+// 绘制鱼骨图
 function drawFishbone(data){
     var html = '';
-    console.log(data);
     data['eventList'].sort(timestamp_comparator);
     var eventListdata = data['eventList'];
     for (var i=0; i < eventListdata.length; i++){
@@ -216,19 +216,19 @@ function drawFishbone(data){
         var news = eventListdata[i]['news'];
         var summary = news['content168'].substring(0, 100) + '...';;
         var datetime = news['datetime'];
-        console.log(datetime);
         var title = news['title'];
         var source = news['transmit_name'];    
-    html += "<li><time datetime='" + datetime + "'>" + datetime +"&nbsp;&nbsp;<span>"+keyword+"</span></time>";
-    html += "<p><b>【" + title + "】:</b>" + summary + "<div>转载于"+ source + "</div></p></li>";
+        html += "<li><time datetime='" + datetime + "'>" + datetime +"&nbsp;&nbsp;<span>"+keyword+"</span></time>";
+        html += "<p><b>【" + title + "】:</b>" + summary + "</p>";
+        html += "<span>转载于"+ source + "</span>&nbsp;&nbsp;<a target=\"_blank\" href=\"" + news["url"] + "\">新闻</a></li>";
     }
-    // html += '<li><time datetime="2014-11-05 00:00:00">2014-11-04</time><p>jQuery 1.0 – Alpha   Release</p></li><li><time datetime="2014-11-06 00:00:00">2014-10-19</time><p>jQuery 1.2.2: 2nd Birthday Present</p></li><li><time datetime="2014-11-07 00:00:00">2014-10-10</time><p>jQuery 1.3.2 Released</p></li><li><time datetime="2014-11-08 00:00:00">2014-10-07</time><p>jQuery 1.4.4 released</p></li><li><time datetime="2014-11-09 00:00:00">2014-11-04</time><p>jQuery 1.6.4 released</p></li>';
     $("#timeline1").append(html);
 }
 
 // 绘制子事件Tab
 Opinion_timeline.prototype.drawSubeventsTab = function(){
     var that = this;
+    this.event_river_data['eventList'].sort(tfidf_comparator);
     drawSubeventTab(this.event_river_data, that); // 画子事件Tab
 }
 
@@ -579,12 +579,23 @@ function drawEventstack(data){
 		series_data.push(One_series_data);
 	}
 
+    var selected_series_count = 10;
+    if(selected_series_count > series_name.length){
+        selected_series_count = series_name.length;
+    }
+    var selected_series_dict = {};
+    for(var i = selected_series_count; i < series_name.length; i++){
+        selected_series_dict[series_name[i]] = false;
+    }
+
 	option = {
 	    tooltip : {
 	        trigger: 'axis'
 	    },
 	    legend: {
-	        data:series_name
+	        data: series_name, 
+            selected : selected_series_dict,
+            selectedMode : "multiple"
 	    },
 	    calculable : true,
 	    xAxis : [
@@ -729,13 +740,16 @@ function subevent_tab_click(that){
     $div = $('#subevent_tab').children('div');
     $div.each(function(){
         $(this).click(function(){
+            var click_that = this;
             $('#subevent_tab').children('div').each(function(){
-                if($("#" + this.id + " :button").hasClass("btn btn-success")){
+                if(click_that.id != this.id && $("#" + this.id + " :button").hasClass("btn btn-success")){
                     $("#" + this.id + " :button").removeClass("btn btn-success").addClass("btn btn-default");
                 }
             });
             if($("#" + this.id + " :button").hasClass("btn btn-default")){
-                console.log($("#" + this.id + " :button").attr('class'));
+                $("#trendTimeline").css("display", "block");
+                $("#cloudpie").css("display", "block");
+                $("#news_rec").css("display", "block");
                 $("#" + this.id + " :button").removeClass("btn btn-default").addClass("btn btn-success");
                 change_subevent_stat(this.id, that);
             }
