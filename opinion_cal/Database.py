@@ -205,7 +205,7 @@ class Event(object):
     def getOtherSubEventInfos(self, initializing=False):
         """
            初始化：其他类文本取往前推30天的
-           24h: 前两天其他类文本 + 当天增量文本
+           24h: 前两天其他类文本 + 当天其他类文本（已做扔回处理)
            1h: 当天凌晨到该小时内其他类文本
            output:
                cluster_num: 聚类数量
@@ -224,8 +224,7 @@ class Event(object):
             results = self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$lt": timestamp}})
 
         elif now_hour == 0:
-            results = self.mongo[self.news_collection].find({"$or": [{"timestamp": {"$gte": timestamp - 24 * 3600 * 3, "$lt": timestamp - 24 * 3600}, "subeventid": self.other_subeventid}, \
-                    {"timestamp": {"$gte": timestamp - 24 * 3600, "$lt": timestamp}}]})
+            results = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 24 * 3600 * 3, "$lt": timestamp}, "subeventid": self.other_subeventid})
 
         else:
             zero_timestamp = timestamp - now_hour * 3600 # 当天0时
@@ -265,6 +264,32 @@ class Event(object):
         else:
             return False
 
+    def remove_subevents(self, ids):
+        """移除subevents
+        """
+        self.mongo[self.sub_events_collection].remove({"_id": {"$in": ids}})
+
+    def getTodayCreatSubeventIds(self):
+        """当天（大于或等于0时小于timestamp时）产生的簇（非其他簇）
+        """
+        import time
+        last_modify = self.getLastmodify()
+        timestamp = last_modify + 3600
+        now_hour = int(time.strftime('%H', time.localtime(timestamp)))
+        zero_timestamp = timestamp - now_hour * 3600 # 当天0时
+
+        results = self.mongo[self.sub_events_collection].find({"eventid": self.id, "timestamp": {"$gte": zero_timestamp, "$lt": timestamp}})
+
+        return [r["_id"] for r in results]
+
+    def getTodayCreatSubeventInfos(self):
+        """当天（大于或等于0时小于timestamp时）产生的簇（非其他簇）下的文本
+        """
+        subeventids = self.getTodayCreatSubeventIds()
+        results = self.mongo[self.news_collection].find({"subeventid": {"$in": subeventids}})
+
+        return [r for r in results]
+
     def check_ifsplit(self, initializing=False):
         """给定时间判断其他类是否需要分裂子事件, 每小时执行一次
            input:
@@ -280,21 +305,20 @@ class Event(object):
         last_modify = self.getLastmodify()
         timestamp = last_modify + 3600
         now_hour = int(time.strftime('%H', time.localtime(timestamp)))
-        print last_modify, now_hour
 
         if now_hour == 0:
-            # 24时检测
-            two_days_other_subevent_news_count = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 24 * 3600 * 3, "$lt": timestamp - 24 * 3600}, "subeventid": self.other_subeventid}).count()
-            one_day_news_count = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 24 * 3600, "$lt": timestamp}}).count()
-            total_count = two_days_other_subevent_news_count + one_day_news_count
-            if total_count > 30:
+            # 24时检测前两天其他类文本+当天没有被分到当天0时之前产生的簇的文本>30
+            count = self.mongo[self.news_collection].find({"timestamp": {"$gte": timestamp - 24 * 3600 * 3, "$lt": timestamp}, "subeventid": self.other_subeventid}).count()
+            print timestamp, now_hour, count
+            if count > 30:
                 return True
 
         else:
             # 每小时判断0时至当前点其他类文本数是否大于10, 大于10则分裂
             zero_timestamp = timestamp - now_hour * 3600 # 当天0时
-            print self.other_subeventid, zero_timestamp, self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$gte": zero_timestamp, "$lt": timestamp}}).count()
-            if self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$gte": zero_timestamp, "$lt": timestamp}}).count() > 10:
+            count = self.mongo[self.news_collection].find({"subeventid": self.other_subeventid, "timestamp": {"$gte": zero_timestamp, "$lt": timestamp}}).count()
+            print timestamp, now_hour, count
+            if count > 10:
                 return True
 
         return False

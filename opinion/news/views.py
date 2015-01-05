@@ -110,12 +110,9 @@ def trenddata():
 
     dates = []
     counts = []
-    f = open('dates_count.txt', 'w')
     for date, count in raw:
-        f.write('%s\t%s\n' % (date, count))
         dates.append(date)
         counts.append(count)
-    f.close()
 
     return json.dumps({"dates": dates, "counts": counts})
 
@@ -126,10 +123,6 @@ def othertext():
     topicid = em.getEventIDByName(topic_name)
     event = Event(topicid)
     results = event.getOtherSubEventInfos()
-    f = open('results.txt', 'w')
-    for r in results:
-        f.write('%s\t%s\n' % (r['title'].encode('utf-8'), r['content168'].encode('utf-8')))
-    f.close()
 
     return json.dumps(results)
 

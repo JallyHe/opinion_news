@@ -1,7 +1,7 @@
 #-*-coding=utf-8-*-
 # User: linhaobuaa
-# Date: 2014-12-28 12:00:00
-# Version: 0.3.0
+# Date: 2015-01-05 20:00:00
+# Version: 0.4.0
 """子事件演化聚类主文件
 """
 
@@ -72,9 +72,7 @@ def one_topic_calculation(eventid_initializing):
 
             if label == "other":
                 label = event.getOtherSubEventID()
-                print r['_id'], ' other ',  label
 
-            print r['_id'], label
             news = News(r["_id"], event.id)
             news.update_news_subeventid(label)
 
@@ -87,6 +85,17 @@ def one_topic_calculation(eventid_initializing):
         TOPK_FREQ_WORD = 50
         # 聚类评价时最小簇的大小
         LEAST_SIZE = 8
+
+        # 如果不是在做初始化，24时的时候, 一定把当天（大于或等于0时小于24时）产生的簇（非其他簇）下的文本扔回其他簇, 同时删除这些簇
+        if not initializing and now_hour == 0:
+            temp_subeventids = self.getTodayCreatSubeventIds()
+            temp_infos = event.getTodayCreatSubeventInfos()
+            other_label = event.getOtherSubEventID()
+            for r in temp_infos:
+                news = News(r["_id"], event.id)
+                news.update_news_subeventid(other_label)
+
+            event.remove_subevents(temp_subeventids)
 
         # 判断其他类是否需要分裂
         ifsplit = event.check_ifsplit(initializing)
