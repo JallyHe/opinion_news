@@ -197,6 +197,35 @@ Opinion_timeline.prototype.pull_eventriver_data = function(){
     }
 }
 
+// 
+Opinion_timeline.prototype.drawFishbone = function(){
+    drawFishbone(this.event_river_data);
+}
+
+function timestamp_comparator(a, b){
+    return parseInt(a.news.timestamp) - parseInt(b.news.timestamp);
+}
+
+function drawFishbone(data){
+    var html = '';
+    console.log(data);
+    data['eventList'].sort(timestamp_comparator);
+    var eventListdata = data['eventList'];
+    for (var i=0; i < eventListdata.length; i++){
+        var keyword = eventListdata[i]['name'];
+        var news = eventListdata[i]['news'];
+        var summary = news['content168'].substring(0, 100) + '...';;
+        var datetime = news['datetime'];
+        console.log(datetime);
+        var title = news['title'];
+        var source = news['transmit_name'];    
+    html += "<li><time datetime='" + datetime + "'>" + datetime +"&nbsp;&nbsp;<span>"+keyword+"</span></time>";
+    html += "<p><b>【" + title + "】:</b>" + summary + "<div>转载于"+ source + "</div></p></li>";
+    }
+    // html += '<li><time datetime="2014-11-05 00:00:00">2014-11-04</time><p>jQuery 1.0 – Alpha   Release</p></li><li><time datetime="2014-11-06 00:00:00">2014-10-19</time><p>jQuery 1.2.2: 2nd Birthday Present</p></li><li><time datetime="2014-11-07 00:00:00">2014-10-10</time><p>jQuery 1.3.2 Released</p></li><li><time datetime="2014-11-08 00:00:00">2014-10-07</time><p>jQuery 1.4.4 released</p></li><li><time datetime="2014-11-09 00:00:00">2014-11-04</time><p>jQuery 1.6.4 released</p></li>';
+    $("#timeline1").append(html);
+}
+
 // 绘制子事件Tab
 Opinion_timeline.prototype.drawSubeventsTab = function(){
     var that = this;
@@ -852,6 +881,7 @@ var end_ts = END_TS;
 var pointInterval = 3600 * 24;
 var opinion = new Opinion_timeline(query, start_ts, end_ts, pointInterval);
 opinion.pull_eventriver_data();
+opinion.drawFishbone();
 opinion.drawSubeventsTab();
 opinion.drawEventriver();
 opinion.drawTrendline();
