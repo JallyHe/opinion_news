@@ -68,6 +68,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
     var that = this;
     $("#clickalltime").click(function(){
         $("#cloudpie").css("display", "block");
+        drawStatusTip(that.select_subevent, "全时段", null);
         that.drawTrendline();
         that.pullDrawPiedata();
         that.pullDrawClouddata();
@@ -495,6 +496,7 @@ function call_peak_ajax(that, series, data_list, ts_list, during, subevent){
             var click_ts = this.x / 1000;
             var title = this.title;
             $("#cloudpie").css("display", "none");
+            drawStatusTip(that.select_subevent, '拐点' + title, click_ts);
             that.click_status = 'peak';
             that.weibo_skip = 0;
             var ajax_url = that.weibo_ajax_url(that.query, click_ts, that.pointInterval, that.select_subevent, that.weibo_skip, that.weibo_limit, that.weibo_sort);
@@ -657,6 +659,23 @@ function refreshPiedata(data){
     myChart.setOption(option);
 }
 
+// 画tip
+function drawStatusTip(subevent, peak_status, click_ts){
+    if(click_ts != null){
+        var dt = new Date(click_ts * 1000).format("yyyy年MM月dd日 hh:mm:ss");
+        var time_block = peak_status + ' (' + dt + ')';
+    }
+    else{
+        var time_block = peak_status;
+    }
+    $("#status_trend_tooltip").empty();
+    $("#status_trend_tooltip").append('<span>当前点击了事件' + subevent + '&nbsp;&nbsp;时间: ' + time_block + '</span>');
+    $("#status_cloudpie_tooltip").empty();
+    $("#status_cloudpie_tooltip").append('<span>当前点击了事件' + subevent + '&nbsp;&nbsp;时间: ' + time_block + '</span>');
+    $("#status_weibo_tooltip").empty();
+    $("#status_weibo_tooltip").append('<span>当前点击了事件' + subevent + '&nbsp;&nbsp;时间: ' + time_block + '</span>');
+}
+
 // 画关键词云图
 function refreshDrawKeywords(that, keywords_data){
     var min_keywords_size = that.min_keywords_size;
@@ -740,6 +759,7 @@ function subevent_tab_click(that){
     $div = $('#subevent_tab').children('div');
     $div.each(function(){
         $(this).click(function(){
+            drawStatusTip($(this).text(), '全时段', null);
             var click_that = this;
             $('#subevent_tab').children('div').each(function(){
                 if(click_that.id != this.id && $("#" + this.id + " :button").hasClass("btn btn-success")){
