@@ -2,7 +2,7 @@
 .b1njTimeline {
     background : url(f43059.gif
         ) top center repeat-y;
-    width : 800px;
+    width : 900px;
     padding : 50px 0;
     margin :0 auto 50px auto;
     position: relative;
@@ -47,14 +47,14 @@
     }
     .b1njTimeline .events li {
         position: absolute;
-        width: 330px;
+        width: 400px;
         margin: 0 0 10px 0;
         top: 0;
-        text-align:right;
+        text-align:left;
     }
         .b1njTimeline .event {
             position: absolute;
-            width: 330px;
+            width: 400px;
             padding: 5px;
             background: #FFFFFF;
             border: 1px solid #D0D0D0;
@@ -81,7 +81,7 @@
         .b1njTimeline .events li:before,
         .b1njTimeline .events li:after {
             content: " ";
-            width: 70px;
+            width: 50px;
             height: 1px;
             background: #f43059;
             position: absolute;
