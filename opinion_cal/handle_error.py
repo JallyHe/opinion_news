@@ -18,11 +18,12 @@ def handle_error(eventid):
     event.setLastmodify(last_modify - 3600)
     event.setModifysuccess(True)
 
-    one_topic_calculation((eventid, False))
+    # one_topic_calculation((eventid, False))
 
 
 if __name__ == '__main__':
     em = EventManager()
-    event_ids_list = em.getFalseEventIDs()
+    # event_ids_list = em.getFalseEventIDs()
+    event_ids_list = em.getAllEventIDs()
     map(handle_error, event_ids_list)
 

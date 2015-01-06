@@ -88,7 +88,7 @@ def one_topic_calculation(eventid_initializing):
 
         # 如果不是在做初始化，24时的时候, 一定把当天（大于或等于0时小于24时）产生的簇（非其他簇）下的文本扔回其他簇, 同时删除这些簇
         if not initializing and now_hour == 0:
-            temp_subeventids = self.getTodayCreatSubeventIds()
+            temp_subeventids = event.getTodayCreatSubeventIds()
             temp_infos = event.getTodayCreatSubeventInfos()
             other_label = event.getOtherSubEventID()
             for r in temp_infos:

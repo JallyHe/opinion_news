@@ -24,6 +24,12 @@ class EventManager(object):
         results = self.mongo[EVENTS_COLLECTION].find({"status": "active", "modify_success": False})
         return [r['_id'] for r in results]
 
+    def getAllEventIDs(self):
+        """
+        """
+        results = self.mongo[EVENTS_COLLECTION].find()
+        return [r['_id'] for r in results]
+
     def getActiveEventIDs(self):
         """获取活跃话题的ID
            input:
@@ -268,22 +274,26 @@ class Event(object):
         """移除subevents
         """
         self.mongo[self.sub_events_collection].remove({"_id": {"$in": ids}})
+        self.mongo[SUB_EVENTS_FEATURE_COLLECTION].remove({"subeventid": {"$in": ids}})
 
     def getTodayCreatSubeventIds(self):
-        """当天（大于或等于0时小于timestamp时）产生的簇（非其他簇）
+        """当天（大于0时小于timestamp时）产生的簇（非其他簇）
         """
         import time
         last_modify = self.getLastmodify()
         timestamp = last_modify + 3600
         now_hour = int(time.strftime('%H', time.localtime(timestamp)))
-        zero_timestamp = timestamp - now_hour * 3600 # 当天0时
+        if now_hour == 0:
+            zero_timestamp = timestamp - 24 * 3600
+        else:
+            zero_timestamp = timestamp - now_hour * 3600 # 当天0时
 
-        results = self.mongo[self.sub_events_collection].find({"eventid": self.id, "timestamp": {"$gte": zero_timestamp, "$lt": timestamp}})
+        results = self.mongo[self.sub_events_collection].find({"eventid": self.id, "timestamp": {"$gt": zero_timestamp, "$lte": timestamp}})
 
         return [r["_id"] for r in results]
 
     def getTodayCreatSubeventInfos(self):
-        """当天（大于或等于0时小于timestamp时）产生的簇（非其他簇）下的文本
+        """当天（大于0小于timestamp时）产生的簇（非其他簇）下的文本
         """
         subeventids = self.getTodayCreatSubeventIds()
         results = self.mongo[self.news_collection].find({"subeventid": {"$in": subeventids}})
