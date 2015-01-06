@@ -13,6 +13,7 @@ from utils import cut_words, _default_mongo
 from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
         EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION
 
+AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
 def process_for_cluto(inputs, cluto_input_folder="cluto"):
     """
