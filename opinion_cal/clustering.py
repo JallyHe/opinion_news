@@ -220,6 +220,7 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
     # 计算每类的tfidf
     tfidf_list = cluster_tfidf(keywords_count_list, total_weight_list, least_freq=least_freq)
     tfidf_dict = dict(zip(labels_list, tfidf_list))
+    print tfidf_dict
     keywords_dict = dict(zip(labels_list, keywords_count_list))
 
     def choose_by_tfidf():
@@ -235,7 +236,14 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
 
         # 筛掉tfidf小于min_tfidf的类
         if min_tfidf:
-            delete_labels = [l[0] for l in sorted_tfidf[-(len(sorted_tfidf)-top_num):] if l[1] < min_tfidf]
+            delete_labels = []
+            candidate_tfidf = []
+            for label, tfidf in sorted_tfidf:
+                if tfidf < min_tfidf:
+                    delete_labels.append(label)
+                else:
+                    candidate_tfidf.append((label, tfidf))
+            delete_labels.extend([l[0] for l in candidate_tfidf[-(len(candidate_tfidf)-top_num):]])
         else:
             delete_labels = [l[0] for l in sorted_tfidf[-(len(sorted_tfidf)-top_num):]]
 
@@ -265,6 +273,7 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
         for label in items_dict.keys():
             if label != 'other':
                 items = items_dict[label]
+                print len(items)
                 if len(items) < least_size:
                     for item in items:
                         item['label'] = 'other'

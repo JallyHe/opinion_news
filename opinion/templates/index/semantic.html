@@ -400,7 +400,7 @@
             <h4>鱼骨图</h4>
             <i id="timeline_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="时间轴：可视化信息中子话题起止时间"></i>&nbsp;&nbsp;
         </div>
-            <div id="page"style="height:600px">
+            <div id="page">
             <ol id="timeline1">
             <!-- <li>
             <time datetime="2012-06-30">June 30th, 2006</time>
@@ -552,11 +552,6 @@
 {% endblock content %}
 {% block tail_js %}
     <script>
-        $(function() {
-            $('#timeline1').b1njTimeline({
-                'height' : 400
-            });
-        });
         $("#timeline_tooltip").tooltip();
         $("#table_pie_tooltip").tooltip();
         $("#weibo_tooltip").tooltip();

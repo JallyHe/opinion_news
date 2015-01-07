@@ -20,28 +20,35 @@
         this._dateFin = false;
         this._duree = false;
         this._name = pluginName;
+        this._firstidx = 0;
+        this._lastidx = 0;
         this.init();
     }
 
     Plugin.prototype.init = function () {
         var self = this;
 
-        $(this.element).addClass('events').wrap('<div class="b1njTimeline" />');
+        $(this.element).addClass('events').wrap('<div class="b1njTimeline" id="b1njTimeline_out"/>');
 
         this.$element = $(this.element).parent();
         this.$element.css('height', this.options.height);
 
         // Recherche date la plus ancienne et la plus récente
-        this._dateDebut = new moment(this.$element.find('li:first time').attr('datetime'), 'YYYY-MM-DD');
-        this._dateFin = new moment(this.$element.find('li:last time').attr('datetime'), 'YYYY-MM-DD');
-        this._duree = this._dateFin.diff(this._dateDebut);
+        // this._dateDebut = new moment(this.$element.find('li:first time').attr('datetime'), 'YYYY-MM-DD');
+        // this._dateFin = new moment(this.$element.find('li:last time').attr('datetime'), 'YYYY-MM-DD');
+        // this._duree = this._dateFin.diff(this._dateDebut);
+        this._lastidx = parseInt(this.$element.find('li:first time').attr('idx'));
+        this._lastidx = parseInt(this.$element.find('li:last time').attr('idx'));
+        this._duridx = this._lastidx - this._firstidx;
 
         // Placement de l'évenement
         this.$element.find('li').each(function () {
             $li = $(this);
             $li.wrapInner('<div class="event" />');
-            var date = new moment($li.find('time').attr('datetime'), 'YYYY-MM-DD')
-            $li.css('top', self._getTop(date));
+            //var date = new moment($li.find('time').attr('datetime'), 'YYYY-MM-DD')
+            //$li.css('top', self._getTop(date));
+            var idx = parseInt($li.find('time').attr('idx'));
+            $li.css('top', self._getPointTop(idx));
 
             $li.on('click', function (e) {
                 self.open(this);
@@ -49,6 +56,7 @@
         });
 
         // Mise en place des dates graduées
+        /*
         var date = this._dateDebut.year();
         var num_years = this._dateFin.diff(this._dateDebut, 'years');
 
@@ -79,7 +87,15 @@
         html_dates += '<ol>';
 
         this.$element.find('ol').after(html_dates);
+        */
 
+    };
+
+    Plugin.prototype._getPointTop = function (idx) {
+        var top = (idx - this._firstidx) * this.options.height / this._duridx;
+        top = Math.abs(parseInt(top));
+        top = top + this.options.margeTop;
+        return top;
     };
 
     Plugin.prototype._getTop = function (date) {

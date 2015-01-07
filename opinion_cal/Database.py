@@ -118,7 +118,7 @@ class Event(object):
                end_ts:   终止时间戳
         """
         results = self.mongo[self.news_collection].find({"timestamp": {"$gte": start_ts, "$lt": end_ts}})
-        return results
+        return [r for r in results]
 
     def getOtherSubEventID(self):
         """获取其他类ID，该ID是预留的
@@ -421,6 +421,9 @@ class News(object):
         self.topicid = topicid
         self.news_collection = EVENTS_NEWS_COLLECTION_PREFIX + str(topicid)
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+
+    def get_news_info(self):
+        return self.mongo[self.news_collection].find_one({"_id": self.id})
 
     def update_news_subeventid(self, label):
         """更新单条信息的簇标签, subeventid

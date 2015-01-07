@@ -212,6 +212,11 @@ function drawFishbone(data){
     var html = '';
     data['eventList'].sort(timestamp_comparator);
     var eventListdata = data['eventList'];
+    $(function(){
+        $('#timeline1').b1njTimeline({
+            'height' : eventListdata.length / 2 * 114
+        });
+    });
     for (var i=0; i < eventListdata.length; i++){
         var keyword = eventListdata[i]['name'];
         var news = eventListdata[i]['news'];
@@ -219,11 +224,12 @@ function drawFishbone(data){
         var datetime = news['datetime'];
         var title = news['title'];
         var source = news['transmit_name'];    
-        html += "<li><time datetime='" + datetime + "'>" + datetime +"&nbsp;&nbsp;<span>"+keyword+"</span></time>";
+        html += "<li><time idx='" + i + "' " + "datetime='" + datetime + "'>" + datetime +"&nbsp;&nbsp;<span>"+keyword+"</span></time>";
         html += "<p><b>【" + title + "】:</b>" + summary + "</p>";
         html += "<span>转载于"+ source + "</span>&nbsp;&nbsp;<a target=\"_blank\" href=\"" + news["url"] + "\">新闻</a></li>";
     }
     $("#timeline1").append(html);
+    $("#page").css("height", eventListdata.length / 2 * 114 + 150);
 }
 
 // 绘制子事件Tab

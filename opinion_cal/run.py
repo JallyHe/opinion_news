@@ -36,6 +36,22 @@ def one_topic_calculation(eventid_initializing):
         """
         print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' %s start step1' % ts2datetime(timestamp)
 
+        if initializing:
+            # 若话题需要做初始聚类，获取话题开始时间之前的文本
+            results = event.getInitialInfos()
+        else:
+            # 若话题已做完初始聚类，获取话题最新一小时的文本
+            results = event.getInfos(timestamp - 3600, timestamp)
+
+            if now_hour == 0:
+                # 如果不是在做初始化，24时的时候, 一定把当天（大于或等于0时小于24时）产生的簇（非其他簇）下的文本重新做一下匹配, 同时删除这些簇
+                temp_subeventids = event.getTodayCreatSubeventIds()
+                temp_infos = event.getTodayCreatSubeventInfos()
+                event.remove_subevents(temp_subeventids)
+                results.extend(temp_infos)
+
+        print eventid, ' before classify: ', len(results)
+
         # 获取子事件
         subevents = event.getSubEvents()
         labels_list = []
@@ -48,13 +64,6 @@ def one_topic_calculation(eventid_initializing):
             fwords = feature.get_newest()
             feature_words_list.append(fwords)
             labels_list.append(subeventid)
-
-        if initializing:
-            # 若话题需要做初始聚类，获取话题开始时间之前的文本
-            results = event.getInitialInfos()
-        else:
-            # 若话题已做完初始聚类，获取话题最新一小时的文本
-            results = event.getInfos(timestamp - 3600, timestamp)
 
         for r in results:
             text = (r['title'] + r['content168']).encode('utf-8')
@@ -86,24 +95,13 @@ def one_topic_calculation(eventid_initializing):
         # 聚类评价时最小簇的大小
         LEAST_SIZE = 8
 
-        # 如果不是在做初始化，24时的时候, 一定把当天（大于或等于0时小于24时）产生的簇（非其他簇）下的文本扔回其他簇, 同时删除这些簇
-        if not initializing and now_hour == 0:
-            temp_subeventids = event.getTodayCreatSubeventIds()
-            temp_infos = event.getTodayCreatSubeventInfos()
-            other_label = event.getOtherSubEventID()
-            for r in temp_infos:
-                news = News(r["_id"], event.id)
-                news.update_news_subeventid(other_label)
-
-            event.remove_subevents(temp_subeventids)
-
         # 判断其他类是否需要分裂
         ifsplit = event.check_ifsplit(initializing)
         print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' split ', ifsplit, ' %s start step2' % ts2datetime(timestamp)
 
         if ifsplit:
             inputs, kmeans_cluster_num, reserve_num = event.getOtherSubEventInfos(initializing)
-            print len(inputs), kmeans_cluster_num, reserve_num
+            print eventid, ' after classify before split: ', len(inputs), kmeans_cluster_num, reserve_num
             if len(inputs) > 2:
                 items = []
                 for r in inputs:
