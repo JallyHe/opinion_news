@@ -412,6 +412,18 @@ class Event(object):
 
         return 0
 
+    def get_sorted_subeventids(self, sort="timestamp"):
+        """获取排序的subeventid
+        """
+        result = self.mongo[SUB_EVENTS_COLLECTION].find({"eventid": self.id, "_id": {"$ne": self.other_subeventid}}).sort("timestamp", 1)
+        return [r["_id"] for r in result]
+
+    def get_subevent_infos(self, subeventid):
+        """获取一个簇下的所有文本
+        """
+        results = self.mongo[self.news_collection].find({"subeventid": subeventid})
+        return [r for r in results]
+
 
 class News(object):
     """新闻类

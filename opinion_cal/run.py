@@ -13,6 +13,7 @@ from classify import subevent_classifier
 from feature import extract_feature
 from sort import text_weight_cal
 from duplicate import duplicate
+from merge import merge_subevents
 from Database import News, Event, EventManager, Feature
 
 
@@ -192,6 +193,42 @@ def one_topic_calculation(eventid_initializing):
 
         print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' %s end step3' % ts2datetime(timestamp)
 
+    def step4_cal():
+        """ 24 点时merge已有的簇
+        """
+        if not initializing and now_hour == 0:
+            print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' %s start step4' % ts2datetime(timestamp)
+
+            subevents = event.getSubEvents()
+            subevent_fwords = dict()
+            for subevent in subevents:
+                subeventid = subevent["_id"]
+                feature = Feature(subeventid)
+
+                # 获取每个子事件最新的特征词
+                fwords = feature.get_newest()
+                subevent_fwords[subeventid] = fwords
+
+            subeventids_sort_timestamp = event.get_sorted_subeventids()
+
+            cids, mids = merge_subevents(subevent_fwords, subeventids_sort_timestamp, top_tfidf_para=10, top_percent=0.3)
+
+            for res_id, mer_id in mids:
+                # 将mer_id下的文本扔入res_id下的簇，remove mer_id的簇
+                temp_infos = event.get_subevent_infos(mer_id)
+
+                for r in temp_infos:
+                    news = News(r["_id"], event.id)
+                    news.update_news_subeventid(res_id)
+
+                event.remove_subevents([mer_id])
+
+            # 重新计算各簇的特征词, 并计算文本权重, 并去重
+            if len(mids):
+                step3_cal()
+
+            print '[%s] ' % ts2datetime(int(time.time())), 'event ', eventid, ' %s end step3' % ts2datetime(timestamp)
+
     # 首先检测该事件最近一次修改是否成功
     success = event.checkLastModify()
     if success:
@@ -199,12 +236,14 @@ def one_topic_calculation(eventid_initializing):
         step1_cal()
         step2_cal()
         step3_cal()
+        step4_cal()
         """
         try:
             # 进行多步计算
             step1_cal()
             step2_cal()
             step3_cal()
+            step4_cal()
             event.setLastmodify(timestamp) # 更新事件的last_modify
             event.setModifysuccess(True) # 更新事件的modify_success为True
         except Exception, e:
