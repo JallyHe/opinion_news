@@ -7,12 +7,19 @@ import datetime
 from collections import Counter
 from utils import ts2datetime, ts2date
 from flask import Blueprint, url_for, render_template, request
-from Database import Event, EventManager, Feature
+from Database import Event, EventManager, Feature, DbManager
 from opinion.global_config import default_topic_name
 
 mod = Blueprint('news', __name__, url_prefix='/news')
 
 em = EventManager()
+
+@mod.route('/db/')
+def db_names():
+    """返回mongodb中news开头的db_name
+    """
+    dm = DbManager()
+    return json.dumps(dm.getDbNames())
 
 @mod.route('/')
 def index():

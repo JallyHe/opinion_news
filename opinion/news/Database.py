@@ -6,10 +6,20 @@
 """
 
 import time
-from utils import _default_mongo
+from utils import _default_mongo, _default_mongo_db
 from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
         EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
         SUB_EVENTS_FEATURE_COLLECTION
+
+class DbManager(object):
+    """数据库管理类
+    """
+    def __init__(self):
+        self.mongo = _default_mongo_db()
+
+    def getDbNames(self):
+        results = self.mongo.database_names()
+        return [r for r in results if r.startswith('news')]
 
 
 class EventManager(object):

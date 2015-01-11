@@ -1,9 +1,13 @@
 #-*-coding=utf-8-*-
 
-from utils import datetime2ts
+from utils import datetime2ts, _default_mongo_db
 
+def get_db_names():
+    results = _default_mongo_db().database_names()
+    return [r for r in results if r.startswith('news')]
 
-MONGO_DB_NAME = "news"
+db_names = get_db_names()
+MONGO_DB_NAME = db_names[4]
 EVENTS_COLLECTION = "news_topic"
 SUB_EVENTS_COLLECTION = "news_subevent"
 SUB_EVENTS_FEATURE_COLLECTION = "news_subevent_feature"

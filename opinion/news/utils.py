@@ -16,6 +16,10 @@ def _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb='boat'):
     db = getattr(connection, usedb)
     return db
 
+def _default_mongo_db(host=MONGOD_HOST, port=MONGOD_PORT):
+    # 强制写journal，并强制safe
+    connection = pymongo.MongoClient(host=host, port=port, j=True, w=1)
+    return connection
 
 def ts2datetime(timestamp):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
