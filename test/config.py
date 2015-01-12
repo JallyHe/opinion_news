@@ -17,3 +17,6 @@ END_DATETIME = "2014-11-04 00:00:00"
 START_TS = datetime2ts(START_DATETIME)
 END_TS = datetime2ts(END_DATETIME)
 
+emotions_vk = {0: '无倾向', 1: '高兴', 2: '愤怒', 3: '悲伤', 4: '新闻'}
+emotions_kv = {'happy': 1, 'angry': 2, 'sad': 3, 'news': 4}
+emotions_zh_kv = {'happy': '高兴', 'angry': '愤怒', 'sad': '悲伤', 'news': '新闻'}

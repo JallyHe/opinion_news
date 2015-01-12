@@ -5,6 +5,7 @@ import csv
 import time
 from bson.objectid import ObjectId
 from ad_filter import ad_filter
+from triple_sentiment_classifier import triple_classifier
 
 import sys
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test/')
@@ -15,14 +16,13 @@ from sort import text_weight_cal
 from duplicate import duplicate
 from clustering import kmeans, cluster_evaluation
 from Database import CommentsManager, EventComments, Comment, News
-
+from config import emotions_vk
 
 def one_topic_calculation_comments(topicid):
     """对评论进行聚类
     """
     eventcomment = EventComments(topicid)
     newsIds = eventcomment.getNewsIds()
-    print newsIds
 
     for news_id in newsIds:
         results = eventcomment.getNewsComments(news_id)
@@ -31,10 +31,17 @@ def one_topic_calculation_comments(topicid):
         for r in results:
             r['title'] = ''
             r['content'] = r['content168'].encode('utf-8')
+            r['text'] = r['content168']
             item = ad_filter(r)
             if item['ad_label'] == 0:
                 inputs.append(item)
 
+        for r in inputs:
+            sentiment = triple_classifier(r)
+            comment = Comment(r['_id'])
+            comment.update_comment_sentiment(sentiment)
+
+        """
         # kmeans 聚类及评价
         kmeans_results = kmeans(inputs, k=10)
         reserve_num = 5
@@ -67,6 +74,7 @@ def one_topic_calculation_comments(topicid):
             weight = text_weight_cal(input, cluster_feature[input['label']])
             comment = Comment(input['_id'])
             comment.update_comment_weight(weight)
+        """
 
 
 if __name__=="__main__":

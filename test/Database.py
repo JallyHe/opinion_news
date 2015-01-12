@@ -19,7 +19,7 @@ class CommentsManager(object):
 
     def get_comments_collection_name(self):
         results = self.mongo.collection_names()
-        return [r for r in results if r.startswith('comment_')]
+        return [r for r in results if r.startswith('comment_') and r != 'comment_cluster']
 
 
 class EventComments(object):
@@ -74,3 +74,8 @@ class Comment(object):
 
     def update_comment_weight(self, weight):
         return self.mongo[self.comments_collection].update({"_id": self.id}, {"$set": {"weight": weight}})
+
+    def update_comment_sentiment(self, sentiment):
+        return self.mongo[self.comments_collection].update({"_id": self.id}, {"$set": {"sentiment": sentiment}})
+
+
