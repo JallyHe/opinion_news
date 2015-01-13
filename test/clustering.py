@@ -243,7 +243,14 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
 
         # 筛掉tfidf小于min_tfidf的类
         if min_tfidf:
-            delete_labels = [l[0] for l in sorted_tfidf[-(len(sorted_tfidf)-top_num):] if l[1] < min_tfidf]
+            delete_labels = []
+            candidate_tfidf = []
+            for label, tfidf in sorted_tfidf:
+                if tfidf < min_tfidf:
+                    delete_labels.append(label)
+                else:
+                    candidate_tfidf.append((label, tfidf))
+            delete_labels.extend([l[0] for l in candidate_tfidf[-(len(candidate_tfidf)-top_num):]])
         else:
             delete_labels = [l[0] for l in sorted_tfidf[-(len(sorted_tfidf)-top_num):]]
 

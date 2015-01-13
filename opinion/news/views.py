@@ -5,9 +5,9 @@ import json
 import time
 import datetime
 from collections import Counter
-from utils import ts2datetime, ts2date
 from flask import Blueprint, url_for, render_template, request
-from Database import Event, EventManager, Feature, DbManager
+from opinion.global_utils import ts2datetime, ts2date
+from opinion.Database import Event, EventManager, Feature, DbManager
 from opinion.global_config import default_topic_name
 
 mod = Blueprint('news', __name__, url_prefix='/news')

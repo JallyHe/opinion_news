@@ -6,10 +6,11 @@
 """
 
 import time
-from utils import _default_mongo, _default_mongo_db
-from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
+from global_utils import _default_mongo, _default_mongo_db
+from global_config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
         EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
-        SUB_EVENTS_FEATURE_COLLECTION
+        SUB_EVENTS_FEATURE_COLLECTION, COMMENTS_CLUSTER_COLLECTION, \
+        EVENTS_COMMENTS_COLLECTION_PREFIX
 
 class DbManager(object):
     """数据库管理类
@@ -20,6 +21,43 @@ class DbManager(object):
     def getDbNames(self):
         results = self.mongo.database_names()
         return [r for r in results if r.startswith('news')]
+
+
+class CommentsManager(object):
+    """评论管理
+    """
+    def __init__(self):
+        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+
+    def get_comments_collection_name(self):
+        results = self.mongo.collection_names()
+        return [r for r in results if r.startswith('comment_') and r != 'comment_cluster']
+
+
+class EventComments(object):
+    """评论数据管理
+    """
+    def __init__(self, topicid):
+        self.id = topicid
+        self.comments_cluster_collection = COMMENTS_CLUSTER_COLLECTION
+        self.comments_collection = EVENTS_COMMENTS_COLLECTION_PREFIX + str(self.id)
+        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+
+    def getNewsIds(self):
+        """
+        """
+        return self.mongo[self.comments_collection].distinct("news_id")
+
+    def getNewsComments(self, news_id):
+        results = self.mongo[self.comments_collection].find({"news_id": news_id})
+        return [r for r in results]
+
+    def save_cluster(self, id, news_id, timestamp):
+        self.mongo[self.comments_cluster_collection].save({"_id": id, "eventid": self.id, \
+                "news_id": news_id, "timestamp": timestamp})
+
+    def update_feature_words(self, id, feature_words):
+        self.mongo[self.comments_cluster_collection].update({"_id": id}, {"$set": {"feature": feature_words}})
 
 
 class EventManager(object):
@@ -603,6 +641,15 @@ class News(object):
         """更新单条信息的簇标签, subeventid
         """
         self.mongo[self.news_collection].update({"_id": self.id}, {"$set": {"subeventid": label}})
+
+    def get_news_subeventid(self):
+        """单条信息的簇标签, subeventid
+        """
+        result = self.mongo[self.news_collection].find_one({"_id": self.id})
+        if result:
+            return result['subeventid']
+        else:
+            return None
 
     def update_news_weight(self, weight):
         """更新单条信息的权重, weight

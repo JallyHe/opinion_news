@@ -53,7 +53,7 @@ class News(object):
     """
     def __init__(self, id):
         self.id = id
-        self.otherCluserId = self.getOtherClusterId()
+        self.otherClusterId = self.getOtherClusterId()
 
     def getOtherClusterId(self):
         """获取评论的其他簇id
@@ -77,5 +77,4 @@ class Comment(object):
 
     def update_comment_sentiment(self, sentiment):
         return self.mongo[self.comments_collection].update({"_id": self.id}, {"$set": {"sentiment": sentiment}})
-
 
