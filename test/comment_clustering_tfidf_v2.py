@@ -227,6 +227,42 @@ def text_classify(inputs,word_label,tfidf_word):
     return inputs
 
 
+def freq_word_evaluation_half(items, topk=10, topk_weight=5):
+    '''
+    选取权值排在topk_weight的评论
+    input：
+        items:
+            新闻组成的列表:字典的序列, 数据示例：[{'_id':新闻id,'content':新闻内容,'lable':类别标签,'weight':每条评论属于该类的权值},...]
+
+    output：
+        权值排在前一半的评论，数据示例：[{'_id':新闻id,'content':新闻内容,'lable':类别标签,'weight':每条评论属于该类的权值},...]
+    '''
+    words_list = []
+    #评论按照权值大小降序排列
+    idx = 0
+    weight_dict = {}
+    for item in items:
+        weight_dict[idx] = item['weight']
+
+    sorted_weight = sorted(weight_dict.iteritems(),key = lambda asd:asd[1],reverse=True)
+    result_weight = sorted_weight[:topk_weight]
+
+    half_item = []
+    for r in result_weight:
+        half_item.append(items[int(r[0])])
+
+    for item in half_item:
+        text = item['content']
+        words = cut_words(text)
+        words_list.extend(words)
+
+    counter = Counter(words_list)
+    total_weight = sum(dict(counter.most_common()).values())
+    topk_words = counter.most_common(topk)
+    keywords_dict = {k: v for k, v in topk_words}
+
+    return keywords_dict, total_weight
+
 def freq_word_evaluation(items, topk=10):
     '''
     聚类评价用，统计一类文本的topk高频词
@@ -277,7 +313,7 @@ def cluster_tfidf(keywords_count_list, total_weight_list, least_freq=10):
     return cluster_tf_idf
 
 
-def cluster_evaluation(items, top_num=5, topk_freq=10, least_freq=0, least_size=2):
+def cluster_evaluation(items, top_num=5, topk_freq=10, least_freq=0, least_size=3):
     '''
     聚类评价，计算每一类的tf-idf: 计算每一类top词的tfidf，目前top词选取该类下前10个高频词，一个词在一个类中出现次数大于0算作在该类中出现
     input:
@@ -303,9 +339,11 @@ def cluster_evaluation(items, top_num=5, topk_freq=10, least_freq=0, least_size=
     for label, one_items in items_dict.iteritems():
         if label != 'other':
             labels_list.append(label)
-            keywords_count, weight = freq_word_evaluation(one_items, topk=topk_freq)
+            # keywords_count, weight = freq_word_evaluation(one_items, topk=topk_freq)
+            # keywords_count_list.append(keywords_count)
+            top_half, weight = freq_word_evaluation_half(one_items)
+            keywords_count_list.append(top_half)
             total_weight_list.append(weight)
-            keywords_count_list.append(keywords_count)
 
     # 计算每类的tfidf
     tfidf_list = cluster_tfidf(keywords_count_list, total_weight_list, least_freq=least_freq)

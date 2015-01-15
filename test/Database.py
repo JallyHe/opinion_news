@@ -40,6 +40,10 @@ class EventComments(object):
         results = self.mongo[self.comments_collection].find({"news_id": news_id})
         return [r for r in results]
 
+    def clear_cluster(self, news_id):
+        self.mongo[self.comments_cluster_collection].remove({"eventid": self.id, \
+                "news_id": news_id})
+
     def save_cluster(self, id, news_id, timestamp):
         self.mongo[self.comments_cluster_collection].save({"_id": id, "eventid": self.id, \
                 "news_id": news_id, "timestamp": timestamp})
@@ -64,9 +68,9 @@ class News(object):
 class Comment(object):
     """评论类
     """
-    def __init__(self, id):
+    def __init__(self, id, topicid):
         self.id = id
-        self.comments_collection = EVENTS_COMMENTS_COLLECTION_PREFIX + str(self.id)
+        self.comments_collection = EVENTS_COMMENTS_COLLECTION_PREFIX + str(topicid)
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
     def update_comment_label(self, label):

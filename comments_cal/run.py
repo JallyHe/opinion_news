@@ -83,6 +83,7 @@ def one_topic_calculation_comments(topicid):
     newsIds = eventcomment.getNewsIds()
 
     for news_id in newsIds:
+        eventcomment.clear_cluster(news_id)
         results = eventcomment.getNewsComments(news_id)
         news = News(news_id)
 
@@ -98,7 +99,7 @@ def one_topic_calculation_comments(topicid):
         # 情绪计算
         for r in inputs:
             sentiment = triple_classifier(r)
-            comment = Comment(r['_id'])
+            comment = Comment(r['_id'], topicid)
             comment.update_comment_sentiment(sentiment)
 
         tfidf_word = tfidf_v2(inputs)
@@ -129,7 +130,7 @@ def one_topic_calculation_comments(topicid):
                 eventcomment.update_feature_words(label, fwords)
 
             for item in items:
-                comment = Comment(item['_id'])
+                comment = Comment(item['_id'], topicid)
                 comment.update_comment_label(label)
                 comment.update_comment_weight(item['weight'])
 

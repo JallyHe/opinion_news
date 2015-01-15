@@ -365,7 +365,7 @@
             window.location.href = "/news/?query=" + QUERY + "&time_range=" + TIME_RANGE;
         });
         var QUERY = "{{topic}}";
-        var TIME_RANGE = $('#all_time').html();
+        /*var TIME_RANGE = $('#all_time').html();
         var START_TS = date2ts(TIME_RANGE.split('-')[0]);
         var END_TS = date2ts(TIME_RANGE.split('-')[1]);
 
@@ -408,7 +408,7 @@
             var month = date.substring(4, 6);
             var day = date.substring(6, 8);
             return new Date(year, month-1, day).getTime() / 1000;
-        }
+        }*/
     </script>
     {% block tail_js %}
 

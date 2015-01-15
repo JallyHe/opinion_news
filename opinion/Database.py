@@ -44,12 +44,10 @@ class EventComments(object):
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
     def getNewsIds(self):
-        """
-        """
         return self.mongo[self.comments_collection].distinct("news_id")
 
     def getNewsComments(self, news_id):
-        results = self.mongo[self.comments_collection].find({"news_id": news_id})
+        results = self.mongo[self.comments_collection].find({"news_id": news_id, "clusterid": {"$ne": news_id + '_other'}})
         return [r for r in results]
 
     def save_cluster(self, id, news_id, timestamp):
@@ -58,6 +56,17 @@ class EventComments(object):
 
     def update_feature_words(self, id, feature_words):
         self.mongo[self.comments_cluster_collection].update({"_id": id}, {"$set": {"feature": feature_words}})
+
+    def get_feature_words(self, id):
+        result = self.mongo[self.comments_cluster_collection].find_one({"_id": id})
+        if result and 'feature' in result:
+            return result['feature']
+        else:
+            return None
+
+    def get_cluster_ids(self, news_id):
+        results = self.mongo[self.comments_cluster_collection].find({"news_id": news_id, "_id": {"$ne": news_id + "_other"}})
+        return [r['_id'] for r in results]
 
 
 class EventManager(object):
@@ -636,11 +645,17 @@ class News(object):
         self.topicid = topicid
         self.news_collection = EVENTS_NEWS_COLLECTION_PREFIX + str(topicid)
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+        self.otherClusterId = self.getOtherClusterId()
 
     def update_news_subeventid(self, label):
         """更新单条信息的簇标签, subeventid
         """
         self.mongo[self.news_collection].update({"_id": self.id}, {"$set": {"subeventid": label}})
+
+    def getOtherClusterId(self):
+        """获取评论的其他簇id
+        """
+        return str(self.id) + '_other'
 
     def get_news_subeventid(self):
         """单条信息的簇标签, subeventid
