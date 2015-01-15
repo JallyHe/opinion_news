@@ -349,8 +349,8 @@ function refreshDrawOpinionTab(tabs_list, select_tab){
     $("#OpinionTabDiv").append(html);
 }
 
-function attitudes_count_comparator(a, b){
-    return parseInt(b.attitudes_count) - parseInt(a.attitudes_count);
+function gweight_comparator(a, b){
+    return parseInt(b.gweight) - parseInt(a.gweight);
 }
 
 function refreshDrawCommentsOpinion(data){
@@ -382,7 +382,7 @@ function refreshDrawCommentsOpinion(data){
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">情绪(' + sentiment_dict[d['sentiment']] + ')</a></span>&nbsp;&nbsp;';
+        //html += '<span><a class="undlin" href="javascript:;" target="_blank">情绪(' + sentiment_dict[d['sentiment']] + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
         html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
@@ -408,7 +408,7 @@ function refreshDrawComments(data, select_sentiment){
     }
 
     var html = "";
-    data[select_sentiment].sort(attitudes_count_comparator);
+    data[select_sentiment].sort(gweight_comparator);
     var da = data[select_sentiment];
     for ( e in da){
         var d = da[e];
@@ -425,6 +425,7 @@ function refreshDrawComments(data, select_sentiment){
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['gweight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
         html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
@@ -517,12 +518,13 @@ function refreshWeiboTab(data){
 }
 
 var query = QUERY;
+var news_id = NEWS_ID;
 var start_ts = undefined;
 var end_ts = undefined;
-var pie_url = "/comment/ratio/?query=" + query;
-var keywords_url = "/comment/keywords/?query=" + query;
-var sentiment_url = "/comment/sentiment/?query=" + query;
-var cluster_url = "/comment/cluster/?query=" + query;
+var pie_url = "/comment/ratio/?query=" + query + "&news_id=" + news_id;
+var keywords_url = "/comment/keywords/?query=" + query + "&news_id=" + news_id;
+var sentiment_url = "/comment/sentiment/?query=" + query + "&news_id=" + news_id;
+var cluster_url = "/comment/cluster/?query=" + query + "&news_id=" + news_id;
 
 comment = new Comment_opinion(query, start_ts, end_ts);
 comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);

@@ -313,7 +313,15 @@ def cluster_tfidf(keywords_count_list, total_weight_list, least_freq=10):
     return cluster_tf_idf
 
 
-def cluster_evaluation(items, top_num=5, topk_freq=10, least_freq=0, least_size=3):
+def global_text_weight(text, words):
+    """计算一个事件下所有文本的权重，按照文本cover聚类词的去重进行计算
+       text
+       words
+    """
+    return sum([float(text.count(k)) * v for k, v in words])
+
+
+def cluster_evaluation(items, top_num=5, topk_freq=10, least_freq=0, least_size=3, topk_weight=5):
     '''
     聚类评价，计算每一类的tf-idf: 计算每一类top词的tfidf，目前top词选取该类下前10个高频词，一个词在一个类中出现次数大于0算作在该类中出现
     input:
@@ -341,7 +349,7 @@ def cluster_evaluation(items, top_num=5, topk_freq=10, least_freq=0, least_size=
             labels_list.append(label)
             # keywords_count, weight = freq_word_evaluation(one_items, topk=topk_freq)
             # keywords_count_list.append(keywords_count)
-            top_half, weight = freq_word_evaluation_half(one_items)
+            top_half, weight = freq_word_evaluation_half(one_items, topk=topk_freq, topk_weight=topk_weight)
             keywords_count_list.append(top_half)
             total_weight_list.append(weight)
 

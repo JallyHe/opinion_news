@@ -65,7 +65,7 @@ class EventComments(object):
             return None
 
     def get_cluster_ids(self, news_id):
-        results = self.mongo[self.comments_cluster_collection].find({"news_id": news_id, "_id": {"$ne": news_id + "_other"}})
+        results = self.mongo[self.comments_cluster_collection].find({"eventid": self.id, "news_id": news_id, "_id": {"$ne": news_id + "_other"}})
         return [r['_id'] for r in results]
 
 

@@ -82,3 +82,5 @@ class Comment(object):
     def update_comment_sentiment(self, sentiment):
         return self.mongo[self.comments_collection].update({"_id": self.id}, {"$set": {"sentiment": sentiment}})
 
+    def update_comment_global_weight(self, weight):
+        return self.mongo[self.comments_collection].update({"_id": self.id}, {"$set": {"gweight": weight}})

@@ -17,10 +17,16 @@ from sort import text_weight_cal
 from duplicate import duplicate
 from Database import CommentsManager, EventComments, Comment, News
 from config import emotions_vk
-from comment_clustering_tfidf_v2 import kmeans, tfidf_v2, text_classify, cluster_evaluation
+from comment_clustering_tfidf_v2 import kmeans, tfidf_v2, text_classify, cluster_evaluation, global_text_weight
 
 
 def text_kmeans_clustering():
+    # 聚类评价时选取TOPK_FREQ_WORD的高频词
+    TOPK_FREQ_WORD = 50
+
+    # 聚类评价时最小簇的大小
+    LEAST_SIZE = 8
+
     eventcomment = EventComments(topicid)
     newsIds = eventcomment.getNewsIds()
 
@@ -39,8 +45,8 @@ def text_kmeans_clustering():
         # 情绪计算
         for r in inputs:
             sentiment = triple_classifier(r)
-            # comment = Comment(r['_id'])
-            # comment.update_comment_sentiment(sentiment)
+            comment = Comment(r['_id'])
+            comment.update_comment_sentiment(sentiment)
 
         # kmeans 聚类及评价
         kmeans_results = kmeans(inputs, k=10)
@@ -105,19 +111,31 @@ def one_topic_calculation_comments(topicid):
         tfidf_word = tfidf_v2(inputs)
 
         #聚类个数=过滤后文本数/2向上取整，大于10的取10
-        k = int(math.ceil(float(len(inputs)) / 5.0))
-        if k > 10:
-            k = 10
+        kmeans_cluster_number = int(math.ceil(float(len(inputs)) / 5.0))
+        if kmeans_cluster_number > 10:
+            kmeans_cluster_number = 10
+        if kmeans_cluster_number < 5:
+            kmeans_cluster_number = 5
 
         # 评论词聚类
-        word_label = kmeans(tfidf_word, inputs, k=k)
+        word_label = kmeans(tfidf_word, inputs, k=kmeans_cluster_number)
+
+        # 计算全局文本权重
+        for r in inputs:
+            gweight = global_text_weight(r['content'], tfidf_word)
+            comment = Comment(r['_id'], topicid)
+            comment.update_comment_global_weight(gweight)
 
         # 评论文本分类
         results = text_classify(inputs, word_label, tfidf_word)
 
         #簇评价
-        reserved_num = int(math.ceil(float(10) / 2.0))
-        final_cluster_results = cluster_evaluation(results, top_num=reserved_num, least_size=2)
+        reserved_num = int(math.ceil(float(kmeans_cluster_number) / 2.0))
+        LEAST_CLUSET_SIZE = 3 # 最小的簇大小
+        TOPK_FREQ = 10
+        TOPK_WEIGHT = 5
+        final_cluster_results = cluster_evaluation(results, top_num=reserved_num, topk_freq=TOPK_FREQ, \
+                least_freq=LEAST_FREQ, least_size=LEAST_CLUSTER_SIZE, topk_weight=TOPK_WEIGHT)
         for label, items in final_cluster_results.iteritems():
             if label == 'other':
                 label = news.otherClusterId
@@ -136,12 +154,6 @@ def one_topic_calculation_comments(topicid):
 
 
 if __name__=="__main__":
-    # 聚类评价时选取TOPK_FREQ_WORD的高频词
-    TOPK_FREQ_WORD = 50
-
-    # 聚类评价时最小簇的大小
-    LEAST_SIZE = 8
-
     cm = CommentsManager()
     com_col_names = cm.get_comments_collection_name()
     for name in com_col_names:
