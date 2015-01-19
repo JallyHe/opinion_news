@@ -49,7 +49,7 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
     '''
     cluto kmeans聚类
     input：
-        k: 聚簇数，默认取5
+        k: 聚簇数
         input_file: cluto输入文件路径，如果不指定，以cluto_input_folder + pid.txt方式命名
         vcluster: cluto vcluster可执行文件路径
 
@@ -205,7 +205,6 @@ def text_classify(inputs,word_label,tfidf_word):
         word_weight[w] = c
 
     #计算每条评论属于各个类的权值
-    text_classify = {}
     for input in inputs:
         cluster_weight = dict()
         text = input['content']

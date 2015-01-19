@@ -17,7 +17,6 @@ from sort import text_weight_cal
 from duplicate import duplicate
 from Database import CommentsManager, EventComments, Comment, News
 from config import emotions_vk
-from comment_clustering_tfidf_v2 import kmeans, tfidf_v2, text_classify, cluster_evaluation, global_text_weight
 
 
 def text_kmeans_clustering():
@@ -82,9 +81,11 @@ def text_kmeans_clustering():
             comment.update_comment_weight(weight)
 
 
-def one_topic_calculation_comments(topicid):
+def one_topic_calculation_comments_v2(topicid):
     """对评论进行聚类
     """
+    from comment_clustering_tfidf_v2 import kmeans, tfidf_v2, text_classify, cluster_evaluation, global_text_weight
+
     eventcomment = EventComments(topicid)
     newsIds = eventcomment.getNewsIds()
 
@@ -153,10 +154,55 @@ def one_topic_calculation_comments(topicid):
                 comment.update_comment_weight(item['weight'])
 
 
+def one_topic_calculation_comments_v4(topicid):
+    """对评论进行聚类
+    """
+    from comment_clustering_tfidf_v4 import kmeans, tfidf_v2, text_classify, \
+            cluster_evaluation, choose_cluster
+
+    eventcomment = EventComments(topicid)
+    newsIds = eventcomment.getNewsIds()
+
+    for news_id in newsIds:
+        eventcomment.clear_cluster(news_id)
+        results = eventcomment.getNewsComments(news_id)
+        news = News(news_id)
+
+        inputs = []
+        for r in results:
+            r['title'] = ''
+            r['content'] = r['content168'].encode('utf-8')
+            r['text'] = r['content168']
+            item = ad_filter(r)
+            if item['ad_label'] == 0:
+                inputs.append(item)
+
+        # 情绪计算
+        for r in inputs:
+            sentiment = triple_classifier(r)
+            # comment = Comment(r['_id'], topicid)
+            # comment.update_comment_sentiment(sentiment)
+
+        MIN_CLUSTERING_INPUT = 50
+        MIN_CLUSTER_SIZE = 2
+        MAX_CLUSTER_SIZE = 15
+        if len(inputs) >= MIN_CLUSTERING_INPUT:
+            tfidf_word, input_dict = tfidf_v2(inputs)
+            results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
+            for k, v in results.iteritems():
+                print k, len(v)
+
+            #评论文本聚类
+            cluster_text = text_classify(inputs, results, tfidf_word)
+
+            #簇评价
+            recommend_text = cluster_evaluation(evaluation_inputs)
+
+
 if __name__=="__main__":
     cm = CommentsManager()
     com_col_names = cm.get_comments_collection_name()
     for name in com_col_names:
         topicid = ObjectId(name.lstrip('comment_'))
-        one_topic_calculation_comments(topicid)
+        one_topic_calculation_comments_v4(topicid)
 
