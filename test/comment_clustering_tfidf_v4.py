@@ -163,7 +163,7 @@ def freq_word(items):
 
     return top_word
 
-def tfidf_v2(inputs):
+def tfidf_v4(inputs):
     '''
     计算每条文本中每个词的tfidf，对每个词在各个文本中tfidf加和除以出现的文本次数作为该词的权值。
     输入数据：
