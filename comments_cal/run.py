@@ -132,9 +132,10 @@ def one_topic_calculation_comments_v2(topicid):
 
         #簇评价
         reserved_num = int(math.ceil(float(kmeans_cluster_number) / 2.0))
-        LEAST_CLUSET_SIZE = 3 # 最小的簇大小
+        LEAST_CLUSTER_SIZE = 3 # 最小的簇大小
         TOPK_FREQ = 10
         TOPK_WEIGHT = 5
+        LEAST_FREQ = 0
         final_cluster_results = cluster_evaluation(results, top_num=reserved_num, topk_freq=TOPK_FREQ, \
                 least_freq=LEAST_FREQ, least_size=LEAST_CLUSTER_SIZE, topk_weight=TOPK_WEIGHT)
         for label, items in final_cluster_results.iteritems():
@@ -157,7 +158,7 @@ def one_topic_calculation_comments_v2(topicid):
 def one_topic_calculation_comments_v4(topicid):
     """对评论进行聚类
     """
-    from comment_clustering_tfidf_v4 import kmeans, tfidf_v2, text_classify, \
+    from comment_clustering_tfidf_v4 import kmeans, tfidf_v4, text_classify, \
             cluster_evaluation, choose_cluster
 
     eventcomment = EventComments(topicid)
@@ -180,24 +181,46 @@ def one_topic_calculation_comments_v4(topicid):
         # 情绪计算
         for r in inputs:
             sentiment = triple_classifier(r)
-            # comment = Comment(r['_id'], topicid)
-            # comment.update_comment_sentiment(sentiment)
+            comment = Comment(r['_id'], topicid)
+            comment.update_comment_sentiment(sentiment)
 
         MIN_CLUSTERING_INPUT = 50
-        MIN_CLUSTER_SIZE = 2
-        MAX_CLUSTER_SIZE = 15
+        MIN_CLUSTER_NUM = 2
+        MAX_CLUSTER_NUM = 15
         if len(inputs) >= MIN_CLUSTERING_INPUT:
-            tfidf_word, input_dict = tfidf_v2(inputs)
+            tfidf_word, input_dict = tfidf_v4(inputs)
             results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
-            for k, v in results.iteritems():
-                print k, len(v)
+
+            # for k, v in results.iteritems():
+            #     print k, len(v)
 
             #评论文本聚类
             cluster_text = text_classify(inputs, results, tfidf_word)
 
+            evaluation_inputs = []
+
+            for k,v in enumerate(cluster_text):
+                inputs[k]['label'] = v['label']
+                inputs[k]['weight'] = v['weight']
+                evaluation_inputs.append(inputs[k])
+
             #簇评价
             recommend_text = cluster_evaluation(evaluation_inputs)
+            for label, items in recommend_text.iteritems():
+                if label == 'other':
+                    label = news.otherClusterId
 
+                if len(items):
+                    eventcomment.save_cluster(label, news_id, int(time.time()))
+
+                if label != news.otherClusterId:
+                    fwords = results[label]
+                    eventcomment.update_feature_words(label, fwords)
+
+                for item in items:
+                    comment = Comment(item['_id'], topicid)
+                    comment.update_comment_label(label)
+                    comment.update_comment_weight(item['weight'])
 
 if __name__=="__main__":
     cm = CommentsManager()

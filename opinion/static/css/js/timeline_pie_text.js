@@ -246,6 +246,10 @@ Opinion_timeline.prototype.drawEventriver = function(){
 
 // instance method, 获取数据并绘制趋势图
 Opinion_timeline.prototype.drawTrendline = function(){
+    this.trend_count_obj = {
+        "ts":[],
+        "count":[]
+    };
     var trends_title = this.trend_title;
     var trend_div_id = this.trend_div_id;
     var pointInterval = this.pointInterval;
@@ -455,6 +459,7 @@ function display_trend(that, trend_div_id, query, during, begin_ts, end_ts, tren
 }
 
 function pull_emotion_count(that, query, emotion_type, total_days, times, begin_ts, during, count_series, absolute_peak_series){
+    console.log(that.trend_count_obj['ts']);
     if(times > total_days){
         get_peaks(that, absolute_peak_series, that.trend_count_obj['count'], that.trend_count_obj['ts'], during);
         return;
