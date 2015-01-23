@@ -62,13 +62,13 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 
     this.event_river_data; // 接收eventriver的数据
     this.select_subevent = "global"; // 当前选择的subevent, global表示总体，subeventid表示各子事件
+    this.select_subevent_name = query;
 
     this.click_status = 'global'; // 标识当前的状态，global表示全局，peak表示点击了某个拐点后的情况
-
     var that = this;
     $("#clickalltime").click(function(){
         $("#cloudpie").css("display", "block");
-        drawStatusTip(that.select_subevent, "全时段", null);
+        drawStatusTip(that.select_subevent_name, "全时段", null);
         that.drawTrendline();
         that.pullDrawPiedata();
         that.pullDrawClouddata();
@@ -459,7 +459,6 @@ function display_trend(that, trend_div_id, query, during, begin_ts, end_ts, tren
 }
 
 function pull_emotion_count(that, query, emotion_type, total_days, times, begin_ts, during, count_series, absolute_peak_series){
-    console.log(that.trend_count_obj['ts']);
     if(times > total_days){
         get_peaks(that, absolute_peak_series, that.trend_count_obj['count'], that.trend_count_obj['ts'], during);
         return;
@@ -507,10 +506,10 @@ function call_peak_ajax(that, series, data_list, ts_list, during, subevent){
             var click_ts = this.x / 1000;
             var title = this.title;
             $("#cloudpie").css("display", "none");
-            drawStatusTip(that.select_subevent, '拐点' + title, click_ts);
+            drawStatusTip(that.select_subevent_name, '拐点' + title, click_ts);
             that.click_status = 'peak';
             that.weibo_skip = 0;
-            var ajax_url = that.weibo_ajax_url(that.query, click_ts, that.pointInterval, that.select_subevent, that.weibo_skip, that.weibo_limit, that.weibo_sort);
+            var ajax_url = that.weibo_ajax_url(that.query, click_ts, that.pointInterval, that.select_subevent, that.weibo_skip, that.weibo_limit_count, that.weibo_sort);
             that.call_sync_ajax_request(ajax_url, that.ajax_method, Weibo_function);
 
             function Weibo_function(data){
@@ -738,7 +737,7 @@ function drawSubeventTab(data, that){
     var topic_weight = data['weight'];
     var data = data['eventList'];
     var html = '';
-    html += '<div class="btn-group" id="global">';
+    html += '<div class="btn-group" id="global" name="' + query + '">';
     if(that.select_subevent == 'global'){
         html += '<button type="button" class="btn btn-success" style="margin: 5px;">' + query + '(' + topic_weight + ')</button>';
     }
@@ -753,7 +752,7 @@ function drawSubeventTab(data, that){
         var date = new Date(data[i]['created_at'] * 1000).format("yyyy-MM-dd hh:mm:ss");
         var tfidf = data[i]['tfidf'];
         var subeventid = data[i]['id'];
-        html += '<div class="btn-group" id="' + subeventid + '">';
+        html += '<div class="btn-group" id="' + subeventid + '" name="' + name + '">';
         if(that.select_subevent == subeventid){
             html += '<button type="button" class="btn btn-success" style="margin: 5px;">' + name + '(' + tfidf.toFixed(3) + ', ' + weight + ', ' + addweight  + ', ' + date  + ')</button>';
         }
@@ -782,7 +781,8 @@ function subevent_tab_click(that){
                 $("#cloudpie").css("display", "block");
                 $("#news_rec").css("display", "block");
                 $("#" + this.id + " :button").removeClass("btn btn-default").addClass("btn btn-success");
-                change_subevent_stat(this.id, that);
+                var subevent_name = $("#" + this.id).attr("name");
+                change_subevent_stat(this.id, subevent_name, that);
             }
             else{
                 $("#" + this.id + " :button").removeClass("btn btn-success").addClass("btn btn-default");
@@ -794,8 +794,9 @@ function subevent_tab_click(that){
     })
 }
 
-function change_subevent_stat(subeventid, that){
+function change_subevent_stat(subeventid, subeventname, that){
     that.select_subevent = subeventid;
+    that.select_subevent_name = subeventname;
     that.drawTrendline();
     that.pullDrawClouddata();
     that.pullDrawPiedata();
