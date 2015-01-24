@@ -345,9 +345,6 @@ function refreshDrawOpinionTab(tabs_list, select_tab){
         html += '<div class="nmTab">' + words  + '</div>';
         html += '<div class="hvTab">' + words + '</div>';
         html += '</a>';
-        if (i % 3 == 0){
-            html += '<p></p>';
-        }
 
     }
     $("#OpinionTabDiv").append(html);
