@@ -499,7 +499,7 @@ class Event(object):
             unique_ids = set()
             unique_items = {}
             for r in results:
-                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-').replace('%', '-').replace('?', '-').replace('&', '-').replace('=', '-')
+                r['_id'] = str(r['_id']).replace(':', '-').replace('/', '-').replace('.', '-').replace('%', '-').replace('?', '-').replace('&', '-').replace('=', '-')
                 if r['same_from'] in unique_ids:
                     try:
                         unique_items[r['same_from']]['same_list'].append(r)
@@ -520,7 +520,7 @@ class Event(object):
             unique_ids = set()
             unique_items = {}
             for r in results:
-                r['_id'] = r['_id'].replace(':', '-').replace('/', '-').replace('.', '-').replace('%', '-').replace('?', '-').replace('&', '-').replace('=', '-')
+                r['_id'] = str(r['_id']).replace(':', '-').replace('/', '-').replace('.', '-').replace('%', '-').replace('?', '-').replace('&', '-').replace('=', '-')
                 if r['same_from'] in unique_ids:
                     try:
                         unique_items[r['same_from']]['same_list'].append(r)
