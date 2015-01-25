@@ -99,6 +99,11 @@ class Event(object):
         self.events_collection = EVENTS_COLLECTION
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
+    def saveItem(self, item):
+        """保存单条item
+        """
+        self.mongo[self.news_collection].save(item)
+
     def getSubEvents(self):
         """获取子事件，非其他类
         """

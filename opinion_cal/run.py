@@ -254,16 +254,18 @@ def one_topic_calculation(eventid_initializing):
 
 
 if __name__ == '__main__':
+    from bson.objectid import ObjectId
+
     em = EventManager()
     event_ids_list = []
 
     # 获取做初始聚类的话题
     initial_event_ids = em.getInitializingEventIDs()
-    event_ids_list.extend([(id, True) for id in initial_event_ids])
+    event_ids_list.extend([(id, True) for id in initial_event_ids if id == ObjectId("54c4df61d8b487851c2434f6")])
 
     # 获取已做完初始聚类的活跃话题
     active_event_ids = em.checkActive()
-    event_ids_list.extend([(id, False) for id in active_event_ids])
+    event_ids_list.extend([(id, False) for id in active_event_ids if id == ObjectId("54c4df61d8b487851c2434f6")])
 
     # map并行计算
     pool = Pool()
