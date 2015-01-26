@@ -255,17 +255,19 @@ def one_topic_calculation(eventid_initializing):
 
 if __name__ == '__main__':
     from bson.objectid import ObjectId
+    # running_ids = [ObjectId("54c4df61d8b487851c2434f6"), ObjectId("54c34b3d2253270fd4dd5598"), \
+    running_ids = [ObjectId("54c5105fd8b487851c2434f7"), ObjectId("54c59c19d8b487851c2434f8")]
 
     em = EventManager()
     event_ids_list = []
 
     # 获取做初始聚类的话题
     initial_event_ids = em.getInitializingEventIDs()
-    event_ids_list.extend([(id, True) for id in initial_event_ids if id == ObjectId("54c4df61d8b487851c2434f6")])
+    event_ids_list.extend([(id, True) for id in initial_event_ids if id in running_ids])
 
     # 获取已做完初始聚类的活跃话题
     active_event_ids = em.checkActive()
-    event_ids_list.extend([(id, False) for id in active_event_ids if id == ObjectId("54c4df61d8b487851c2434f6")])
+    event_ids_list.extend([(id, False) for id in active_event_ids if id in running_ids])
 
     # map并行计算
     pool = Pool()
