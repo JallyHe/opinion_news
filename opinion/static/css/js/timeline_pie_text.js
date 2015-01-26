@@ -805,7 +805,8 @@ function change_subevent_stat(subeventid, subeventname, that){
 
 // 画重要微博
 function refreshWeibodata(data){  //需要传过来的是新闻的data
-	var html = "";
+    console.log(data);
+    var html = "";
     for ( e in data){
         var d = data[e];
         var content_summary = d['content168'].substring(0, 168) + '...';
@@ -815,9 +816,30 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
         else{
             var same_text_count = d['same_list'].length;
         }
+        var user_name;
+        var source_from_name;
+        if (d['transmit_name'] != null){
+            user_name = d['transmit_name'];
+        }
+        else{
+            user_name = d['user_name'];
+        }
+        if (d['source_from_name'] != null){
+            source_from_name = d['source_from_name'];
+        }
+        else{
+            source_from_name = d['user_name'];
+        }
+        var url;
+        if (d["url"] != null){
+            url = d["url"];
+        }
+        else{
+            url = d["showurl"];
+        }
         html += '<li class="item" style="width:1010px">';
         html += '<div class="weibo_detail" >';
-        html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + d['source_from_name'] + '</a>&nbsp;&nbsp;发布:';
+        html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + source_from_name + '</a>&nbsp;&nbsp;发布:';
         html += '<span class="title" style="color:#0000FF" id="' + d['_id'] + '"><b>[' + d['title'] + ']</b></span>';
         html += '&nbsp;&nbsp;发布内容：&nbsp;&nbsp;<span id="content_summary_' + d['_id']  + '">' + content_summary + '</span>';
         html += '<span style="display: none;" id="content_' + d['_id']  + '">' + d['content168'] + '&nbsp;&nbsp;</span>';
@@ -830,18 +852,39 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
         html += "</div>";
         html += '<div class="m">';
         html += '<a>' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
-        html += '<a>转载于'+ d["transmit_name"] +'</a>&nbsp;&nbsp;';
-        html += '<a target="_blank" href="'+ d["url"] +'">新闻</a>&nbsp;&nbsp;';
+        html += '<a>转载于'+ user_name +'</a>&nbsp;&nbsp;';
+        html += '<a target="_blank" href="'+ url +'">新闻</a>&nbsp;&nbsp;';
         html += '</div>';
         html += '</div>' 
         html += '</div>';
         html += '</li>';
         for (var i=0;i<same_text_count;i++){
             var dd = d['same_list'][i];
+            var user_name;
+            var source_from_name;
+            if (dd['transmit_name'] != null){
+                user_name = dd['transmit_name'];
+            }
+            else{
+                user_name = dd['user_name'];
+            }
+            if (dd['source_from_name'] != null){
+                source_from_name = dd['source_from_name'];
+            }
+            else{
+                source_from_name = dd['user_name'];
+            }
+            var d_url;
+            if (dd["url"] != null){
+                d_url = dd["url"];
+            }
+            else{
+                d_url = dd["showurl"];
+            }
             html += '<div class="inner-same inner-same-' + d['_id'] + '" style="display:none;">';
             html += '<li class="item" style="width:1000px; border:2px solid">';
             html += '<div class="weibo_detail" >';
-            html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + dd['source_from_name'] + '</a>&nbsp;&nbsp;发布:';
+            html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + source_from_name + '</a>&nbsp;&nbsp;发布:';
             html += '<span class="title" style="color:#0000FF" id="' + dd['_id'] + '"><b> ' + dd['title'] + ' </b></span>';
             html += '&nbsp;&nbsp;发布内容：&nbsp;&nbsp;<span id="content_summary_' + d['_id']  + '">' + dd['content168'].substring(0, 168) + '...</span>';
             html += '<span style="display: none;" id="content_' + dd['_id']  + '">' + d['content168'] + '&nbsp;&nbsp;</span>';
@@ -853,8 +896,8 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             html += "</div>";
             html += '<div class="m">';
             html += '<a>' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
-            html += '<a>转载于'+ dd["transmit_name"] +'</a>&nbsp;&nbsp;';
-            html += '<a target="_blank" href="'+ dd["url"] +'">新闻</a>&nbsp;&nbsp;';
+            html += '<a>转载于'+ user_name +'</a>&nbsp;&nbsp;';
+            html += '<a target="_blank" href="'+ d_url +'">新闻</a>&nbsp;&nbsp;';
             html += '</div>';
             html += '</div>' 
             html += '</div>';

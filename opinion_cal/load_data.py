@@ -72,13 +72,19 @@ def subject_weibo2news(item):
 def load_subject_weibo_data():
     """加载客观微博数据
     """
-    topicname = u'外滩踩踏-微博'
+    # topicname = u'外滩踩踏-微博'
+    # topicname = u'呼格案-微博'
+    # topicname = u'复旦投毒案-微博'
+    topicname = u'APEC-微博'
 
     em = EventManager()
     topicid = em.getEventIDByName(topicname)
     event = Event(topicid)
 
-    f = open('caitai.jl')
+    # f = open('caitai.jl')
+    # f = open('huge.jl')
+    # f = open('fudan.jl')
+    f = open('apec.jl')
     for line in f:
         item = json.loads(line.strip())
         item['text'] = item['text'].encode('utf-8')
@@ -95,7 +101,28 @@ def initializeWeiboTopic():
     """
     em = EventManager()
 
-    topicname = u'外滩踩踏-微博'
+    # topicname = u'外滩踩踏-微博'
+    # start_datetime = "2015-01-02 00:00:00"
+    # topicname = u'呼格案-微博'
+    # start_datetime = "2014-12-14 00:00:00"
+    # topicname = u'复旦投毒案-微博'
+    # start_datetime = "2014-12-15 00:00:00"
+    topicname = u'APEC-微博'
+    start_datetime = "2014-12-15 00:00:00"
+
+    topicid = em.getEventIDByName(topicname)
+    start_ts = datetime2ts(start_datetime)
+
+    event = Event(topicid)
+    event.initialize(start_ts)
+
+
+def initializeNewsTopic():
+    """初始化新闻话题
+    """
+    em = EventManager()
+
+    topicname = u'外滩踩踏'
     start_datetime = "2015-01-02 00:00:00"
     topicid = em.getEventIDByName(topicname)
     start_ts = datetime2ts(start_datetime)
@@ -105,6 +132,7 @@ def initializeWeiboTopic():
 
 
 if __name__ == '__main__':
+    # initializeNewsTopic()
     # initializeWeiboTopic()
     load_subject_weibo_data()
 
