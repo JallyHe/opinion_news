@@ -5,18 +5,18 @@ import csv
 import time
 import math
 from bson.objectid import ObjectId
-from ad_filter import ad_filter
-from triple_sentiment_classifier import triple_classifier
 
 import sys
-AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test/')
+AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../public/')
 sys.path.append(AB_PATH)
 
 from feature import extract_feature
 from sort import text_weight_cal
 from duplicate import duplicate
-from Database import CommentsManager, EventComments, Comment, News
 from config import emotions_vk
+from ad_filter import ad_filter
+from triple_sentiment_classifier import triple_classifier
+from Database import CommentsManager, EventComments, Comment, News
 
 
 def text_kmeans_clustering():
@@ -227,5 +227,7 @@ if __name__=="__main__":
     com_col_names = cm.get_comments_collection_name()
     for name in com_col_names:
         topicid = ObjectId(name.lstrip('comment_'))
-        one_topic_calculation_comments_v4(topicid)
+        if str(topicid) == '54c5b301d8b487851c2434f9':
+            print 'found'
+            one_topic_calculation_comments_v4(topicid)
 

@@ -4,6 +4,7 @@ from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 from opinion.news.views import mod as newsModule
 from opinion.comment.views import mod as commentsModule
+from opinion.weibo.views import mod as weibosModule
 
 def create_app():
     app = Flask(__name__)
@@ -12,6 +13,7 @@ def create_app():
     # Create modules
     app.register_blueprint(newsModule)
     app.register_blueprint(commentsModule)
+    app.register_blueprint(weibosModule)
 
     # Enable the toolbar?
     app.config['DEBUG_TB_ENABLED'] = app.debug
