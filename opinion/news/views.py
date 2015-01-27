@@ -7,7 +7,7 @@ import datetime
 from collections import Counter
 from flask import Blueprint, url_for, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
-from opinion.Database import Event, EventManager, Feature, DbManager
+from opinion.Database import Event, EventManager, Feature, DbManager, EventComments
 from opinion.global_config import default_topic_name
 
 mod = Blueprint('news', __name__, url_prefix='/news')
@@ -70,6 +70,28 @@ def trend():
     return render_template('index/trend.html', mode=mode, topic=topic_name, time_range=time_range, status=status, \
             start_date=ts2datetime(start_ts), end_date=end_date, last_modify=ts2datetime(last_modify), modify_success=modify_success)
 
+@mod.route('/sentiment/')
+def sentiment():
+    """
+    主观微博
+    """
+    topic_name = request.args.get('query', default_topic_name)
+    topic_name = u'APEC-微博'
+    topicid = em.getEventIDByName(topic_name)
+
+    eventcomment = EventComments(topicid)
+    comments = eventcomment.getAllNewsComments()
+
+    sentiment_comments = dict()
+    for comment in comments:
+        if 'sentiment' in comment:
+            sentiment = comment['sentiment']
+            try:
+                sentiment_comments[sentiment].append(comment)
+            except KeyError:
+                sentiment_comments[sentiment] = [comment]
+    return json.dumps(sentiment_comments)
+    
 @mod.route('/manage/')
 def mange():
     """返回话题管理页面

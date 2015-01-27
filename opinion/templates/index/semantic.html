@@ -441,6 +441,47 @@
             </ol>
             </div>
     </div>
+    <div class="blkUnit grpUnit" style="float:left;width:1033px;" id="cloudpie">
+        <div class="titlBar" style="padding-bottom:15px;">
+            <h4><b>按情绪类别查看</b></h4>
+            <i id="sub_weibo_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="重要评论:各类子观点的重要评论"></i>&nbsp;&nbsp;
+        </div>
+        <div class="stmTabs tabUnit" style="width:1033px;">
+            <div class="tabTitle" style="padding-top:1px;">
+                <div class="tabUI" id="SentimentTabDiv" style = "width:1033px;">
+                    <a sentiment="happy" class="tabLi gColor1 curr" href="javascript:;" style="display: block;">
+                        <div class="nmTab">积极</div>
+                        <div class="hvTab">积极</div>
+                    </a>
+                    <a sentiment="angry" class="tabLi gColor2" href="javascript:;" style="display: block;">
+                        <div class="nmTab">愤怒</div>
+                        <div class="hvTab">愤怒</div>
+                    </a>
+                    <a sentiment="sad" class="tabLi gColor0" href="javascript:;" style="display: block;">
+                        <div class="nmTab">悲伤</div>
+                        <div class="hvTab">悲伤</div>
+                    </a>
+                </div>
+            </div>
+            <div class="tabConts">
+                <div id="sub_weibos_div" style="width:1000px;float:left;">
+                    <!--
+                    <div class="tabCon">
+                        <div id="weibo_list" id="weibo_list weibo_list_height scrolls tang-scrollpanel">
+                            <ul id="sub_weibo_ul">
+                            </ul>
+                            <div id="content_control_height" class="tang-scrollpanel-wrapper">
+                                <div class="tang-scrollpanel-content">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </div>
+      
+    </div>
 
     <div class="blkUnit grpUnit" style="float:left;margin-bottom: 20px;" id="subevent_sel">
         <div class="titlBar" style="padding-bottom:25px;">
@@ -555,6 +596,7 @@
         $("#timeline_tooltip").tooltip();
         $("#table_pie_tooltip").tooltip();
         $("#weibo_tooltip").tooltip();
+        $("#sub_weibo_tooltip").tooltip();
     </script>
    
     <script src="/static/css/js/tab.js" type="text/javascript"></script>

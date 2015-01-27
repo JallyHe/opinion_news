@@ -39,9 +39,11 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
 	}
 	this.weibo_ajax_url = function(query, end_ts, during, subevent, skip, limit, sort){
 		var url = "/news/weibos/?query=" + query + "&limit=" + limit + "&skip=" + skip + "&ts=" + end_ts + "&during=" + during + "&subevent=" + subevent + "&sort=" + sort;
-        console.log(url);
         return url
 	}
+    this.sub_weibo_ajax_url =  function(query){
+        return "/news/sentiment/?query=" + query;
+    }
     this.peak_ajax_url = function(data, ts_list, during, subevent){
         return "/news/peak/?lis=" + data.join(',') + "&ts=" + ts_list + '&during=' + during + "&subevent=" + subevent;
     }
@@ -203,6 +205,10 @@ Opinion_timeline.prototype.drawFishbone = function(){
     drawFishbone(this.event_river_data);
 }
 
+function gweight_comparator(a,b){
+    return parseInt(b.gweight) - parseInt(a.gweight);
+}
+
 function timestamp_comparator(a, b){
     return parseInt(a.news.timestamp) - parseInt(b.news.timestamp);
 }
@@ -318,6 +324,20 @@ Opinion_timeline.prototype.pullDrawWeibodata = function(){
         $("#weibo_ul").empty();
         that.weibo_skip += that.weibo_limit_count;
         refreshWeibodata(data);
+    }
+}
+
+Opinion_timeline.prototype.pullDrawSubWeiboData = function(){
+	var that = this;
+	var ajax_url = this.sub_weibo_ajax_url(this.query);
+
+	this.call_sync_ajax_request(ajax_url, this.ajax_method, Sub_Weibo_function);
+
+    function Sub_Weibo_function(data){
+        global_sub_weibos = data;
+        $("#sub_weibo_ul").empty();
+        var select_sentiment = 1;
+        refreshSubWeiboData(global_sub_weibos, select_sentiment);
     }
 }
 
@@ -627,6 +647,76 @@ function drawEventstack(data){
 	var myChart = echarts.init(document.getElementById('event_river'));
     myChart.setOption(option); 
 }
+
+function bindSentimentTabClick(){
+    var select_div_id = "SentimentTabDiv";
+    var sentiment_map = {
+        'happy': 1,
+        'angry': 2,
+        'sad': 3
+    }
+    $("#"+select_div_id).children("a").unbind();
+    $("#"+select_div_id).children("a").click(function() {
+        var select_a = $(this);
+        var unselect_a = $(this).siblings('a');
+        if(!select_a.hasClass('curr')) {
+            select_a.addClass('curr');
+            unselect_a.removeClass('curr');
+            var select_sentiment = sentiment_map[select_a.attr('sentiment')];
+            refreshSubWeiboData(global_sub_weibos, select_sentiment);
+        }
+    });
+}
+
+
+function refreshSubWeiboData(data, select_sentiment){
+    var sub_weibo_div = "#sub_weibos_div";
+    $(sub_weibo_div).empty();
+
+    var sentiment_dict = {
+        0: '无倾向',
+        1: '高兴',
+        2: '愤怒',
+        3: '悲伤'
+    }
+
+    var html = "";
+    var counter = 0;
+    data[select_sentiment].sort(gweight_comparator);
+    var da = data[select_sentiment];
+    for ( e in da){
+        if (counter == 10){
+            break;
+        }
+        counter += 1;
+        var d = da[e];
+        var content_summary = d['content168'];
+        var user_img_link = '/static/img/unknown_profile_image.gif';
+        html += '<li class="item" style="width:1010px;height:70px;">';
+        html += '<div class="weibo_face"><a target="_blank" href="#">';
+        html += '<img src="' + user_img_link + '">';
+        html += '</a></div>';
+        html += '<div class="weibo_detail" >';
+        html += '<p>用户:<a class="undlin" target="_blank" href="' + d["user_comment_url"] + '">' + d['user_name'] + '</a>&nbsp;&nbsp;';
+        html += '&nbsp;&nbsp;发布内容：&nbsp;&nbsp;<span id="content_summary_' + d['_id']  + '">' + content_summary + '</span>';
+        html += '</p>';
+        html += '<div class="weibo_info">';
+        html += '<div class="weibo_pz" style="margin-right:10px;">';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['gweight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
+        html += "</div>";
+        html += '<div class="m">';
+        html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
+        html += '<a target="_blank">发表于'+ d["comment_source"] +'</a>&nbsp;&nbsp;';
+        html += '</div>';
+        html += '</div>'; 
+        html += '</div>';
+        html += '</li>';
+    }
+    $(sub_weibo_div).append(html);
+    // $("#content_control_height").css("height", $("#weibo_ul").css("height"));
+}
+
 
 function refreshPiedata(data){
 	var pie_data = [];
@@ -968,9 +1058,12 @@ var query = QUERY;
 var start_ts = START_TS;
 var end_ts = END_TS;
 var pointInterval = 3600 * 24;
+var global_sub_weibos;
 var opinion = new Opinion_timeline(query, start_ts, end_ts, pointInterval);
 opinion.pull_eventriver_data();
 opinion.drawFishbone();
+opinion.pullDrawSubWeiboData();
+bindSentimentTabClick();
 opinion.drawSubeventsTab();
 opinion.drawEventriver();
 opinion.drawTrendline();
