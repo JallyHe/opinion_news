@@ -11,10 +11,12 @@ import numpy as np
 from gensim import corpora
 from utils import cut_words,cut_words_noun, _default_mongo
 from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, COMMENT_COLLECTION
+        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, EVENTS_COMMENTS_COLLECTION_PREFIX
 import sys
 reload (sys)
 sys.setdefaultencoding('utf-8')
+
+AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
 def freq_word_comment(items):
     '''
@@ -258,7 +260,7 @@ def process_for_cluto(word,inputs):
     column = len(inputs)#特征列数
     nonzero_count = 0#非0特征数
 
-    cluto_input_folder = "cluto"
+    cluto_input_folder = os.path.join(AB_PATH, "cluto")
     if not os.path.exists(cluto_input_folder):
         os.makedirs(cluto_input_folder)
     file_name = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
@@ -294,13 +296,20 @@ def cluto_kmeans_vcluster(k, input_file=None, vcluster='./cluto-2.1.2/Linux-i686
         聚类结果评价文件位置及名称
     '''
     # 聚类结果文件, result_file
+
+    cluto_input_folder = os.path.join(AB_PATH, "cluto")
+
     if not input_file:
+        print 'not exist'
         input_file = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
         result_file = os.path.join(cluto_input_folder, '%s.txt.clustering.%s' % (os.getpid(), k))
         evaluation_file = os.path.join(cluto_input_folder,'%s_%s.txt'%(os.getpid(),k))
     else:
-        result_file = '%s.clustering.%s' % (input_file, k)
+        result_file = os.path.join(cluto_input_folder,'%s.clustering.%s' % (input_file, k))
         evaluation_file = os.path.join(cluto_input_folder,'%s_%s.txt'%(os.getpid(),k))
+
+    if not vcluster:
+        vcluster = os.path.join(AB_PATH, './cluto-2.1.2/Linux_i686/vcluster')
 
     command = "%s -niter=20 %s %s > %s" % (vcluster, input_file, k, evaluation_file)
     os.popen(command)
@@ -377,7 +386,7 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     evaluation_result = {}#每类的聚类评价效果
     cluster_result={}#记录每个聚类个数下，kmeans词聚类结果，{聚类个数：{类标签：[词1，词2，...]}}
     for i in range(cluster_min,cluster_max,1):
-        results,evaluation = kmeans(tfidf_word,filtered_inputs,i)
+        results,evaluation = kmeans(tfidf_word,inputs,i)
         cluster_result[i]=results
         #提取每类聚类效果
         f = open(evaluation)
@@ -482,7 +491,7 @@ if __name__=="__main__":
     for topic, topicid in topic_topicid:
         print topic,topicid
         mongo = _default_mongo(usedb=MONGO_DB_NAME)
-        results = mongo[ COMMENT_COLLECTION + topicid].find()
+        results = mongo[EVENTS_COMMENTS_COLLECTION_PREFIX + topicid].find()
         inputs = []
         input_count = 0
         for r in results:
