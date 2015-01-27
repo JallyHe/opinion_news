@@ -50,6 +50,10 @@ class EventComments(object):
         results = self.mongo[self.comments_collection].find({"news_id": news_id, "clusterid": {"$ne": news_id + '_other'}})
         return [r for r in results]
 
+    def getAllNewsComments(self):
+        results = self.mongo[self.comments_collection].find({"clusterid": {"$ne": 'weibo_other'}})
+        return [r for r in results]
+
     def save_cluster(self, id, news_id, timestamp):
         self.mongo[self.comments_cluster_collection].save({"_id": id, "eventid": self.id, \
                 "news_id": news_id, "timestamp": timestamp})
