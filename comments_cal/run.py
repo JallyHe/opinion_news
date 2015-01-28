@@ -222,6 +222,73 @@ def one_topic_calculation_comments_v4(topicid):
                     comment.update_comment_label(label)
                     comment.update_comment_weight(item['weight'])
 
+def one_topic_calculation_comments_v7(topicid):
+    """对评论进行聚类
+    """
+    from comment_clustering_tfidf_v7 import tfidf_v2, text_classify, \
+            cluster_evaluation, choose_cluster
+
+    eventcomment = EventComments(topicid)
+    newsIds = eventcomment.getNewsIds()
+
+    for news_id in newsIds:
+        eventcomment.clear_cluster(news_id)
+        results = eventcomment.getNewsComments(news_id)
+        news = News(news_id)
+
+        inputs = []
+        for r in results:
+            r['title'] = ''
+            r['content'] = r['content168'].encode('utf-8')
+            r['text'] = r['content168']
+            item = ad_filter(r)
+            if item['ad_label'] == 0:
+                inputs.append(item)
+
+        # 情绪计算
+        for r in inputs:
+            sentiment = triple_classifier(r)
+            comment = Comment(r['_id'], topicid)
+            comment.update_comment_sentiment(sentiment)
+
+        MIN_CLUSTERING_INPUT = 30
+        MIN_CLUSTER_NUM = 2
+        MAX_CLUSTER_NUM = 10
+        if len(inputs) >= MIN_CLUSTERING_INPUT:
+            tfidf_word, input_dict = tfidf_v2(inputs)
+            results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
+
+            # for k, v in results.iteritems():
+            #     print k, len(v)
+
+            #评论文本聚类
+            cluster_text = text_classify(inputs, results, tfidf_word)
+
+            evaluation_inputs = []
+
+            for k,v in enumerate(cluster_text):
+                inputs[k]['label'] = v['label']
+                inputs[k]['weight'] = v['weight']
+                evaluation_inputs.append(inputs[k])
+
+            #簇评价
+            recommend_text = cluster_evaluation(evaluation_inputs)
+            for label, items in recommend_text.iteritems():
+                if label == 'other':
+                    label = news.otherClusterId
+
+                if len(items):
+                    eventcomment.save_cluster(label, news_id, int(time.time()))
+
+                if label != news.otherClusterId:
+                    fwords = results[label]
+                    eventcomment.update_feature_words(label, fwords)
+
+                for item in items:
+                    comment = Comment(item['_id'], topicid)
+                    comment.update_comment_label(label)
+                    comment.update_comment_weight(item['weight'])
+
 if __name__=="__main__":
     cm = CommentsManager()
     com_col_names = cm.get_comments_collection_name()
@@ -229,5 +296,5 @@ if __name__=="__main__":
         topicid = ObjectId(name.lstrip('comment_'))
         if str(topicid) == '54c5b301d8b487851c2434f9':
             print 'found'
-            one_topic_calculation_comments_v4(topicid)
+            one_topic_calculation_comments_v7(topicid)
 

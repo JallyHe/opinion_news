@@ -25,7 +25,7 @@ def index():
         news_subeventid = 'None'
     eventcomment = EventComments(topicid)
 
-    return render_template('index/comment.html', topic=topic_name, topic_id=topicid, \
+    return render_template('index/weibo.html', topic=topic_name, topic_id=topicid, \
             news_id=news_id, news_subeventid=news_subeventid)
 
 
@@ -110,6 +110,7 @@ def cluster():
 
     eventcomment = EventComments(topicid)
     comments = eventcomment.getNewsComments(news_id)
+
     cluster_results = dict()
     for comment in comments:
         if 'clusterid' in comment:
@@ -128,13 +129,13 @@ def cluster():
                 positive += 1
             if c['sentiment'] in [2, 3]:
                 negative += 1
-
         sentiment_dict[clusterid] = u'(积极：' + str(positive) + ',' + u'消极：' + str(negative) + ')'
 
     results = dict()
     for clusterid, comments in cluster_results.iteritems():
         feature = eventcomment.get_feature_words(clusterid)
-        results[clusterid] = [','.join(feature[:5]) + sentiment_dict[clusterid], \
+        if feature and len(feature):
+            results[clusterid] = [','.join(feature[:5]) + sentiment_dict[clusterid],\
                 sorted(comments, key=lambda c: c['weight'], reverse=True)]
 
     return json.dumps(results)
