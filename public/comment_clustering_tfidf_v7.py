@@ -9,9 +9,11 @@ import re
 import heapq
 import numpy as np
 from gensim import corpora
+from collections import Counter
 from utils import cut_words,cut_words_noun, _default_mongo
 from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, EVENTS_COMMENTS_COLLECTION_PREFIX
+        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
+        EVENTS_COMMENTS_COLLECTION_PREFIX
 import sys
 reload (sys)
 sys.setdefaultencoding('utf-8')
@@ -27,7 +29,6 @@ def freq_word_comment(items):
         top_word:词和词频构成的列表，{词：词频率}
         word_comment:每条评论的名词，{"_id":[名词1，名词2，...]}
     '''
-    from collections import Counter
     words_list = []
     word_comment = {}#记录每条评论的名词
     for item in items:
@@ -52,7 +53,6 @@ def freq_word_news(item):
     输入数据:新闻，字符串
     输出数据:新闻的词及词频率字典，{词：词频率}
     '''
-    from collections import Counter
     words_list = []
     words = cut_words_noun(item)
     word_item = []
@@ -105,7 +105,6 @@ def comment_word_in_news(word_comment,word_news,inputs):
     input_reserved = []
     input_filtered = []
     news_word = [item[0] for item in word_news]
-    #print news_word
     for k,v in word_comment.iteritems():
         count = 0#每条评论中包含的新闻词数
         for w in v:
@@ -159,7 +158,6 @@ def filter_comment(inputs,news,topicid):
     news_word = freq_word_news(news)#新闻中的词及词频
     imp_word = word_list(comment_top,news_word)#评论和新闻中的词及词频结合
     reserved,filtered = comment_word_in_news(comment_noun,imp_word,item_reserved)
-    #print 'reserved:%s;filtered:%s'%(len(reserved),len(filtered))    
 
     return reserved
 
@@ -190,8 +188,6 @@ def freq_word(items):
     输出数据：
         top_word: 词和词频构成的字典, 数据示例：{词：词频，词：词频，...}
     '''
-    from utils import cut_words_noun#分词结果只保留名词
-    from collections import Counter
     words_list = []
     text = items['content']
     words = cut_words_noun(text)
@@ -282,8 +278,7 @@ def process_for_cluto(word,inputs):
                     
     return file_name
 
-def cluto_kmeans_vcluster(k, input_file=None, vcluster='./cluto-2.1.2/Linux-i686/vcluster', \
-        cluto_input_folder="cluto"):
+def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
     '''
     cluto kmeans聚类
     输入数据：
@@ -300,7 +295,6 @@ def cluto_kmeans_vcluster(k, input_file=None, vcluster='./cluto-2.1.2/Linux-i686
     cluto_input_folder = os.path.join(AB_PATH, "cluto")
 
     if not input_file:
-        print 'not exist'
         input_file = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
         result_file = os.path.join(cluto_input_folder, '%s.txt.clustering.%s' % (os.getpid(), k))
         evaluation_file = os.path.join(cluto_input_folder,'%s_%s.txt'%(os.getpid(),k))
@@ -338,7 +332,6 @@ def label2uniqueid(labels):
         label2id[label] = str(uuid.uuid4())
 
     return label2id
-
 def kmeans(word, inputs, k):
     '''
     kmeans聚类函数
@@ -351,7 +344,7 @@ def kmeans(word, inputs, k):
         每类词构成的字典，{类标签：[词1，词2，...]}
         聚类效果评价文件路径
     '''
-    if len(word) < 2:
+    if len(inputs) < 2:
         raise ValueError("length of input items must be larger than 2")
     
     input_file = process_for_cluto(word, inputs)
@@ -371,7 +364,6 @@ def kmeans(word, inputs, k):
             word_label[l] = item
 
     return word_label,evaluation_file
-
 def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     '''
     选取聚类个数2~15个中聚类效果最好的保留
@@ -383,6 +375,8 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     输出数据：
         聚类效果最好的聚类个数下的词聚类结果
     '''
+    from comment_clustering_tfidf_v4 import kmeans
+
     evaluation_result = {}#每类的聚类评价效果
     cluster_result={}#记录每个聚类个数下，kmeans词聚类结果，{聚类个数：{类标签：[词1，词2，...]}}
     for i in range(cluster_min,cluster_max,1):
@@ -395,7 +389,6 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
         res = pattern.search(s).groups()
         evaluation_result[i]=res[0]
     sorted_evaluation = sorted(evaluation_result.iteritems(),key = lambda(k,v):k,reverse=False)
-    print sorted_evaluation
 
     #计算各个点的斜率
     slope = {}#每点斜率
@@ -410,7 +403,6 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     for k,v in slope.iteritems():
         slope_difference[k] = abs(float(slope[k])-slope_average)
     sorted_slope_difference = sorted(slope_difference.iteritems(),key=lambda(k,v):v, reverse=False)
-    print sorted_slope_difference
     print 'best cluster num:%s'%sorted_slope_difference[0][0]
         
     return cluster_result[sorted_slope_difference[0][0]]
@@ -432,7 +424,6 @@ def text_classify(inputs,word_label,tfidf_word):
         word_weight[w[0]] = w[1]
 
     #计算每条评论属于各个类的权值
-    text_classify = {}
     for input in inputs:
         text_weight = {}
         text = input['content']
@@ -444,9 +435,15 @@ def text_classify(inputs,word_label,tfidf_word):
             text_weight[l] = float(weight)/float(len(text_word))
         sorted_weight = sorted(text_weight.iteritems(), key = lambda asd:asd[1], reverse = True)
         if sorted_weight[0][1]!=0:#只有一条文本属于任何一个类的权值都不为0时才归类
-            text_classify[input['_id']] = sorted_weight[0]
+            clusterid, weight = sorted_weight[0]
+        else:
+            clusterid = 'other'
+            weight = 0
 
-    return text_classify
+        input['label'] = clusterid
+        input['weight'] = weight
+
+    return inputs
 
 def cluster_evaluation(items, min_size=5):
     '''

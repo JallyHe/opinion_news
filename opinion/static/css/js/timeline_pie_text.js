@@ -196,7 +196,7 @@ Opinion_timeline.prototype.pull_eventriver_data = function(){
 	function Timeline_function(data){    //数据的处理函数
         that.event_river_data = data;
         that.select_subevent = 'global'; // 默认处理总体
-        subevent_list = data['eventList'];
+        // subevent_list = data['eventList'];
     }
 }
 
@@ -546,6 +546,7 @@ function call_peak_ajax(that, series, data_list, ts_list, during, subevent){
 }
 
 //事件流的展示
+/*
 function drawEventriver(data){
     option = {
 	    title : {
@@ -578,6 +579,7 @@ function drawEventriver(data){
     var myChart = echarts.init(document.getElementById('event_river'));
     myChart.setOption(option);       
 }
+*/
 
 function drawEventstack(data){
 	var x_data = data['dates'];
@@ -679,12 +681,12 @@ function refreshSubWeiboData(data, select_sentiment){
         2: '愤怒',
         3: '悲伤'
     }
-
     var html = "";
     var counter = 0;
     data[select_sentiment].sort(gweight_comparator);
+    console.log(data);
     var da = data[select_sentiment];
-    for ( e in da){
+    for (var e in da){
         if (counter == 10){
             break;
         }
@@ -703,7 +705,7 @@ function refreshSubWeiboData(data, select_sentiment){
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['gweight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
         html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
@@ -1061,11 +1063,11 @@ var pointInterval = 3600 * 24;
 var global_sub_weibos;
 var opinion = new Opinion_timeline(query, start_ts, end_ts, pointInterval);
 opinion.pull_eventriver_data();
+opinion.drawEventriver();
 opinion.drawFishbone();
 opinion.pullDrawSubWeiboData();
 bindSentimentTabClick();
 opinion.drawSubeventsTab();
-opinion.drawEventriver();
 opinion.drawTrendline();
 opinion.pullDrawClouddata();
 opinion.pullDrawWeibodata();

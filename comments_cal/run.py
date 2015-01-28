@@ -225,7 +225,7 @@ def one_topic_calculation_comments_v4(topicid):
 def one_topic_calculation_comments_v7(topicid):
     """对评论进行聚类
     """
-    from comment_clustering_tfidf_v7 import kmeans, tfidf_v2, text_classify, \
+    from comment_clustering_tfidf_v7 import tfidf_v2, text_classify, \
             cluster_evaluation, choose_cluster
 
     eventcomment = EventComments(topicid)
@@ -265,15 +265,10 @@ def one_topic_calculation_comments_v7(topicid):
             cluster_text = text_classify(inputs, results, tfidf_word)
 
             evaluation_inputs = []
-            '''
+
             for k,v in enumerate(cluster_text):
                 inputs[k]['label'] = v['label']
                 inputs[k]['weight'] = v['weight']
-                evaluation_inputs.append(inputs[k])
-            '''
-            for k,v in cluster_text.iteritems():
-                inputs[k]['label'] = v[0]
-                inputs[k]['weight'] = v[1]
                 evaluation_inputs.append(inputs[k])
 
             #簇评价
@@ -301,5 +296,5 @@ if __name__=="__main__":
         topicid = ObjectId(name.lstrip('comment_'))
         if str(topicid) == '54c5b301d8b487851c2434f9':
             print 'found'
-            one_topic_calculation_comments_v4(topicid)
+            one_topic_calculation_comments_v7(topicid)
 

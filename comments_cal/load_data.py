@@ -27,7 +27,7 @@ COMMENTS_FIELDS = ['first_in', 'timestamp', 'datetime', 'last_modify', \
         'date', 'id', 'user_comment_url', 'content168', 'news_id', 'attitudes_count', \
         'comments_count', 'reposts_count','location', '_id', 'user_name', 'comment_source']
 
-NULL_FIELDS = ['last_modify', 'first_in', 'news_id', 'location', 'user_comment_url', 'comment_source']
+NULL_FIELDS = ['last_modify', 'first_in', 'news_id', 'location', 'user_comment_url']
 
 
 def subob_classifier(item):
@@ -59,6 +59,8 @@ def object_weibo2comment(item):
             comment[k] = v
         if k == 'name':
             comment['user_name'] = v
+        if k =='weibourl':
+            comment['comment_source'] = v
         if k == 'text':
             text = v
             comment['content168'] = text

@@ -130,7 +130,8 @@ def cluster():
     results = dict()
     for clusterid, comments in cluster_results.iteritems():
         feature = eventcomment.get_feature_words(clusterid)
-        results[clusterid] = [','.join(feature[:5]) + sentiment_dict[clusterid], \
+        if feature and len(feature):
+            results[clusterid] = [','.join(feature[:5]) + sentiment_dict[clusterid], \
                 sorted(comments, key=lambda c: c['weight'], reverse=True)]
 
     return json.dumps(results)

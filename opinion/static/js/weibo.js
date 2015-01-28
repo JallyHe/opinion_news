@@ -573,10 +573,10 @@ var query = QUERY;
 var news_id = NEWS_ID;
 var start_ts = undefined;
 var end_ts = undefined;
-var pie_url = "/comment/ratio/?query=" + query + "&news_id=" + news_id;
-var keywords_url = "/comment/keywords/?query=" + query + "&news_id=" + news_id;
-var sentiment_url = "/comment/sentiment/?query=" + query + "&news_id=" + news_id;
-var cluster_url = "/comment/cluster/?query=" + query + "&news_id=" + news_id;
+var pie_url = "/weibo/ratio/?query=" + query + "&news_id=" + news_id;
+var keywords_url = "/weibo/keywords/?query=" + query + "&news_id=" + news_id;
+var sentiment_url = "/weibo/sentiment/?query=" + query + "&news_id=" + news_id;
+var cluster_url = "/weibo/cluster/?query=" + query + "&news_id=" + news_id;
 
 comment = new Comment_opinion(query, start_ts, end_ts);
 comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
