@@ -59,6 +59,42 @@ def ratio():
 
     return json.dumps(results)
 
+@mod.route('/sentiratio/')
+def sentiratio():
+    """
+    情绪占比
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    news_id = request.args.get('news_id', default_news_id)
+    topicid = em.getEventIDByName(topic_name)
+
+    eventcomment = EventComments(topicid)
+    comments = eventcomment.getNewsComments(news_id)
+
+    senti_dict = {
+            0:'中性',
+            1:'积极',
+            2:'愤怒',
+            3:'悲伤'
+        }
+    senti_ratio = dict()
+    for comment in comments:
+        if 'sentiment' in comment:
+            sentiment = comment['sentiment']
+
+            try:
+                senti_ratio[sentiment] += 1
+            except KeyError:
+                senti_ratio[sentiment] = 1
+
+    results = dict()
+    total_count = sum(senti_ratio.values())
+    for sentiment, ratio in senti_ratio.iteritems():
+        label = senti_dict[sentiment]
+        if label and len(label):
+            results[label] = float(ratio) / float(total_count)
+
+    return json.dumps(results)
 
 @mod.route('/sentiment/')
 def sentiment():
@@ -119,7 +155,7 @@ def cluster():
                 cluster_results[clusterid].append(comment)
             except KeyError:
                 cluster_results[clusterid] = [comment]
-
+    '''
     sentiment_dict = dict()
     for clusterid, comments in cluster_results.iteritems():
         positive = 0
@@ -130,13 +166,13 @@ def cluster():
             if c['sentiment'] in [2, 3]:
                 negative += 1
         sentiment_dict[clusterid] = u'(积极：' + str(positive) + ',' + u'消极：' + str(negative) + ')'
+    '''
 
     results = dict()
     for clusterid, comments in cluster_results.iteritems():
         feature = eventcomment.get_feature_words(clusterid)
         if feature and len(feature):
-            results[clusterid] = [','.join(feature[:5]) + sentiment_dict[clusterid],\
-                sorted(comments, key=lambda c: c['weight'], reverse=True)]
+            results[clusterid] = [','.join(feature[:5]),sorted(comments, key=lambda c: c['weight'], reverse=True)]
 
     return json.dumps(results)
 

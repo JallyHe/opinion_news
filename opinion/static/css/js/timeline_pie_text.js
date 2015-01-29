@@ -44,6 +44,12 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
     this.sub_weibo_ajax_url =  function(query){
         return "/news/sentiment/?query=" + query;
     }
+    this.subevent_pie_ajax_url =  function(query){
+        return "/news/subeventpie/?query=" + query;
+    }
+    this.sentiment_pie_ajax_url =  function(query){
+        return "/news/sentimentpie/?query=" + query;
+    }
     this.peak_ajax_url = function(data, ts_list, during, subevent){
         return "/news/peak/?lis=" + data.join(',') + "&ts=" + ts_list + '&during=' + during + "&subevent=" + subevent;
     }
@@ -327,19 +333,6 @@ Opinion_timeline.prototype.pullDrawWeibodata = function(){
     }
 }
 
-Opinion_timeline.prototype.pullDrawSubWeiboData = function(){
-	var that = this;
-	var ajax_url = this.sub_weibo_ajax_url(this.query);
-
-	this.call_sync_ajax_request(ajax_url, this.ajax_method, Sub_Weibo_function);
-
-    function Sub_Weibo_function(data){
-        global_sub_weibos = data;
-        $("#sub_weibo_ul").empty();
-        var select_sentiment = 1;
-        refreshSubWeiboData(global_sub_weibos, select_sentiment);
-    }
-}
 
 // 走势图
 function display_trend(that, trend_div_id, query, during, begin_ts, end_ts, trends_title, series_data, xAxisTitleText, yAxisTitleText){
@@ -615,68 +608,6 @@ function drawEventstack(data){
     myChart.setOption(option); 
 }
 
-function bindSentimentTabClick(){
-    var select_div_id = "SentimentTabDiv";
-    var sentiment_map = {
-        'happy': 1,
-        'angry': 2,
-        'sad': 3
-    }
-    $("#"+select_div_id).children("a").unbind();
-    $("#"+select_div_id).children("a").click(function() {
-        var select_a = $(this);
-        var unselect_a = $(this).siblings('a');
-        if(!select_a.hasClass('curr')) {
-            select_a.addClass('curr');
-            unselect_a.removeClass('curr');
-            var select_sentiment = sentiment_map[select_a.attr('sentiment')];
-            refreshSubWeiboData(global_sub_weibos, select_sentiment);
-        }
-    });
-}
-
-
-function refreshSubWeiboData(data, select_sentiment){
-    var sub_weibo_div = "#sub_weibos_div";
-    $(sub_weibo_div).empty();
-
-    var html = "";
-    var counter = 0;
-    data[select_sentiment].sort(gweight_comparator);
-    var da = data[select_sentiment];
-    for (var e in da){
-        if (counter == 10){
-            break;
-        }
-        counter += 1;
-        var d = da[e];
-        var content_summary = d['content168'];
-        var user_img_link = '/static/img/unknown_profile_image.gif';
-        html += '<li class="item" style="width:1010px;height:70px;">';
-        html += '<div class="weibo_face"><a target="_blank" href="#">';
-        html += '<img src="' + user_img_link + '">';
-        html += '</a></div>';
-        html += '<div class="weibo_detail" >';
-        html += '<p>用户:<a class="undlin" target="_blank" href="' + d["user_comment_url"] + '">' + d['user_name'] + '</a>&nbsp;&nbsp;';
-        html += '&nbsp;&nbsp;发布内容：&nbsp;&nbsp;<span id="content_summary_' + d['_id']  + '">' + content_summary + '</span>';
-        html += '</p>';
-        html += '<div class="weibo_info">';
-        html += '<div class="weibo_pz" style="margin-right:10px;">';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
-        html += "</div>";
-        html += '<div class="m">';
-        html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
-        html += '<a target="_blank">发表于'+ d["comment_source"] +'</a>&nbsp;&nbsp;';
-        html += '</div>';
-        html += '</div>'; 
-        html += '</div>';
-        html += '</li>';
-    }
-    $(sub_weibo_div).append(html);
-    // $("#content_control_height").css("height", $("#weibo_ul").css("height"));
-}
-
 
 function refreshPiedata(data){
 	var pie_data = [];
@@ -686,7 +617,7 @@ function refreshPiedata(data){
 		pie_data.push(One_pie_data);		
 	}
 
-    option = {
+    var option = {
         title : {
             text: '',
             x:'center', 
@@ -719,6 +650,86 @@ function refreshPiedata(data){
     myChart.setOption(option);
 }
 
+function refreshSubeventPieData(data){
+	var pie_data = [];
+	var One_pie_data = {};
+	for (var key in data){ 
+		One_pie_data = {'value': data[key], 'name': key + (data[key]*100).toFixed(2)+"%"};
+		pie_data.push(One_pie_data);		
+	}
+
+    var option = {
+        title : {
+            text: '',
+            x:'center', 
+            textStyle:{
+            fontWeight:'lighter',
+            fontSize: 13,
+            }        
+        },
+        toolbox: {
+	        show : true,
+	        feature : {
+	         	mark : {show: true},
+	           	dataView : {show: true, readOnly: false},
+	            restore : {show: true},            
+	            saveAsImage : {show: true}
+	        }
+    	},
+        calculable : true,
+        series : [
+            {
+                name:'访问来源',
+                type:'pie',
+                radius : '50%',
+                center: ['50%', '60%'],
+                data: pie_data
+            }
+        ]
+    };
+    var myChart = echarts.init(document.getElementById('subevent_pie'));
+    myChart.setOption(option);
+}
+function refreshSentimentPieData(data){
+	var pie_data = [];
+	var One_pie_data = {};
+	for (var key in data){ 
+		One_pie_data = {'value': data[key], 'name': key + (data[key]*100).toFixed(2)+"%"};
+		pie_data.push(One_pie_data);		
+	}
+
+    var option = {
+        title : {
+            text: '',
+            x:'center', 
+            textStyle:{
+            fontWeight:'lighter',
+            fontSize: 13,
+            }        
+        },
+        toolbox: {
+	        show : true,
+	        feature : {
+	         	mark : {show: true},
+	           	dataView : {show: true, readOnly: false},
+	            restore : {show: true},            
+	            saveAsImage : {show: true}
+	        }
+    	},
+        calculable : true,
+        series : [
+            {
+                name:'访问来源',
+                type:'pie',
+                radius : '50%',
+                center: ['50%', '60%'],
+                data: pie_data
+            }
+        ]
+    };
+    var myChart = echarts.init(document.getElementById('sentiment_pie'));
+    myChart.setOption(option);
+}
 // 画tip
 function drawStatusTip(subevent, peak_status, click_ts){
     if(click_ts != null){
@@ -1001,34 +1012,6 @@ function open_same_list(text_id){
     $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
 
-//画关键字表格的代码，现在已经没有了
-function drawtable(data){
-    var topic_child_keywords = {};
-    var html = '';
-    var target_html = '';
-    var m = 0;
-    var number;                  
-    for (var key in data){
-        topic_child_keywords[key] = [];
-        for (var i = 0; i < data[key].length; i++){
-            topic_child_keywords[key].push(data[key][i][1]);
-        }
-    }
-
-    for (var topic in topic_child_keywords){
-        m++;
-        if( m > 10) {
-        	break;
-        }
-        html += '<tr style="height:25px">';                    
-        html += '<td><b style =\"width:20px\">'+topic+'</b></td>';
-        for (var n = 0 ;n < 5; n++){
-            html += '<td>'+topic_child_keywords[topic][n]+'</td>'
-        }
-        html += "</tr>";
-    }
-    $("#alternatecolor").append(html);
-}
 
 var query = QUERY;
 var start_ts = START_TS;
@@ -1039,8 +1022,10 @@ var opinion = new Opinion_timeline(query, start_ts, end_ts, pointInterval);
 opinion.pull_eventriver_data();
 opinion.drawEventriver();
 opinion.drawFishbone();
-opinion.pullDrawSubWeiboData();
-bindSentimentTabClick();
+opinion.call_sync_ajax_request(opinion.subevent_pie_ajax_url(this.query), opinion.ajax_method, refreshSubeventPieData);
+opinion.call_sync_ajax_request(opinion.sentiment_pie_ajax_url(this.query), opinion.ajax_method, refreshSentimentPieData);
+// opinion.pullDrawSubWeiboData();
+// bindSentimentTabClick();
 opinion.drawSubeventsTab();
 opinion.drawTrendline();
 opinion.pullDrawClouddata();
