@@ -27,9 +27,9 @@ def datetime2ts(date):
     return int(time.mktime(time.strptime(date, '%Y-%m-%d %H:%M:%S')))
 
 s = load_scws()
-#cx_dict = set(['Ag','a','an','Ng','n','nr','ns','nt','nz','Vg','v','vd','vn','@','j']) # 关键词词性词典
-cx_dict = set(['Ag','a','an','Ng','n','nr','ns','nt','nz'])
-cx_dict_noun = set(['Ng','n','nr','ns','nt','nz'])
+
+cx_dict = set(['Ag','a','an','Ng','n','nr','ns','nt','nz','Vg','v','vd','vn','@','j']) # 关键词词性词典, 保留名词、动词、形容词
+cx_dict_noun = set(['Ng','n','nr','ns','nt','nz']) # 关键词词性词典, 保留名词
 
 EXTRA_BLACK_LIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'black.txt')
 
@@ -53,6 +53,7 @@ def cut_words(text):
 
     return [term for term, cx in cx_terms if cx in cx_dict and term not in black_words]
 
+
 def cut_words_noun(text):
     '''分词, 加入黑名单过滤单个词，保留名词
        input
@@ -66,3 +67,4 @@ def cut_words_noun(text):
     cx_terms = cut(s, text, cx=True)
 
     return [term for term, cx in cx_terms if cx in cx_dict_noun and term not in black_words]
+
