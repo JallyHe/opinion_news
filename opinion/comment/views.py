@@ -21,6 +21,10 @@ def index():
     news_subeventid = news.get_news_subeventid()
     eventcomment = EventComments(topicid)
 
+    comments = eventcomment.getNewsComments(news_id)
+    if not comments:
+        return 'no comments'
+
     return render_template('index/comment.html', topic=topic_name, topic_id=topicid, \
             news_id=news_id, news_subeventid=news_subeventid)
 

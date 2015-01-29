@@ -79,7 +79,48 @@ Comment_opinion.prototype = {
 			One_pie_data = {'value': data[key], 'name': key + (data[key]*100).toFixed(2)+"%"};
 			pie_data.push(One_pie_data);
 		}
-	    option = {
+	    var option = {
+	        title : {
+	            text: '',
+	            x:'center', 
+	            textStyle:{
+	            fontWeight:'lighter',
+	            fontSize: 13,
+	            }        
+	        },
+	        toolbox: {
+		        show : true,
+		        feature : {
+		         	mark : {show: true},
+		           	dataView : {show: true, readOnly: false},
+		            restore : {show: true},            
+		            saveAsImage : {show: true}
+		        }
+	    	},
+	        calculable : true,
+	        series : [
+	            {
+	                name:'访问来源',
+	                type:'pie',
+	                radius : '50%',
+	                center: ['50%', '60%'],
+	                data: pie_data
+	            }
+	        ]
+	    };
+	    var myChart = echarts.init(document.getElementById(pie_div));
+	    myChart.setOption(option);
+	},
+    //情绪饼图
+	SentiPie_function: function(data){
+        var pie_div = "senti_pie";
+		var pie_data = [];
+		var One_pie_data = {};
+		for (var key in data){ 
+			One_pie_data = {'value': data[key], 'name': key + (data[key]*100).toFixed(2)+"%"};
+			pie_data.push(One_pie_data);
+		}
+	    var option = {
 	        title : {
 	            text: '',
 	            x:'center', 
@@ -112,210 +153,6 @@ Comment_opinion.prototype = {
 	    myChart.setOption(option);
 	},
 
-	//关键词云
-	Cloud_function: function(data){
-	    var min_keywords_size = this.minsize;
-	    var max_keywords_size = tis.maxsize;
-	    var keywords_div_id = this.cloud_div;
-	   	var color = '#11c897';
-	   	var value = [];
-		var key = [];
-	    $("#"+keywords_div_id).empty();	
-		if (data=={}){
-		    $('#'+div_id_cloud).append("<a style='font-size:1ex'>关键词云数据为空</a>");
-		}
-		else{
-		    var min_count, max_count = 0, words_count_obj = {};
-			for (var subeventid in data){
-				value = data[subeventid];
-				word = value[0][0];
-				count = value[0][1];
-
-		      	if(count > max_count){
-		                max_count = count;
-		        }
-		      	if(!min_count){
-		                min_count = count;
-		        }
-		      	if(count < min_count){
-		                min_count = count;
-		        }
-		    	words_count_obj[word] = count;
-			}
-		    for(var keyword in words_count_obj){
-		        var count = words_count_obj[keyword];
-		        var size = this.defscale(count, min_count, max_count, min_keywords_size, max_keywords_size);
-		        $('#'+keywords_div_id).append('<a><font style="color:' + color +  '; font-size:' + size + 'px;">' + keyword + '</font></a>');
-		    }
-		    on_load(keywords_div_id);
-		}
-	},
-
-	//tab
-	Tab_fuiction: function(data){
-		var html = '';
-		//var tab_div = this.tab_div;
-		var n = data.length;
-		var tab_wid = 100.0/n + '%';
-		topic_son = data[0][0];
-		var topic = [];
-        for (var i = 0;i < data.length;i++) {
-	        topic[i] = data[i][0]; 
-	        var s = i.toString();
-	        if(i==0){
-	            html += '<a style="display: block;width:'+tab_wid+'" topic='+ topic[i] + ' name="c_topic" class="tabLi gColor0 curr" href="javascript:;" >';
-	            html += '<div class="nmTab">'+ topic[i]+ '</div>';
-	            html += '<div class="hvTab">'+topic[i]+'</div></a>';
-	        }
-	        else{
-	            html += '<a style="display: block;width:'+tab_wid+'" topic='+ topic[i] + ' name="c_topic" class="tabLi gColor0" href="javascript:;" >';
-	            html += '<div class="nmTab">'+ topic[i]+ '</div>';
-	            html += '<div class="hvTab">'+topic[i]+'</div></a>';
-	        }
-	    };
-	    $(tab_div).append(html);
-	},
-
-	//表格
-	Table_function: function(data){
-		var that = this;
-        var topic_child_keywords = data;
-
-        var m = 0;
-        var html = '';
-        for (var topic in topic_child_keywords){
-            m++;
-            if( m > 10) {
-                break;
-            }
-            html += '<tr topic=' + topic_child_keywords[topic][0] + '>'; 
-            html += "<td><b>"+m+"</b></td><td><b onclick = \"connect('"+topic+"')\" style =\"width:20px;cursor:pointer;\">"+topic_child_keywords[topic][0]+"</b></td>";
-            var child_keywords = topic_child_keywords[topic][1];
-            if (child_keywords.length >= 10){
-                total = 10;
-            }
-            else{
-                total = child_keywords.length;
-            }
-            for (var n = 0 ;n < total; n++){
-                html += '<td>' + child_keywords[n] + '</td>'
-            }
-            html += "</tr>";
-        }
-        $("#alternatecolor").append(html);
-
-        var target_html = '';
-        for (var topic in topic_child_keywords){
-            target_html += '<tr style="height:25px">';                    
-            target_html += '<td><b>'+topic_child_keywords[topic][0]+'</b></td>';
-            var child_keywords = topic_child_keywords[topic][1];
-            if (child_keywords.length>=100){
-            	total = 100;
-            }
-            else{
-            	total = child_keywords.length;
-            }
-            for (var n = 0 ;n < total; n++){
-                target_html += '<td>'+ child_keywords[n] + '</td>'
-            }
-            target_html += "</tr>";
-        }
-        $("#alternate").append(target_html);
-    },
-
-	Tab_click_function: function(){ 
-		var that = this; 
-		$("#Tableselect").children("a").unbind();
-        $("#Tableselect").children("a").click(function(){
-            var select_a = $(this);
-            var unselect_a = $(this).siblings('a');
-            if(!select_a.hasClass('curr')) {
-                select_a.addClass('curr');
-                unselect_a.removeClass('curr');
-                topic_son = select_a.attr('topic');          
-                that.Weibo_function(weibo_data);
-             }
-         });
-    },
-
-	//微博
-	Weibo_function: function(data){
-		weibo_data = data;
-		var data = data[topic_son];
-		var html = '';
-		$(weibo_div).empty();      
-        html += '<div class="tang-scrollpanel-wrapper">';
-        html += '<div class="tang-scrollpanel-content">';
-        html += '<ul id="weibo_ul">';
-        for(var i = 0; i < data.length; i += 1){
-	        var da = data[i];
-	        var uid = da['user'];
-	        var name;
-	        if ('name' in da){
-	            name = da['name'];
-	            if(name == 'unknown'){
-	                name = '未知';
-	            }
-	        }
-	        else{
-	            name = '未知';
-	        }
-	        var mid = da['_id'];
-	        var retweeted_mid = da['retweeted_mid'];
-			var retweeted_uid = da['retweeted_uid'];
-	        var text = da['text'];
-	        if (da['geo']){
-				var ip = da['geo'];
-				var loc = ip;
-			}
-			else{
-				var loc = ip = '未知';
-			}
-	        var reposts_count = da['reposts_count'];
-	        var comments_count = da['comments_count'];
-	        var timestamp = da['time'];
-	        var date = new Date(timestamp * 1000).format("yyyy年MM月dd日 hh:mm:ss");
-	        var user_link = 'http://weibo.com/u/' + uid;
-	        var weibo_link = da['weibo_link'];
-			var repost_tree_link = 'http://219.224.135.60:8080/show_graph/' + mid;
-			var user_image_link = '/static/img/unknown_profile_image.gif';
-			/*var user_image_link = da['profile_image_url'];
-			if (user_image_link == ''){
-				user_image_link = '/static/img/unknown_profile_image.gif';
-			}*/
-	        html += '<li class="item"><div class="weibo_face"><a target="_blank" href="' + user_link + '">';
-	        html += '<img src="' + user_image_link + '">';
-			html += '</a></div>';
-			html += '<div class="weibo_detail">';
-			html += '<p>昵称:<a class="undlin" target="_blank" href="' + user_link  + '">' + name + '</a>(' + loc + ')&nbsp;&nbsp;发布ip:' + '未知' + '&nbsp;&nbsp;发布内容：&nbsp;&nbsp;' + text + '</p>';;
-			html += '<div class="weibo_info">';
-			html += '<div class="weibo_pz">';
-			html += '<a class="undlin" href="javascript:;" target="_blank">转发数(' + reposts_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
-			html += '<a class="undlin" href="javascript:;" target="_blank">评论数(' + comments_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
-			html += '<a class="undlin" href="javascript:;" target="_blank">粉丝数(未知)</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
-			html += '<a class="undlin" href="javascript:;" target="_blank">关注数(未知)</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
-			html += '<a class="undlin" href="javascript:;" target="_blank">微博数(未知)</a></div>';
-			html += '<div class="m">';
-			html += '<a class="undlin" target="_blank" href="' + weibo_link + '">' + date + '</a>&nbsp;-&nbsp;';
-			html += '<a target="_blank" href="' + weibo_link + '">微博</a>&nbsp;-&nbsp;';
-			html += '<a target="_blank" href="' + user_link + '">用户</a>&nbsp;-&nbsp;';
-			html += '<a target="_blank" href="' + '#huaxiang' + '">画像</a>&nbsp;-&nbsp;';
-			html += '<a target="_blank" href="' + repost_tree_link + '">转发树</a>';
-			if(retweeted_mid != '0'){
-    			var source_repost_tree_link = 'http://219.224.135.60:8080/show_graph/' + retweeted_mid;
-    			html += '&nbsp;-&nbsp;<a target="_blank" href="' + source_repost_tree_link + '">转发子树</a>';
-			}
-	        html += '</div>';
-	        html += '</div>';
-	        html += '</div>';
-	        html += '</li>';
-   		}
-	    html += '</ul>';
-	    html += '</div>';
-	    $(weibo_div).append(html);
-	    $("#weibos_div").css("height", $(weibo_div).css("height"));
-	},
-
 	//新闻
 	News_function: function(data){
         global_comments_data = data;
@@ -323,14 +160,6 @@ Comment_opinion.prototype = {
         refreshDrawComments(data, select_sentiment);
 	},
 
-	//通过词频来决定字体的大小
-	defscale: function(count, mincount, maxcount, minsize, maxsize){
-	    if(maxcount == mincount){
-	        return (maxsize + minsize) * 1.0 / 2
-	    }else{
-	        return minsize + 1.0 * (maxsize - minsize) * Math.pow((count / (maxcount - mincount)), 2)
-	    }
-	},
 }
 
 function refreshDrawOpinionTab(tabs_list, select_tab){
@@ -531,56 +360,20 @@ function bindSubeventMoreClick(){
     });
 }
 
-function connect(data){
-	topic_son = data;
-    $("#alternatecolor tr").each(function() {
-        var select_all =$(this);
-        if(select_all.attr('topic') == data){
-            if(!select_all.hasClass("tablecurrent")){
-                select_all.addClass("tablecurrent");
-            }
-        }
-        else{
-            if(select_all.hasClass("tablecurrent")){
-                select_all.removeClass('tablecurrent');
-            }
-        }
-
-    })
-   refreshWeiboTab(data);
-}
-
-function refreshWeiboTab(data){
-    var curr_data = data;
-     $("#Tableselect a").each(function() {
-        var select_a = $(this);
-        var select_a_sentiment = select_a.attr('topic');
-        if (select_a_sentiment == curr_data){
-            if(!select_a.hasClass('curr')) {
-                select_a.addClass('curr');
-            }
-        }
-        else{
-            if(select_a.hasClass('curr')) {
-                select_a.removeClass('curr');
-            }
-        }
-    });
-    Comment.Weibo_function(weibo_data);
-}
 
 var query = QUERY;
 var news_id = NEWS_ID;
 var start_ts = undefined;
 var end_ts = undefined;
 var pie_url = "/comment/ratio/?query=" + query + "&news_id=" + news_id;
-var keywords_url = "/comment/keywords/?query=" + query + "&news_id=" + news_id;
+// var keywords_url = "/comment/keywords/?query=" + query + "&news_id=" + news_id;
 var sentiment_url = "/comment/sentiment/?query=" + query + "&news_id=" + news_id;
 var cluster_url = "/comment/cluster/?query=" + query + "&news_id=" + news_id;
 
 comment = new Comment_opinion(query, start_ts, end_ts);
 comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
-comment.call_sync_ajax_request(keywords_url, comment.ajax_method, comment.Table_function);
+comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.SentiPie_function);
+// comment.call_sync_ajax_request(keywords_url, comment.ajax_method, comment.Table_function);
 comment.call_sync_ajax_request(sentiment_url, comment.ajax_method, comment.News_function);
 bindSentiMoreClick();
 bindSentimentTabClick(comment);

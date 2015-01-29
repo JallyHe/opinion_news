@@ -545,41 +545,6 @@ function call_peak_ajax(that, series, data_list, ts_list, during, subevent){
     }
 }
 
-//事件流的展示
-/*
-function drawEventriver(data){
-    option = {
-	    title : {
-	        text: '事件流',
-	        //subtext: '纯属虚构'
-	    },
-	    tooltip : {
-	        trigger: 'item',
-	        enterable: true
-	    },
-	    legend: {
-	        data:[data['name']]
-	    },
-	    toolbox: {
-	        show : true,
-	        feature : {
-	            mark : {show: true},
-	            restore : {show: true},
-	            saveAsImage : {show: true}
-	        }
-	    },
-	    xAxis : [
-	        {
-	            type : 'time',
-	            boundaryGap: [0.05,0.1]
-	        }
-	    ],
-	    series : [data]
-	};
-    var myChart = echarts.init(document.getElementById('event_river'));
-    myChart.setOption(option);       
-}
-*/
 
 function drawEventstack(data){
 	var x_data = data['dates'];
@@ -675,16 +640,9 @@ function refreshSubWeiboData(data, select_sentiment){
     var sub_weibo_div = "#sub_weibos_div";
     $(sub_weibo_div).empty();
 
-    var sentiment_dict = {
-        0: '无倾向',
-        1: '高兴',
-        2: '愤怒',
-        3: '悲伤'
-    }
     var html = "";
     var counter = 0;
     data[select_sentiment].sort(gweight_comparator);
-    console.log(data);
     var da = data[select_sentiment];
     for (var e in da){
         if (counter == 10){
@@ -897,7 +855,6 @@ function change_subevent_stat(subeventid, subeventname, that){
 
 // 画重要微博
 function refreshWeibodata(data){  //需要传过来的是新闻的data
-    console.log(data);
     var html = "";
     for ( e in data){
         var d = data[e];
@@ -941,6 +898,7 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
         html += '<span id="detail_' + d['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + d['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
         html += '<a class="undlin" href="javascript:;" target="_blank" onclick="open_same_list(\'' + d['_id'] + '\')";>相似新闻(' + same_text_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
         html += '<a href="javascript:;" target="_blank">相关度(' + d['weight'] + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
+        html += '<a href="javascript:;" target="_blank" onclick="check_comments(\'' + d['_id'] + '\')">评论分析</a>&nbsp;&nbsp;&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
         html += '<a>' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
@@ -1014,7 +972,23 @@ function detail_text(text_id){
     $("#detail_" + text_id).html("<a href= 'javascript:;' target='_blank' onclick=\"summary_text(\'" + text_id + "\');\">阅读概述</a>&nbsp;&nbsp;");
     $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
-
+function check_comments(text_id){
+    // var text_id='1-1-30963839';
+    var ajax_url = "/news/comments?query=" + query + "&news_id=" + text_id;
+    $.ajax({
+        url:ajax_url,
+        type:"GET",
+        dataType:"json",
+        success:function(data){
+            if (data["status"] == "success"){
+                window.location.href="/comment?query=" + query + "&news_id=" + text_id;
+            }
+            else{
+                alert("该新闻暂无评论");
+            }
+        }
+    });
+}
 function open_same_list(text_id){
     $(".inner-same-" + text_id).each(function(){
         if( $(this).css("display") == "none"){
