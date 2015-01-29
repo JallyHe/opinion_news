@@ -7,8 +7,8 @@ import datetime
 from collections import Counter
 from flask import Blueprint, url_for, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
-from opinion.Database import Event, EventManager, Feature, DbManager, EventComments
-from opinion.global_config import default_topic_name
+from opinion.Database import Event, EventManager, Feature, DbManager, EventComments, News
+from opinion.global_config import default_topic_name, default_news_id
 
 mod = Blueprint('news', __name__, url_prefix='/news')
 
@@ -343,3 +343,18 @@ def getPeaks():
 
     return json.dumps(time_lis)
 
+@mod.route('/comments/')
+def commments():
+    """
+    查看有无评论
+    """
+    topic_name = request.args.get('query', default_topic_name)
+    news_id = request.args.get('news_id', default_news_id)
+    topicid = em.getEventIDByName(topic_name)
+
+    eventcomment = EventComments(topicid)
+    comments = eventcomment.getNewsComments(news_id)
+    if comments:
+        return json.dumps({"status":"success"})
+    else:
+        return json.dumps({"status":"fail"})

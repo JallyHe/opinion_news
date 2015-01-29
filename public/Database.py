@@ -10,6 +10,19 @@ from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
         EVENTS_COMMENTS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
         SUB_EVENTS_FEATURE_COLLECTION, COMMENTS_CLUSTER_COLLECTION
 
+class EventManager(object):
+    """
+    话题管理类
+    """
+    def __init__(self):
+        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+
+    def getEventIDByName(self,name):
+        result = self.mongo[EVENTS_COLLECTION].find_one({"topic": name})
+        if result:
+            return result['_id']
+        else:
+            return None
 
 class CommentsManager(object):
     """评论管理
@@ -30,6 +43,12 @@ class EventComments(object):
         self.comments_cluster_collection = COMMENTS_CLUSTER_COLLECTION
         self.comments_collection = EVENTS_COMMENTS_COLLECTION_PREFIX + str(self.id)
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+
+    def saveItem(self,item):
+        """
+        保存单条item
+        """
+        self.mongo[self.comments_collection].save(item)
 
     def getNewsIds(self):
         """
