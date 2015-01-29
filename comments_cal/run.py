@@ -222,11 +222,13 @@ def one_topic_calculation_comments_v4(topicid):
                     comment.update_comment_label(label)
                     comment.update_comment_weight(item['weight'])
 
+
 def one_topic_calculation_comments_v7(topicid):
     """对评论进行聚类
     """
     from comment_clustering_tfidf_v7 import tfidf_v2, text_classify, \
             cluster_evaluation, choose_cluster
+    from weibo_subob_rub_neu_classifier import weibo_subob_rub_neu_classifier
 
     eventcomment = EventComments(topicid)
     newsIds = eventcomment.getNewsIds()
@@ -236,18 +238,33 @@ def one_topic_calculation_comments_v7(topicid):
         results = eventcomment.getNewsComments(news_id)
         news = News(news_id)
 
+        # 数据字段预处理
         inputs = []
         for r in results:
             r['title'] = ''
-            r['content'] = r['content168'].encode('utf-8')
+            r['content168'] = r['content168'].encode('utf-8')
+            r['content'] = r['content168']
             r['text'] = r['content168']
             item = ad_filter(r)
             if item['ad_label'] == 0:
                 inputs.append(item)
 
+        # 去除垃圾和新闻文本
+        items = weibo_subob_rub_neu_classifier(inputs)
+        inputs = []
+        for item in items:
+            subob_rub_neu_label = item['subob_rub_neu_label']
+            if not subob_rub_neu_label in [1, 0]:
+                # 1表示垃圾文本，0表示新闻文本
+                inputs.append(item)
+
         # 情绪计算
         for r in inputs:
-            sentiment = triple_classifier(r)
+            if r['subob_rub_neu_label'] == 2:
+                sentiment = 0 # 0 中性
+            elif r['subob_rub_neu_label'] == -1:
+                sentiment = triple_classifier(r) # 1 高兴、2 愤怒、3 悲伤
+
             comment = Comment(r['_id'], topicid)
             comment.update_comment_sentiment(sentiment)
 
@@ -289,12 +306,12 @@ def one_topic_calculation_comments_v7(topicid):
                     comment.update_comment_label(label)
                     comment.update_comment_weight(item['weight'])
 
+
 if __name__=="__main__":
     cm = CommentsManager()
     com_col_names = cm.get_comments_collection_name()
     for name in com_col_names:
         topicid = ObjectId(name.lstrip('comment_'))
         if str(topicid) == '54c5b301d8b487851c2434f9':
-            print 'found'
             one_topic_calculation_comments_v7(topicid)
 

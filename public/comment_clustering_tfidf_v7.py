@@ -403,8 +403,7 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     for k,v in slope.iteritems():
         slope_difference[k] = abs(float(slope[k])-slope_average)
     sorted_slope_difference = sorted(slope_difference.iteritems(),key=lambda(k,v):v, reverse=False)
-    print 'best cluster num:%s'%sorted_slope_difference[0][0]
-        
+
     return cluster_result[sorted_slope_difference[0][0]]
 
 def text_classify(inputs,word_label,tfidf_word):
@@ -428,11 +427,12 @@ def text_classify(inputs,word_label,tfidf_word):
         text_weight = {}
         text = input['content']
         text_word = cut_words_noun(text)#每句话分词结果，用于text_weight中
+
         for l,w_list in word_label.iteritems():
             weight = 0
             for w in w_list:
                 weight += text.count(w)*word_weight[w]
-            text_weight[l] = float(weight)/float(len(text_word))
+            text_weight[l] = float(weight)/(float(len(text_word)) + 1.0)
         sorted_weight = sorted(text_weight.iteritems(), key = lambda asd:asd[1], reverse = True)
         if sorted_weight[0][1]!=0:#只有一条文本属于任何一个类的权值都不为0时才归类
             clusterid, weight = sorted_weight[0]
