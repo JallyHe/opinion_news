@@ -10,7 +10,7 @@ import heapq
 import numpy as np
 from gensim import corpora
 from collections import Counter
-from utils import cut_words,cut_words_noun, _default_mongo
+from utils import cut_words, cut_words_noun, _default_mongo
 from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
         EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
         EVENTS_COMMENTS_COLLECTION_PREFIX
