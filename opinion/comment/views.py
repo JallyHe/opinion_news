@@ -55,7 +55,7 @@ def ratio():
     for clusterid, ratio in cluster_ratio.iteritems():
         feature = eventcomment.get_feature_words(clusterid)
         if feature and len(feature):
-            results[','.join(feature[:5])] = float(ratio) / float(total_count)
+            results[','.join(feature[:3])] = float(ratio) / float(total_count)
 
     return json.dumps(results)
 
