@@ -70,6 +70,73 @@ def trend():
     return render_template('index/trend.html', mode=mode, topic=topic_name, time_range=time_range, status=status, \
             start_date=ts2datetime(start_ts), end_date=end_date, last_modify=ts2datetime(last_modify), modify_success=modify_success)
 
+@mod.route('/subeventpie/')
+def subeventpie():
+    """子观点占比
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = u'APEC-微博'
+    topicid = em.getEventIDByName(topic_name)
+
+    eventcomment = EventComments(topicid)
+    comments = eventcomment.getAllNewsComments()
+
+    cluster_ratio = dict()
+    for comment in comments:
+        if 'clusterid' in comment:
+            clusterid = comment['clusterid']
+
+            try:
+                cluster_ratio[clusterid] += 1
+            except KeyError:
+                cluster_ratio[clusterid] = 1
+
+    results = dict()
+    total_count = sum(cluster_ratio.values())
+    for clusterid, ratio in cluster_ratio.iteritems():
+        feature = eventcomment.get_feature_words(clusterid)
+        if feature and len(feature):
+            results[','.join(feature[:5])] = float(ratio) / float(total_count)
+
+    return json.dumps(results)
+
+@mod.route('/sentimentpie/')
+def sentimentpie():
+    """
+    情绪占比
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = u'APEC-微博'
+    topicid = em.getEventIDByName(topic_name)
+
+    eventcomment = EventComments(topicid)
+    comments = eventcomment.getAllNewsComments()
+
+    senti_dict = {
+            0:'中性',
+            1:'积极',
+            2:'愤怒',
+            3:'悲伤'
+        }
+    senti_ratio = dict()
+    for comment in comments:
+        if 'sentiment' in comment:
+            sentiment = comment['sentiment']
+
+            try:
+                senti_ratio[sentiment] += 1
+            except KeyError:
+                senti_ratio[sentiment] = 1
+
+    results = dict()
+    total_count = sum(senti_ratio.values())
+    for sentiment, ratio in senti_ratio.iteritems():
+        label = senti_dict[sentiment]
+        if label and len(label):
+            results[label] = float(ratio) / float(total_count)
+
+    return json.dumps(results)
+
 @mod.route('/sentiment/')
 def sentiment():
     """
