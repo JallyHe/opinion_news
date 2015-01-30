@@ -29,6 +29,13 @@ def index():
             news_id=news_id, news_subeventid=news_subeventid)
 
 
+@mod.route('/')
+def weibo_clustering():
+    """
+    """
+    pass
+
+
 @mod.route('/ratio/')
 def ratio():
     """子观点占比
