@@ -203,6 +203,16 @@ function refreshDrawCommentsOpinion(data){
         var d = da[e];
         var content_summary = d['content168'];
         var user_img_link = '/static/img/unknown_profile_image.gif';
+        var weight;
+        if ('weight' in d){
+            weight = d['weight'];
+        }
+        else if('gweight' in d){
+            weight = d['gweight'];
+        }
+        else{
+            weight = 0;
+        }
         html += '<li class="item" style="width:1010px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
@@ -246,9 +256,15 @@ function refreshDrawComments(data, select_sentiment){
 
     var counter = 0;
     var html = "";
-    console.log(select_sentiment);
-    data[select_sentiment].sort(gweight_comparator);
-    var da = data[select_sentiment];
+
+    if (select_sentiment in data){
+        data[select_sentiment].sort(gweight_comparator);
+        var da = data[select_sentiment];
+    }
+    else{
+        var da = [];
+    }
+
     for (var e in da){
         if (counter == global_senti_display){
             break;
@@ -257,6 +273,16 @@ function refreshDrawComments(data, select_sentiment){
         var d = da[e];
         var content_summary = d['content168'];
         var user_img_link = '/static/img/unknown_profile_image.gif';
+        var weight;
+        if ('weight' in d){
+            weight = d['weight'];
+        }
+        else if('gweight' in d){
+            weight = d['gweight'];
+        }
+        else{
+            weight = 0;
+        }
         html += '<li class="item" style="width:1010px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
