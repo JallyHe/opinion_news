@@ -238,7 +238,7 @@ function refreshDrawComments(data, select_sentiment){
     $(news_div).empty();
 
     var sentiment_dict = {
-        0: '无倾向',
+        0: '中性',
         1: '高兴',
         2: '愤怒',
         3: '悲伤'
@@ -306,6 +306,7 @@ function bindOpinionTabClick(that){
 function bindSentimentTabClick(that){
     var select_div_id = "SentimentTabDiv";
     var sentiment_map = {
+        'neutral': 0,
         'happy': 1,
         'angry': 2,
         'sad': 3
@@ -330,6 +331,7 @@ function bindSentiMoreClick(){
         global_senti_display += addition;
         var select_div_id = "SentimentTabDiv";
         var sentiment_map = {
+            'neutral': 0,
             'happy': 1,
             'angry': 2,
             'sad': 3
@@ -366,13 +368,14 @@ var news_id = NEWS_ID;
 var start_ts = undefined;
 var end_ts = undefined;
 var pie_url = "/comment/ratio/?query=" + query + "&news_id=" + news_id;
+var senti_pie_url = "/weibo/sentiratio/?query=" + query + "&news_id=" + news_id;
 // var keywords_url = "/comment/keywords/?query=" + query + "&news_id=" + news_id;
 var sentiment_url = "/comment/sentiment/?query=" + query + "&news_id=" + news_id;
 var cluster_url = "/comment/cluster/?query=" + query + "&news_id=" + news_id;
 
 comment = new Comment_opinion(query, start_ts, end_ts);
 comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
-comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.SentiPie_function);
+comment.call_sync_ajax_request(senti_pie_url, comment.ajax_method, comment.SentiPie_function);
 // comment.call_sync_ajax_request(keywords_url, comment.ajax_method, comment.Table_function);
 comment.call_sync_ajax_request(sentiment_url, comment.ajax_method, comment.News_function);
 bindSentiMoreClick();

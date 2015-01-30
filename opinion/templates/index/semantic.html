@@ -443,7 +443,7 @@
     </div>
     <div class="blkUnit grpUnit" style="float:left;width:1033px;" id="cloudpie">
         <div class="titlBar" style="padding-bottom:15px;">
-            <h4><b>查看草根微博</b></h4>
+            <h4><b>草根观点</b></h4>
             <i id="sub_weibo_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="重要评论:各类子观点的重要评论"></i>&nbsp;&nbsp;
             <span id="" class="pull-right" style="margin:-3px -2px -10px auto;cursor: pointer;">
                 <div id="sort_news_subweibo_tab" class="r_v2" style="float: right;">
@@ -452,37 +452,10 @@
             </span>
         </div>
         <div class="stmTabs tabUnit" style="width:1033px;">
-            <div class="tabTitle" style="padding-top:1px;">
-                <div class="tabUI" id="SentimentTabDiv" style = "width:1033px;">
-                    <a sentiment="happy" class="tabLi gColor1 curr" href="javascript:;" style="display: block;">
-                        <div class="nmTab">积极</div>
-                        <div class="hvTab">积极</div>
-                    </a>
-                    <a sentiment="angry" class="tabLi gColor2" href="javascript:;" style="display: block;">
-                        <div class="nmTab">愤怒</div>
-                        <div class="hvTab">愤怒</div>
-                    </a>
-                    <a sentiment="sad" class="tabLi gColor0" href="javascript:;" style="display: block;">
-                        <div class="nmTab">悲伤</div>
-                        <div class="hvTab">悲伤</div>
-                    </a>
-                </div>
-            </div>
-            <div class="tabConts">
-                <div id="sub_weibos_div" style="width:1000px;float:left;">
-                    <!--
-                    <div class="tabCon">
-                        <div id="weibo_list" id="weibo_list weibo_list_height scrolls tang-scrollpanel">
-                            <ul id="sub_weibo_ul">
-                            </ul>
-                            <div id="content_control_height" class="tang-scrollpanel-wrapper">
-                                <div class="tang-scrollpanel-content">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    -->
-                </div>
+            <div class="tabTitle" style="padding-top:1px;"></div>
+            <div class="tabConts" style="width:970px;">
+                <div id="subevent_pie" style="clear:left;width:50%;float:left;height:400px;position:relative;"></div>
+                <div id="sentiment_pie" style="clear:right;width:50%;float:left;height:400px;position:relative;"></div>
             </div>
         </div>
       
@@ -495,10 +468,10 @@
             <span id="peak_cloudpie_tooltip"></span>
             <span id="" class="pull-right" style="margin:-3px -2px -10px auto;cursor: pointer;">
                 <div id="sort_news_subevent_tab" class="r_v2" style="float: right;">
-                    <span id="sort_by_tfidf" style="color: #333">按tfidf排序</span> |
-                    <span id="sort_by_total_weight" style="color: -webkit-link;">全局最热</span> |
-                    <span id="sort_by_addweight" style="color: -webkit-link;" >当前最热</span> |
-                    <span id="sort_by_created_at" style="color: -webkit-link;">按创建时间排序</span>
+                    排序：<span id="sort_by_tfidf" style="color: #333">内聚性</span> |
+                    <span id="sort_by_total_weight" style="color: -webkit-link;">全局热点</span> |
+                    <span id="sort_by_addweight" style="color: -webkit-link;" >当前热点</span> |
+                    <span id="sort_by_created_at" style="color: -webkit-link;">创建时间</span>
                 </div>
             </span>
         </div>
