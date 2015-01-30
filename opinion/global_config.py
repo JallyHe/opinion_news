@@ -10,6 +10,7 @@ else:
     # 219.224.135.47
     default_topic_name = u'APEC2014'
     default_news_id = '1-1-30963839'
+    default_news_url = 'http://news.sina.com.cn/c/2014-10-09/145630963839.shtml'
 
 def get_db_names():
     results = _default_mongo_db().database_names()

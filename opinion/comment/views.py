@@ -3,8 +3,8 @@
 import json
 from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
-from opinion.Database import EventComments, EventManager, Feature, DbManager, News
-from opinion.global_config import default_topic_name, default_news_id, emotions_vk
+from opinion.Database import EventComments, EventManager, Feature, DbManager, News, Event
+from opinion.global_config import default_topic_name, default_news_id, emotions_vk, default_news_url
 
 mod = Blueprint('comment', __name__, url_prefix='/comment')
 
@@ -17,16 +17,18 @@ def index():
     topic_name = request.args.get('query', default_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
     topicid = em.getEventIDByName(topic_name)
+    eventcomment = EventComments(topicid)
+
     news = News(news_id, topicid)
     news_subeventid = news.get_news_subeventid()
-    eventcomment = EventComments(topicid)
+    news_url = news.get_news_url()
 
     comments = eventcomment.getNewsComments(news_id)
     if not comments:
         return 'no comments'
 
     return render_template('index/comment.html', topic=topic_name, topic_id=topicid, \
-            news_id=news_id, news_subeventid=news_subeventid)
+            news_id=news_id, news_subeventid=news_subeventid, news_url=news_url)
 
 
 @mod.route('/ratio/')
@@ -175,3 +177,24 @@ def cluster():
 
     return json.dumps(results)
 
+@mod.route('/urlsearch/')
+def urlsearch():
+    """返回页面
+    """
+    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topicid = em.getEventIDByName(topic_name)
+
+    news_url = request.args.get('url', default_news_url) # news url
+    news_url = 'http://news.sina.com.cn/c/2014-10-09/145630963839.shtml'
+
+    event = Event(topicid)
+    news_id = event.get_news_id_by_url(news_url)
+    if not news_id:
+        return json.dumps({"news_id":None})
+
+    eventcomment = EventComments(topicid)
+    comments = eventcomment.getNewsComments(news_id)
+    if not comments:
+        return json.dumps({"news_id":None})
+
+    return json.dumps({"news_id":news_id})
