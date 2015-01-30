@@ -17,7 +17,7 @@ def index():
     """返回页面
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
-    # topic_name = u'高校宣传思想工作-微博'
+    topic_name = u'APEC2014-微博'
     news_id = request.args.get('news_id', default_news_id)
     news_id = 'weibo'
     topicid = em.getEventIDByName(topic_name)
@@ -59,7 +59,7 @@ def ratio():
     for clusterid, ratio in cluster_ratio.iteritems():
         feature = eventcomment.get_feature_words(clusterid)
         if feature and len(feature):
-            results[','.join(feature[:5])] = float(ratio) / float(total_count)
+            results[','.join(feature[:3])] = float(ratio) / float(total_count)
 
     return json.dumps(results)
 

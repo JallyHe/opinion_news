@@ -10,7 +10,6 @@ mod = Blueprint('cluster', __name__, url_prefix='/cluster')
 
 em = EventManager()
 
-
 @mod.route('/topics/')
 def topics():
     """获取新闻话题信息

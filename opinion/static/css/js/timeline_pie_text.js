@@ -95,6 +95,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(tfidf_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_total_weight").click(function(){
@@ -104,6 +105,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(weight_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_addweight").click(function(){
@@ -113,6 +115,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(addweight_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_created_at").click(function(){
@@ -122,6 +125,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "#333");
         that.event_river_data['eventList'].sort(createdat_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_timestamp").click(function(){
@@ -201,7 +205,7 @@ Opinion_timeline.prototype.pull_eventriver_data = function(){
 	
 	function Timeline_function(data){    //数据的处理函数
         that.event_river_data = data;
-        that.select_subevent = 'global'; // 默认处理总体
+        // that.select_subevent = 'global'; // 默认处理总体
         // subevent_list = data['eventList'];
     }
 }
@@ -249,6 +253,7 @@ Opinion_timeline.prototype.drawSubeventsTab = function(){
     var that = this;
     this.event_river_data['eventList'].sort(tfidf_comparator);
     drawSubeventTab(this.event_river_data, that); // 画子事件Tab
+    drawSubeventSelect(this.event_river_data); //画子事件下拉框
 }
 
 // 绘制eventriver
@@ -580,7 +585,7 @@ function drawEventstack(data){
         selected_series_dict[series_name[i]] = false;
     }
 
-	option = {
+	var option = {
 	    tooltip : {
 	        trigger: 'axis'
 	    },
@@ -641,7 +646,7 @@ function refreshPiedata(data){
                 name:'访问来源',
                 type:'pie',
                 radius : '50%',
-                center: ['50%', '60%'],
+                center: ['50%', '50%'],
                 data: pie_data
             }
         ]
@@ -682,7 +687,7 @@ function refreshSubeventPieData(data){
                 name:'访问来源',
                 type:'pie',
                 radius : '50%',
-                center: ['50%', '60%'],
+                center: ['50%', '50%'],
                 data: pie_data
             }
         ]
@@ -722,7 +727,7 @@ function refreshSentimentPieData(data){
                 name:'访问来源',
                 type:'pie',
                 radius : '50%',
-                center: ['50%', '60%'],
+                center: ['50%', '50%'],
                 data: pie_data
             }
         ]
@@ -792,6 +797,26 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
     }
 }
 
+//把子话题输出下拉框
+function drawSubeventSelect(data){
+    $("#choose_subevent").empty();
+    var data = data['eventList'];
+    var html = '';
+    html += '<select id="subevents_select" name="subevents">';
+
+    html += '<option value="global" selected="selected">' + query +'</option>';
+
+    for (var i = 0;i < data.length;i++) {
+        var name = data[i]['name'];
+        var subeventid = data[i]['id'];
+        html += '<option value="' + subeventid +'">' + name +'</option>';
+    }
+    html += '</select>';
+    $("#choose_subevent").append(html);
+    //subevent_tab_click(that);
+}
+
+
 //把子话题输出
 function drawSubeventTab(data, that){
     $("#subevent_tab").empty();
@@ -810,7 +835,7 @@ function drawSubeventTab(data, that){
         var name = data[i]['name'];
         var weight = data[i]['weight'];
         var addweight = data[i]['addweight'];
-        var date = new Date(data[i]['created_at'] * 1000).format("yyyy-MM-dd hh:mm:ss");
+        var date = new Date(data[i]['created_at'] * 1000).format("yyyy-MM-dd hh时");
         var tfidf = data[i]['tfidf'];
         var subeventid = data[i]['id'];
         html += '<div class="btn-group" id="' + subeventid + '" name="' + name + '">';
@@ -824,6 +849,14 @@ function drawSubeventTab(data, that){
     }
     $("#subevent_tab").append(html);
     subevent_tab_click(that);
+}
+
+function jump_comments(){
+    var subevent_value = $("#subevents_select").val();
+    var ajax_url = "/comment?query=APEC2014";
+    // window.location.href="/weibo?query=APEC2014-微博";
+    window.open(ajax_url);
+    alert(query+subevent_value);
 }
 
 function subevent_tab_click(that){
@@ -897,6 +930,16 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
         else{
             url = d["showurl"];
         }
+        var weight;
+        if ('weight' in d){
+            weight = d['weight'];
+        }
+        else if('gweight' in d){
+            weight = d['gweight'];
+        }
+        else{
+            weight = 0;
+        }
         html += '<li class="item" style="width:1010px">';
         html += '<div class="weibo_detail" >';
         html += '<p>媒体:<a class="undlin" target="_blank" href="javascript;;">' + source_from_name + '</a>&nbsp;&nbsp;发布:';
@@ -908,7 +951,7 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span id="detail_' + d['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + d['_id'] + '\')";>阅读全文</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
         html += '<a class="undlin" href="javascript:;" target="_blank" onclick="open_same_list(\'' + d['_id'] + '\')";>相似新闻(' + same_text_count + ')</a>&nbsp;&nbsp;|&nbsp;&nbsp;';
-        html += '<a href="javascript:;" target="_blank">相关度(' + d['weight'] + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
+        html += '<a href="javascript:;" target="_blank">相关度(' + weight + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
         html += '<a href="javascript:;" target="_blank" onclick="check_comments(\'' + d['_id'] + '\')">评论分析</a>&nbsp;&nbsp;&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
@@ -942,6 +985,16 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             else{
                 d_url = dd["showurl"];
             }
+            var same_weight;
+            if ('weight' in dd){
+                same_weight = dd['weight'];
+            }
+            else if ('gweight' in dd){
+                same_weight = dd['gweight'];
+            }
+            else{
+                same_weight = 0;
+            }
             html += '<div class="inner-same inner-same-' + d['_id'] + '" style="display:none;">';
             html += '<li class="item" style="width:1000px; border:2px solid">';
             html += '<div class="weibo_detail" >';
@@ -953,7 +1006,7 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             html += '<div class="weibo_info">';
             html += '<div class="weibo_pz" style="margin-right:10px;">';
             html += '<span id="detail_' + dd['_id'] + '"><a class="undlin" href="javascript:;" target="_blank" onclick="detail_text(\'' + dd['_id'] + '\')";>阅读全文</a></span>&nbsp;|&nbsp;&nbsp;&nbsp;';
-            html += '<a href="javascript:;" target="_blank">相关度(' + dd['weight'] + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            html += '<a href="javascript:;" target="_blank">相关度(' + same_weight + ')</a>&nbsp;&nbsp;&nbsp;&nbsp;';
             html += "</div>";
             html += '<div class="m">';
             html += '<a>' + new Date(dd['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
@@ -1024,8 +1077,6 @@ opinion.drawEventriver();
 opinion.drawFishbone();
 opinion.call_sync_ajax_request(opinion.subevent_pie_ajax_url(this.query), opinion.ajax_method, refreshSubeventPieData);
 opinion.call_sync_ajax_request(opinion.sentiment_pie_ajax_url(this.query), opinion.ajax_method, refreshSentimentPieData);
-// opinion.pullDrawSubWeiboData();
-// bindSentimentTabClick();
 opinion.drawSubeventsTab();
 opinion.drawTrendline();
 opinion.pullDrawClouddata();

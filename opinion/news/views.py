@@ -75,7 +75,7 @@ def subeventpie():
     """子观点占比
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
-    topic_name = u'APEC-微博'
+    # topic_name = u'APEC2014-微博'
     topicid = em.getEventIDByName(topic_name)
 
     eventcomment = EventComments(topicid)
@@ -96,7 +96,7 @@ def subeventpie():
     for clusterid, ratio in cluster_ratio.iteritems():
         feature = eventcomment.get_feature_words(clusterid)
         if feature and len(feature):
-            results[','.join(feature[:5])] = float(ratio) / float(total_count)
+            results[','.join(feature[:3])] = float(ratio) / float(total_count)
 
     return json.dumps(results)
 
@@ -106,7 +106,7 @@ def sentimentpie():
     情绪占比
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
-    topic_name = u'APEC-微博'
+    # topic_name = u'APEC2014-微博'
     topicid = em.getEventIDByName(topic_name)
 
     eventcomment = EventComments(topicid)
@@ -143,7 +143,7 @@ def sentiment():
     主观微博
     """
     topic_name = request.args.get('query', default_topic_name)
-    topic_name = u'APEC-微博'
+    # topic_name = u'APEC2014-微博'
     topicid = em.getEventIDByName(topic_name)
 
     eventcomment = EventComments(topicid)

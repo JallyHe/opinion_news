@@ -203,6 +203,16 @@ function refreshDrawCommentsOpinion(data){
         var d = da[e];
         var content_summary = d['content168'];
         var user_img_link = '/static/img/unknown_profile_image.gif';
+        var weight;
+        if ('weight' in d){
+            weight = d['weight'];
+        }
+        else if('gweight' in d){
+            weight = d['gweight'];
+        }
+        else{
+            weight = 0;
+        }
         html += '<li class="item" style="width:1010px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
@@ -214,7 +224,7 @@ function refreshDrawCommentsOpinion(data){
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + weight.toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         //html += '<span><a class="undlin" href="javascript:;" target="_blank">情绪(' + sentiment_dict[d['sentiment']] + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
@@ -246,8 +256,15 @@ function refreshDrawComments(data, select_sentiment){
 
     var counter = 0;
     var html = "";
-    data[select_sentiment].sort(gweight_comparator);
-    var da = data[select_sentiment];
+
+    if (select_sentiment in data){
+        data[select_sentiment].sort(gweight_comparator);
+        var da = data[select_sentiment];
+    }
+    else{
+        var da = [];
+    }
+
     for (var e in da){
         if (counter == global_senti_display){
             break;
@@ -256,6 +273,16 @@ function refreshDrawComments(data, select_sentiment){
         var d = da[e];
         var content_summary = d['content168'];
         var user_img_link = '/static/img/unknown_profile_image.gif';
+        var weight;
+        if ('weight' in d){
+            weight = d['weight'];
+        }
+        else if('gweight' in d){
+            weight = d['gweight'];
+        }
+        else{
+            weight = 0;
+        }
         html += '<li class="item" style="width:1010px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
@@ -267,7 +294,7 @@ function refreshDrawComments(data, select_sentiment){
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + weight.toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
         html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
