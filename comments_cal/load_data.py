@@ -13,9 +13,14 @@ import json
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../public/')
 sys.path.append(AB_PATH)
 
-from Database import EventManager, EventComments
 from utils import ts2datetime, ts2date, datetime2ts
+from Database import EventManager, EventComments
 
+API_WEIBO_FIELDS = [u'user', u'reposts_count', u'in_reply_to_status_id', \
+        u'favorited', u'truncated', u'thumbnail_pic', u'text', u'created_at', \
+        u'mid', u'comments', u'search_type', u'source', u'attitudes_count', \
+        u'in_reply_to_screen_name', u'in_reply_to_user_id', u'timestamp', \
+        u'keywords', u'comments_count', u'geo', u'id', u'reposts']
 
 WEIBO_FIELDS = [u'reposts_count', u'_id', u'name', u'website_type', \
         u'text', u'createdate', u'bmiddle_pic', u'retweeted_mid', \
@@ -37,6 +42,38 @@ def subob_classifier(item):
 
     item['subject'] = subject
     return item
+
+
+def api_object_weibo2comment(item):
+    comment = dict()
+    for field in NULL_FIELDS:
+        comment[field] = None
+
+    comment['news_id'] = 'weibo'
+    for k, v in item.iteritems():
+        if k == 'timestamp':
+            comment['timestamp'] = v
+            comment['date'] = ts2date(v)
+            comment['datetime'] = ts2datetime(v)
+        if k == 'mid':
+            comment['_id'] = v
+            comment['id'] = v
+        if k == 'reposts_count':
+            comment[k] = v
+        if k == 'comments_count':
+            comment[k] = v
+        if k == 'attitudes_count':
+            comment[k] = v
+        if k == 'user':
+            comment['user_name'] = v['name']
+        if k =='weibourl':
+            comment['comment_source'] = v
+        if k == 'text':
+            text = v
+            comment['content168'] = text
+
+    return comment
+
 
 def object_weibo2comment(item):
     comment = dict()
@@ -74,23 +111,37 @@ def load_object_weibo_data():
     # topicname = u'外滩踩踏-微博'
     # topicname = u'呼格案-微博'
     # topicname = u'复旦投毒案-微博'
-    topicname = u'APEC-微博'
+    # topicname = u'APEC-微博'
+    # topicname = u'高校宣传思想工作-微博'
+    topicname = u'张灵甫遗骨被埋羊圈-微博'
 
     em = EventManager()
     topicid = em.getEventIDByName(topicname)
+    print topicid
     eventcomment = EventComments(topicid)
 
     # f = open('caitai.jl')
     # f = open('huge.jl')
     # f = open('fudan.jl')
-    f = open('apec.jl')
+    # f = open('apec.jl')
+    # f = open('items_qiushi.jl')
+    f = open('items_zhang.jl')
     for line in f:
         item = json.loads(line.strip())
+        if 'mid' in item:
+            item['text'] = item['text'].encode('utf-8')
+            item = subob_classifier(item)
+            if item['subject']:
+                comment = api_object_weibo2comment(item)
+                eventcomment.saveItem(comment)
+
+        """
         item['text'] = item['text'].encode('utf-8')
         item = subob_classifier(item)
         if item['subject']:
             weibo = object_weibo2comment(item)
             eventcomment.saveItem(weibo)
+        """
 
     f.close()
 
@@ -106,8 +157,13 @@ def initializeWeiboTopic():
     # start_datetime = "2014-12-14 00:00:00"
     # topicname = u'复旦投毒案-微博'
     # start_datetime = "2014-12-15 00:00:00"
-    topicname = u'APEC-微博'
-    start_datetime = "2014-12-15 00:00:00"
+    # topicname = u'APEC-微博'
+    # start_datetime = "2014-12-15 00:00:00"
+    # topicname = u'高校宣传思想工作-微博'
+    # start_datetime = "2015-01-30 00:00:00"
+
+    topicname = u'高校宣传思想工作-repost微博'
+    start_datetime = "2015-01-30 00:00:00"
 
     topicid = em.getEventIDByName(topicname)
     start_ts = datetime2ts(start_datetime)
@@ -121,8 +177,12 @@ def initializeNewsTopic():
     """
     em = EventManager()
 
-    topicname = u'外滩踩踏'
-    start_datetime = "2015-01-02 00:00:00"
+    # topicname = u'外滩踩踏'
+    # start_datetime = "2015-01-02 00:00:00"
+
+    topicname = u'张灵甫遗骨被埋羊圈'
+    start_datetime = "2015-01-31 00:00:00"
+
     topicid = em.getEventIDByName(topicname)
     start_ts = datetime2ts(start_datetime)
 

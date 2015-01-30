@@ -1,6 +1,7 @@
 #-*-coding=utf-8-*-
 
 import re
+from xapian_case.utils import cut_filter
 
 def remove_rub(text):
     """remove http、分享自
@@ -10,6 +11,28 @@ def remove_rub(text):
         p = re.compile(i)
         text = p.sub('', text)
     return text
+
+
+def cut_mid_weibo(text):
+    # 在中性情感中根据规则再提取新闻微博
+    text = cut_filter(text) # 去掉文本中的网页链接和分享自
+    n1 = text.find('发表')
+    n2 = text.find('【')
+
+    if '//' in text:
+        return -1
+
+    if n1 == 0:
+        return 0
+
+    if n2 == -1:
+        return -1
+
+    sub_str = text[0:n2]    
+    if '#' in sub_str and '//' not in sub_str and '@' not in sub_str:
+        return 0
+
+    return -1
 
 
 def subob_classifier(item):

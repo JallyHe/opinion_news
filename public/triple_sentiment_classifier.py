@@ -109,6 +109,8 @@ with open(os.path.join(AB_PATH, 'triple_polarity_1.txt')) as f:
 
 
 def triple_classifier(tweet):
+    """text: utf-8 encoding
+    """
     sentiment = 0
     text = tweet['text']  # encode
 
@@ -121,10 +123,10 @@ def triple_classifier(tweet):
     emoticon_sentiment = emoticon(text)
     if emoticon_sentiment != 0:
         sentiment = emoticon_sentiment
-        text = u''
+        text = ''
 
-    if text != u'':
-        entries = cut(cut_str, text.encode('utf-8'))
+    if text != '':
+        entries = cut(cut_str, text)
         entry = [e.decode('utf-8', 'ignore') for e in entries]
         bow = dictionary_1.doc2bow(entry)
         s = [1, 1]

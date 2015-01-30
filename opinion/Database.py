@@ -46,6 +46,15 @@ class EventComments(object):
     def getNewsIds(self):
         return self.mongo[self.comments_collection].distinct("news_id")
 
+    def getCommentsBySubeventid(self, subeventid):
+        event = Event(self.id)
+        news_list = event.getSubeventInfos(subeventid)
+        results = []
+        for news in news_list:
+            resutls.extend(self.getNewsComments(news['_id']))
+
+        return results
+
     def getNewsComments(self, news_id):
         results = self.mongo[self.comments_collection].find({"news_id": news_id, "clusterid": {"$ne": news_id + '_other'}})
         return [r for r in results]

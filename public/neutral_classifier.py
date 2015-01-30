@@ -44,6 +44,17 @@ def emoticon(pe_set, ne_set, text):
 
     return state
 
+
+def remove_at(text):
+    """text去除@
+       text: utf-8
+    """
+    at_pattern = r'\/\/@(.+?):'
+    text = re.sub(at_pattern, '。', text)
+
+    return text
+
+
 '''define 2 kinds of seed emoticons'''
 pe_set = set([])
 ne_set = set([])
@@ -65,11 +76,17 @@ with open(EMOTICON_FILE) as f:
 
 
 def triple_classifier(tweet):
+    """content168 以utf-8编码
+    """
     sentiment = 0
     text = tweet['content168']
 
     if '//@' in text:
         text = text[:text.index('//@')]
+
+    if not len(text):
+        text = remove_at(tweet['content168'])
+
     emoticon_sentiment = emoticon(pe_set,ne_set, text)
     if emoticon_sentiment in [1,2]:
         sentiment = 1

@@ -1,9 +1,11 @@
 #-*- coding:utf-8 -*-
 
 import json
+from bson.objectid import ObjectId
 from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
-from opinion.Database import EventComments, EventManager, Feature, DbManager, News
+from opinion.Database import EventComments, EventManager, \
+        Feature, DbManager, News, Event
 from opinion.global_config import default_topic_name, default_news_id, emotions_vk
 
 mod = Blueprint('weibo', __name__, url_prefix='/weibo')
@@ -15,25 +17,20 @@ def index():
     """返回页面
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
-    topic_name = u'APEC-微博'
+    # topic_name = u'高校宣传思想工作-微博'
     news_id = request.args.get('news_id', default_news_id)
     news_id = 'weibo'
     topicid = em.getEventIDByName(topic_name)
+
     news = News(news_id, topicid)
     news_subeventid = news.get_news_subeventid()
     if not news_subeventid:
         news_subeventid = 'None'
     eventcomment = EventComments(topicid)
+    comments = eventcomment.getNewsComments(news_id)
 
     return render_template('index/weibo.html', topic=topic_name, topic_id=topicid, \
             news_id=news_id, news_subeventid=news_subeventid)
-
-
-@mod.route('/')
-def weibo_clustering():
-    """
-    """
-    pass
 
 
 @mod.route('/ratio/')
@@ -65,6 +62,7 @@ def ratio():
             results[','.join(feature[:5])] = float(ratio) / float(total_count)
 
     return json.dumps(results)
+
 
 @mod.route('/sentiratio/')
 def sentiratio():
@@ -103,6 +101,7 @@ def sentiratio():
 
     return json.dumps(results)
 
+
 @mod.route('/sentiment/')
 def sentiment():
     """评论情绪
@@ -125,6 +124,7 @@ def sentiment():
 
     return json.dumps(sentiment_comments)
 
+
 @mod.route('/keywords/')
 def keywords():
     """关键词
@@ -142,6 +142,7 @@ def keywords():
         results[clusterid] = [fwords[:5], fwords]
 
     return json.dumps(results)
+
 
 @mod.route('/cluster/')
 def cluster():
