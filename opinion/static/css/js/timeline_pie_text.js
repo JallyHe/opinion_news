@@ -95,6 +95,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(tfidf_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_total_weight").click(function(){
@@ -104,6 +105,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(weight_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_addweight").click(function(){
@@ -113,6 +115,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "-webkit-link");
         that.event_river_data['eventList'].sort(addweight_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_created_at").click(function(){
@@ -122,6 +125,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         $("#sort_by_created_at").css("color", "#333");
         that.event_river_data['eventList'].sort(createdat_comparator);
         drawSubeventTab(that.event_river_data, that); // 画子事件Tab
+        drawSubeventSelect(that.event_river_data); //画子事件下拉框
     });
 
     $("#sort_by_timestamp").click(function(){
@@ -249,6 +253,7 @@ Opinion_timeline.prototype.drawSubeventsTab = function(){
     var that = this;
     this.event_river_data['eventList'].sort(tfidf_comparator);
     drawSubeventTab(this.event_river_data, that); // 画子事件Tab
+    drawSubeventSelect(this.event_river_data); //画子事件下拉框
 }
 
 // 绘制eventriver
@@ -580,7 +585,7 @@ function drawEventstack(data){
         selected_series_dict[series_name[i]] = false;
     }
 
-	option = {
+	var option = {
 	    tooltip : {
 	        trigger: 'axis'
 	    },
@@ -792,6 +797,26 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
     }
 }
 
+//把子话题输出下拉框
+function drawSubeventSelect(data){
+    $("#choose_subevent").empty();
+    var data = data['eventList'];
+    var html = '';
+    html += '<select id="subevents_select" name="subevents">';
+
+    html += '<option value="global" selected="selected">' + query +'</option>';
+
+    for (var i = 0;i < data.length;i++) {
+        var name = data[i]['name'];
+        var subeventid = data[i]['id'];
+        html += '<option value="' + subeventid +'">' + name +'</option>';
+    }
+    html += '</select>';
+    $("#choose_subevent").append(html);
+    //subevent_tab_click(that);
+}
+
+
 //把子话题输出
 function drawSubeventTab(data, that){
     $("#subevent_tab").empty();
@@ -824,6 +849,14 @@ function drawSubeventTab(data, that){
     }
     $("#subevent_tab").append(html);
     subevent_tab_click(that);
+}
+
+function jump_comments(){
+    var subevent_value = $("#subevents_select").val();
+    var ajax_url = "/comment?query=APEC2014";
+    // window.location.href="/weibo?query=APEC2014-微博";
+    window.open(ajax_url);
+    alert(query+subevent_value);
 }
 
 function subevent_tab_click(that){

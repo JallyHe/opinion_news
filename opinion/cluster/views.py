@@ -6,7 +6,7 @@ from opinion.global_utils import ts2datetime, ts2date
 from opinion.Database import EventComments, EventManager, Feature, DbManager, News
 from opinion.global_config import default_topic_name, default_news_id, emotions_vk
 
-mod = Blueprint('weibo', __name__, url_prefix='/weibo')
+mod = Blueprint('cluster', __name__, url_prefix='/cluster')
 
 em = EventManager()
 
@@ -15,17 +15,17 @@ def index():
     """返回页面
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
-    topic_name = u'APEC2014-微博'
     news_id = request.args.get('news_id', default_news_id)
-    news_id = 'weibo'
     topicid = em.getEventIDByName(topic_name)
     news = News(news_id, topicid)
     news_subeventid = news.get_news_subeventid()
-    if not news_subeventid:
-        news_subeventid = 'None'
     eventcomment = EventComments(topicid)
 
-    return render_template('index/weibo.html', topic=topic_name, topic_id=topicid, \
+    comments = eventcomment.getNewsComments(news_id)
+    if not comments:
+        return 'no comments'
+
+    return render_template('index/topic_comment.html', topic=topic_name, topic_id=topicid, \
             news_id=news_id, news_subeventid=news_subeventid)
 
 
@@ -94,8 +94,6 @@ def sentiratio():
         if label and len(label):
             results[label] = float(ratio) / float(total_count)
 
-    return json.dumps(results)
-
 @mod.route('/sentiment/')
 def sentiment():
     """评论情绪
@@ -146,7 +144,6 @@ def cluster():
 
     eventcomment = EventComments(topicid)
     comments = eventcomment.getNewsComments(news_id)
-
     cluster_results = dict()
     for comment in comments:
         if 'clusterid' in comment:
@@ -155,6 +152,7 @@ def cluster():
                 cluster_results[clusterid].append(comment)
             except KeyError:
                 cluster_results[clusterid] = [comment]
+
     '''
     sentiment_dict = dict()
     for clusterid, comments in cluster_results.iteritems():
@@ -165,6 +163,7 @@ def cluster():
                 positive += 1
             if c['sentiment'] in [2, 3]:
                 negative += 1
+
         sentiment_dict[clusterid] = u'(积极：' + str(positive) + ',' + u'消极：' + str(negative) + ')'
     '''
 
