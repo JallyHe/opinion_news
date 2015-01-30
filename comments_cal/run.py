@@ -312,6 +312,6 @@ if __name__=="__main__":
     com_col_names = cm.get_comments_collection_name()
     for name in com_col_names:
         topicid = ObjectId(name.lstrip('comment_'))
-        if str(topicid) == '54c5b301d8b487851c2434f9':
+        if str(topicid) == '54cb4196e20cd1decd94bee2': # '54916b0d955230e752f2a94e' '54c5b301d8b487851c2434f9'
             one_topic_calculation_comments_v7(topicid)
 

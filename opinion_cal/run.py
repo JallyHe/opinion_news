@@ -256,7 +256,9 @@ def one_topic_calculation(eventid_initializing):
 if __name__ == '__main__':
     from bson.objectid import ObjectId
     # running_ids = [ObjectId("54c4df61d8b487851c2434f6"), ObjectId("54c34b3d2253270fd4dd5598"), \
-    running_ids = [ObjectId("54c5105fd8b487851c2434f7"), ObjectId("54c59c19d8b487851c2434f8")]
+    # running_ids = [ObjectId("54c5105fd8b487851c2434f7"), ObjectId("54c59c19d8b487851c2434f8")]
+    # running_ids = [ObjectId("54cb0b472253277627a8ac43")]
+    running_ids = [ObjectId("54cb259e2253277bca996516")]
 
     em = EventManager()
     event_ids_list = []
