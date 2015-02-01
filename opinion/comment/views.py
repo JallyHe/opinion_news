@@ -96,6 +96,8 @@ def sentiratio():
         if label and len(label):
             results[label] = float(ratio) / float(total_count)
 
+    return json.dumps(results)
+
 @mod.route('/sentiment/')
 def sentiment():
     """评论情绪

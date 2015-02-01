@@ -9,8 +9,10 @@ if IS_PROD == 1:
 else:
     # 219.224.135.47
     default_topic_name = u'APEC2014'
+    default_topic_id = '54916b0d955230e752f2a94e'
     default_news_id = '1-1-30963839'
     default_news_url = 'http://news.sina.com.cn/c/2014-10-09/145630963839.shtml'
+    default_subevent_id = '7325a077-76b8-4b03-bbed-d8f0faaf28fd'
 
 def get_db_names():
     results = _default_mongo_db().database_names()

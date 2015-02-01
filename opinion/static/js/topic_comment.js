@@ -20,11 +20,6 @@ Date.prototype.format = function(format) {
     return format;
 }
 
-var global_comments_data = undefined;
-var global_comments_opinion = undefined;
-var global_subevent_display = 10;
-var global_senti_display = 10;
-var addition = 10;
 
 function Comment_opinion(query, start_ts, end_ts){
 	//传进来的参数，可以有
@@ -229,12 +224,12 @@ function refreshDrawCommentsOpinion(data){
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + weight.toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         //html += '<span><a class="undlin" href="javascript:;" target="_blank">情绪(' + sentiment_dict[d['sentiment']] + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
         html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
-        html += '发表于新浪微博<a target="_blank" href="' + d["comment_source"] + '">'+ d["comment_source"] +'</a>&nbsp;&nbsp;';
+        html += '<a target="_blank">发表于'+ d["comment_source"] +'</a>&nbsp;&nbsp;';
         html += '</div>';
         html += '</div>' 
         html += '</div>';
@@ -299,11 +294,11 @@ function refreshDrawComments(data, select_sentiment){
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + weight.toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
         html += '<a class="undlin" target="_blank" >' + new Date(d['timestamp'] * 1000).format("yyyy-MM-dd hh:mm:ss")  + '</a>&nbsp;-&nbsp;';
-        html += '发表于新浪微博<a target="_blank" href="' + d["comment_source"] + '">'+ d["comment_source"] +'</a>&nbsp;&nbsp;';
+        html += '<a target="_blank">发表于'+ d["comment_source"] +'</a>&nbsp;&nbsp;';
         html += '</div>';
         html += '</div>' 
         html += '</div>';
@@ -394,24 +389,106 @@ function bindSubeventMoreClick(){
     });
 }
 
+function drawTopicSelect(data){
+    $("#topic_form").empty();
+    var html = '';
+    html += '<select style="width:160px;" id="topic_select" name="topics">';
+
+    for (var i = 0;i < data.length;i++) {
+        var value = data[i]['_id'];
+        var name = data[i]['topic'];
+        if (name == query){
+            html += '<option selected="selected" value="' + value +'">' + name +'</option>';
+        }
+        else{
+            html += '<option value="' + value +'">' + name +'</option>';
+        }
+    }
+    html += '</select>';
+    $("#topic_form").append(html);
+    bindTopicChange();
+}
+function bindTopicChange(){
+    $("#topic_select").change(function(){
+        topic_id = $(this).val();
+        query = $(this).find("option:selected").text();
+        subevent_id = 'global';   //默认显示全部子事件汇总
+        drawSubeventSelect(global_subevents_data);
+    });
+}
+
+function drawSubeventSelect(data){
+    if (!global_subevents_data){
+        global_subevents_data = data;
+    }
+    $("#subevent_form").empty();
+    var html = '';
+    html += '<select style="width:160px;" id="subevent_select" name="subevents">';
+
+    if (subevent_id == 'global'){
+        html += '<option selected="selected" value="global">全部</option>';
+    }
+    else{
+        html += '<option value="global">全部</option>';
+    }
+    if (topic_id in data){
+        var subevents = data[topic_id];
+    }
+    else{
+        var subevents = [];
+    }
+
+    for (var i = 0;i < subevents.length;i++){
+        var value = subevents[i]['_id'];
+        var name = subevents[i]['name'];
+        if (value == subevent_id){
+            html += '<option selected="selected" value="' + value +'">' + name +'</option>';
+        }
+        else{
+            html += '<option value="' + value +'">' + name +'</option>';
+        }
+    }
+    html += '</select>';
+    $("#subevent_form").append(html);
+    bindSubeventChange();
+}
+
+function bindSubeventChange(){
+    $("#subevent_select").change(function(){
+        subevent_id = $(this).val();
+    });
+}
+
 
 var query = QUERY;
-var news_id = NEWS_ID;
+var topic_id = TOPIC_ID;
+var subevent_id = SUBEVENT_ID;
 var start_ts = undefined;
 var end_ts = undefined;
-var pie_url = "/weibo/ratio/?query=" + query + "&news_id=" + news_id;
-var senti_pie_url = "/weibo/sentiratio/?query=" + query + "&news_id=" + news_id;
-// var keywords_url = "/weibo/keywords/?query=" + query + "&news_id=" + news_id;
-var sentiment_url = "/weibo/sentiment/?query=" + query + "&news_id=" + news_id;
-var cluster_url = "/weibo/cluster/?query=" + query + "&news_id=" + news_id;
+var global_subevents_data = undefined;
+var global_comments_data = undefined;
+var global_comments_opinion = undefined;
+var global_subevent_display = 10;
+var global_senti_display = 10;
+var addition = 10;
+var topic_url = "/cluster/topics/";
+var subevent_url = "/cluster/subevents/";
+
+var pie_url = "/cluster/ratio/?query=" + query + "&subevent_id=" + subevent_id;
+var senti_pie_url = "/cluster/sentiratio/?query=" + query + "&subevent_id=" + subevent_id;
+var sentiment_url = "/cluster/sentiment/?query=" + query + "&subevent_id=" + subevent_id;
+var cluster_url = "/cluster/cluster/?query=" + query + "&subevent_id=" + subevent_id;
+
 
 comment = new Comment_opinion(query, start_ts, end_ts);
+console.log("QUERY"+QUERY);
+comment.call_sync_ajax_request(topic_url, comment.ajax_method, drawTopicSelect);
+comment.call_sync_ajax_request(subevent_url, comment.ajax_method, drawSubeventSelect);
 comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
 comment.call_sync_ajax_request(senti_pie_url, comment.ajax_method, comment.SentiPie_function);
-// comment.call_sync_ajax_request(keywords_url, comment.ajax_method, comment.Table_function);
 comment.call_sync_ajax_request(sentiment_url, comment.ajax_method, comment.News_function);
-bindSentiMoreClick();
 bindSentimentTabClick(comment);
+bindSentiMoreClick();
 comment.call_sync_ajax_request(cluster_url, comment.ajax_method, comment.Cluster_function);
 bindOpinionTabClick(comment);
 bindSubeventMoreClick();

@@ -45,10 +45,10 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
         return "/news/sentiment/?query=" + query;
     }
     this.subevent_pie_ajax_url =  function(query){
-        return "/news/subeventpie/?query=" + query;
+        return "/news/subeventpie/?query=" + query + "-微博";
     }
     this.sentiment_pie_ajax_url =  function(query){
-        return "/news/sentimentpie/?query=" + query;
+        return "/news/sentimentpie/?query=" + query + "-微博";
     }
     this.peak_ajax_url = function(data, ts_list, during, subevent){
         return "/news/peak/?lis=" + data.join(',') + "&ts=" + ts_list + '&during=' + during + "&subevent=" + subevent;
@@ -804,7 +804,7 @@ function drawSubeventSelect(data){
     var html = '';
     html += '<select id="subevents_select" name="subevents">';
 
-    html += '<option value="global" selected="selected">' + query +'</option>';
+    html += '<option value="global" selected="selected">' + query +'</option>'; //默认显示全部
 
     for (var i = 0;i < data.length;i++) {
         var name = data[i]['name'];
@@ -853,7 +853,7 @@ function drawSubeventTab(data, that){
 
 function jump_comments(){
     var subevent_value = $("#subevents_select").val();
-    var ajax_url = "/comment?query=APEC2014";
+    var ajax_url = "/cluster?query=" + query + "&subevent_id=" + subevent_value;
     // window.location.href="/weibo?query=APEC2014-微博";
     window.open(ajax_url);
     alert(query+subevent_value);
