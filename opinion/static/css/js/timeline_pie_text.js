@@ -799,10 +799,9 @@ function defscale(count, mincount, maxcount, minsize, maxsize){
 
 //把子话题输出下拉框
 function drawSubeventSelect(data){
-    $("#choose_subevent").empty();
+    $("#subevents_select").empty();
     var data = data['eventList'];
     var html = '';
-    html += '<select id="subevents_select" name="subevents">';
 
     html += '<option value="global" selected="selected">' + query +'</option>'; //默认显示全部
 
@@ -811,8 +810,7 @@ function drawSubeventSelect(data){
         var subeventid = data[i]['id'];
         html += '<option value="' + subeventid +'">' + name +'</option>';
     }
-    html += '</select>';
-    $("#choose_subevent").append(html);
+    $("#subevents_select").append(html);
     //subevent_tab_click(that);
 }
 

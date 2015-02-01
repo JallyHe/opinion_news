@@ -465,12 +465,12 @@
         <div class="titlBar" style="padding-bottom:25px;">
             <h4>总体/子话题选择</h4>
             <i id="cloud_pie_tooltip" class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="right" title="关键词云:热点关键词信息；各类信息占比分析:4类信息-积极、悲伤、愤怒、新闻占比"></i>&nbsp;&nbsp;
-            
             <span>
-                <form id="choose_subevent"></form>
-                <input type="submit" value="评论分析" onclick="jump_comments();"></input>
+                <form id="choose_subevent" style="padding-top:5px;padding-left:5px;">
+                    <select id="subevents_select" name="subevents"></select>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" value="评论分析" onclick="jump_comments();"></input>
+                </form>    
             </span>
-            <span id="peak_cloudpie_tooltip"></span>
             <span id="" class="pull-right" style="margin:-3px -2px -10px auto;cursor: pointer;">
                 <div id="sort_news_subevent_tab" class="r_v2" style="float: right;">
                     排序：<span id="sort_by_tfidf" style="color: #333">内聚性</span> |

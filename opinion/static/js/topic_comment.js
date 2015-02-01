@@ -392,7 +392,7 @@ function bindSubeventMoreClick(){
 function drawTopicSelect(data){
     $("#topic_form").empty();
     var html = '';
-    html += '<select style="width:160px;" id="topic_select" name="topics">';
+    html += '<select style="width:140px;float:right;height:30px" id="topic_select" name="topics">';
 
     for (var i = 0;i < data.length;i++) {
         var value = data[i]['_id'];
@@ -423,7 +423,7 @@ function drawSubeventSelect(data){
     }
     $("#subevent_form").empty();
     var html = '';
-    html += '<select style="width:160px;" id="subevent_select" name="subevents">';
+    html += '<select style="width:140px;height:30px;float:right" id="subevent_select" name="subevents">';
 
     if (subevent_id == 'global'){
         html += '<option selected="selected" value="global">全部</option>';
