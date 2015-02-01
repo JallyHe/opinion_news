@@ -211,6 +211,16 @@ class Event(object):
 
         return count
 
+    def get_news_id_by_url(self, url):
+        """获取子事件的tfidf
+        """
+        result = self.mongo[self.news_collection].find_one({"url": url})
+        if result:
+            if "_id" in result:
+                return result["_id"]
+
+        return 0
+
     def getSubEventsLength(self):
         """获取子事件的个数
         """
@@ -242,6 +252,7 @@ class Event(object):
                 return result["tfidf"]
 
         return 0
+
 
     def get_subevent_addsize(self, subeventid):
         """获取子事件的增幅
@@ -676,6 +687,15 @@ class News(object):
         result = self.mongo[self.news_collection].find_one({"_id": self.id})
         if result:
             return result['subeventid']
+        else:
+            return None
+
+    def get_news_url(self):
+        """单条信息的簇标签, subeventid
+        """
+        result = self.mongo[self.news_collection].find_one({"_id": self.id})
+        if result:
+            return result['url']
         else:
             return None
 
