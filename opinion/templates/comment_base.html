@@ -345,6 +345,13 @@
 
                 <div class="compVsplit"></div>
 
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">URL</span>
+                    <input id="news_url" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ news_url }}">
+                </div>
+
+                <div class="compVsplit"></div>
+
                 <span id="submit_request"><a class="compOK" ><i class="glyphicon glyphicon-ok icons iOK"></i>搜索</a></span>
             </div>
         </div>
@@ -359,57 +366,27 @@
 
 {% endblock navbar %}
     <script>
-        $("#submit_request").click(function(){
-            var QUERY = document.getElementById('keyword_input').value;
-            var TIME_RANGE = $('#all_time').html();
-            window.location.href = "/news/?query=" + QUERY + "&time_range=" + TIME_RANGE;
-        });
         var QUERY = "{{topic}}";
         var NEWS_ID = "{{news_id}}";
-        /*var TIME_RANGE = $('#all_time').html();
-        var START_TS = date2ts(TIME_RANGE.split('-')[0]);
-        var END_TS = date2ts(TIME_RANGE.split('-')[1]);
-
-        //var all_startDate = new Date('09/01/2013');
-        var all_endDate = new Date();
-        //var all_maxDate = new Date('09/21/2013');
-        //var all_minDate = new Date('09/01/2013');
-        var week_ago = subtract(all_endDate,7);
-
-        function subtract(date,days){
-            var nd = new Date(date);
-            nd = nd.valueOf();
-            nd = nd - days * 24 * 60 * 60 * 1000;
-            nd = new Date(nd);
-            var y = nd.getFullYear();
-            var m = nd.getMonth()+1;
-            var d = nd.getDate();
-            if(m <= 9) m = "0"+m;
-            if(d <= 9) d = "0"+d; 
-            var cdate = y+"-"+m+"-"+d;
-            return cdate;
-        }
-        $('#reportrange').daterangepicker({
-            ranges: {
-                '今天': [all_endDate, all_endDate],
-                '最近7天': [week_ago, all_endDate],
-            },
-            //startDate: all_startDate,
-            endDate: all_endDate,
-            //minDate: all_minDate,
-            //maxDate: all_maxDate
-        },
-        function(start, end) {
-            $('#reportrange span').html(start.format('YYYYMMDD') + '-' + end.format('YYYYMMDD'));
-        }
-        );
-
-        function date2ts(date){
-            var year = date.substring(0, 4);
-            var month = date.substring(4, 6);
-            var day = date.substring(6, 8);
-            return new Date(year, month-1, day).getTime() / 1000;
-        }*/
+        $("#submit_request").click(function(){
+            var NEWS_URL = document.getElementById('news_url').value;
+            // var QUERY = document.getElementById('keyword_input').value;
+            // var TIME_RANGE = $('#all_time').html();
+            $.ajax({
+                url: "/comment/urlsearch/?query=" + QUERY + "&url=" + NEWS_URL,
+                type: "GET",
+                dataType: "json",
+                success:function(data){
+                    if (data["news_id"]){
+                        window.location.href="/comment/?query=" + QUERY +"&news_id=" + NEWS_ID;
+                    }
+                    else{
+                        alert("此新闻不存在评论分析");
+                    }
+                }
+            });
+            //window.location.href = "/comment/urlsearch/?query=" + QUERY + "&url=" + NEWS_URL;
+        });
     </script>
     {% block tail_js %}
 

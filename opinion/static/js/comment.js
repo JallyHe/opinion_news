@@ -194,7 +194,12 @@ function refreshDrawCommentsOpinion(data){
 
     var counter = 0;
     var html = "";
-    var da = data[1];
+    if (data){
+        var da = data[1];
+    }
+    else{
+        var da = {};
+    }
     for (var e in da){
         if (counter == global_subevent_display){
             break;
@@ -395,7 +400,7 @@ var news_id = NEWS_ID;
 var start_ts = undefined;
 var end_ts = undefined;
 var pie_url = "/comment/ratio/?query=" + query + "&news_id=" + news_id;
-var senti_pie_url = "/weibo/sentiratio/?query=" + query + "&news_id=" + news_id;
+var senti_pie_url = "/comment/sentiratio/?query=" + query + "&news_id=" + news_id;
 // var keywords_url = "/comment/keywords/?query=" + query + "&news_id=" + news_id;
 var sentiment_url = "/comment/sentiment/?query=" + query + "&news_id=" + news_id;
 var cluster_url = "/comment/cluster/?query=" + query + "&news_id=" + news_id;
