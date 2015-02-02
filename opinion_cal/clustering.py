@@ -9,9 +9,7 @@ import time
 import math
 import uuid
 from gensim import corpora
-from utils import cut_words, _default_mongo
-from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION
+from utils import cut_words
 
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
@@ -220,7 +218,6 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
     # 计算每类的tfidf
     tfidf_list = cluster_tfidf(keywords_count_list, total_weight_list, least_freq=least_freq)
     tfidf_dict = dict(zip(labels_list, tfidf_list))
-    print tfidf_dict
     keywords_dict = dict(zip(labels_list, keywords_count_list))
 
     def choose_by_tfidf():
@@ -243,9 +240,9 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
                     delete_labels.append(label)
                 else:
                     candidate_tfidf.append((label, tfidf))
-            delete_labels.extend([l[0] for l in candidate_tfidf[-(len(candidate_tfidf)-top_num):]])
+            delete_labels.extend([l[0] for l in candidate_tfidf[top_num:]])
         else:
-            delete_labels = [l[0] for l in sorted_tfidf[-(len(sorted_tfidf)-top_num):]]
+            delete_labels = [l[0] for l in sorted_tfidf[top_num:]]
 
         other_items = []
         for label in items_dict.keys():
@@ -273,7 +270,6 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
         for label in items_dict.keys():
             if label != 'other':
                 items = items_dict[label]
-                print len(items)
                 if len(items) < least_size:
                     for item in items:
                         item['label'] = 'other'
@@ -291,18 +287,3 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
 
     return items_dict, tfidf_dict
 
-
-if __name__=="__main__":
-    topic = "APEC2014"
-    topicid = "54916b0d955230e752f2a94e"
-    mongo = _default_mongo(usedb=MONGO_DB_NAME)
-    results = mongo[EVENTS_NEWS_COLLECTION_PREFIX + topicid].find()
-    inputs = [{"title": r["title"].encode("utf-8"), "content": r["content168"].encode("utf-8")} for r in results]
-
-    # kmeans 聚类
-    results = kmeans(inputs)
-
-    # cluster evaluation
-    results = cluster_evaluation(results)
-    for k, v in results.iteritems():
-        print k, len(v)

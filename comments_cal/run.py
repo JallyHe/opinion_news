@@ -15,6 +15,7 @@ from sort import text_weight_cal
 from duplicate import duplicate
 from config import emotions_vk
 from ad_filter import ad_filter
+from classify_mid_weibo import mid_sentiment_classify
 from triple_sentiment_classifier import triple_classifier
 from Database import CommentsManager, EventComments, Comment, News
 
@@ -263,7 +264,12 @@ def one_topic_calculation_comments_v7(topicid):
             if r['subob_rub_neu_label'] == 2:
                 sentiment = 0 # 0 中性
             elif r['subob_rub_neu_label'] == -1:
-                sentiment = triple_classifier(r) # 1 高兴、2 愤怒、3 悲伤
+                sentiment = triple_classifier(r) # 1 高兴、2 愤怒、3 悲伤、0无情感
+                if sentiment == 0:
+                    sentiment = mid_sentiment_classify(r['text'])
+
+                if sentiment == -1:
+                    sentiment = 0 # 中性
 
             comment = Comment(r['_id'], topicid)
             comment.update_comment_sentiment(sentiment)

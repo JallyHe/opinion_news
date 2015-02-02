@@ -60,13 +60,16 @@ def initialize_topics():
     topicname = u'全军政治工作会议'
     start_datetime = "2014-11-04 00:00:00"
     topic_start.append((topicname, start_datetime))
+    """
 
     topicname = u'高校思想宣传工作'
     start_datetime = "2015-01-31 00:00:00"
-    """
 
+    """
     topicname = u'张灵甫遗骨被埋羊圈'
     start_datetime = "2015-01-31 00:00:00"
+    """
+
     topic_start.append((topicname, start_datetime))
 
     pool = Pool()
