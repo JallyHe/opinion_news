@@ -104,7 +104,8 @@ Comment_opinion.prototype = {
 	        ]
 	    };
 	    var myChart = echarts.init(document.getElementById(pie_div));
-	    myChart.setOption(option);
+        myChart.setOption(option);
+	    $("#"+pie_div).hideLoading();
 	},
     //情绪饼图
 	SentiPie_function: function(data){
@@ -146,6 +147,7 @@ Comment_opinion.prototype = {
 	    };
 	    var myChart = echarts.init(document.getElementById(pie_div));
 	    myChart.setOption(option);
+	    $("#"+pie_div).hideLoading();
 	},
 
 	//新闻
@@ -239,6 +241,7 @@ function refreshDrawCommentsOpinion(data){
     if (counter < global_subevent_display){
         $("#subevent_more_information").html("加载完毕");
     }
+    $(news_div).hideLoading();
     $(news_div).append(html);
     $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
@@ -308,7 +311,7 @@ function refreshDrawComments(data, select_sentiment){
     if (counter < global_senti_display){
         $("#senti_more_information").html("加载完毕");
     }
-
+    $(news_div).hideLoading();
     $(news_div).append(html);
     $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
@@ -484,11 +487,15 @@ comment = new Comment_opinion(query, start_ts, end_ts);
 console.log("QUERY"+QUERY);
 comment.call_sync_ajax_request(topic_url, comment.ajax_method, drawTopicSelect);
 comment.call_sync_ajax_request(subevent_url, comment.ajax_method, drawSubeventSelect);
+$("#main").showLoading();
 comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
+$("#senti_pie").showLoading();
 comment.call_sync_ajax_request(senti_pie_url, comment.ajax_method, comment.SentiPie_function);
+$("#vertical-ticker").showLoading();
 comment.call_sync_ajax_request(sentiment_url, comment.ajax_method, comment.News_function);
 bindSentimentTabClick(comment);
 bindSentiMoreClick();
+$("#vertical-ticker_opinion").showLoading();
 comment.call_sync_ajax_request(cluster_url, comment.ajax_method, comment.Cluster_function);
 bindOpinionTabClick(comment);
 bindSubeventMoreClick();
