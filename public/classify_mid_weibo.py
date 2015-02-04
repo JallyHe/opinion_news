@@ -65,11 +65,12 @@ def label_adjust(label,text):
     else:
         label = -1
 
-    return label 
+    return label
 
 
-def label_classify(text):#中性文本分类
-
+def label_classify(text):
+    """中性文本分类
+    """
     happy_count = 0
     angry_count = 0
     sad_count = 0

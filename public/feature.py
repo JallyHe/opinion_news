@@ -1,9 +1,7 @@
 #-*-coding=utf-8-*-
 
 import math
-import random
-from utils import _default_mongo, cut_words
-from config import MONGO_DB_NAME, EVENTS_NEWS_COLLECTION_PREFIX 
+from utils import cut_words
 
 
 def tfidf_cal(keywords_dict_list, topk=100):
@@ -94,19 +92,4 @@ def extract_feature(items, title_term_weight=5, content_term_weight=1):
     results = tfidf_cal(keywords_count_list)
 
     return dict(zip(items_dict.keys(), results))
-
-
-if __name__ == '__main__':
-    topic = "APEC2014"
-    topicid = "54916b0d955230e752f2a94e"
-    mongo = _default_mongo(usedb=MONGO_DB_NAME)
-    results = mongo[EVENTS_NEWS_COLLECTION_PREFIX + topicid].find()
-    inputs = [{"title": r["title"].encode("utf-8"), "content": r["content168"].encode("utf-8"), \
-            "label": random.randint(0, 10)} for r in results]
-
-    results = extract_feature(inputs, title_term_weight=5, content_term_weight=1)
-    for k in results:
-        print "-----------------------"
-        for v0, v1 in k:
-            print v0, v1
 

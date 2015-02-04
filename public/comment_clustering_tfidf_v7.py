@@ -10,7 +10,7 @@ import heapq
 import numpy as np
 from gensim import corpora
 from collections import Counter
-from utils import cut_words, cut_words_noun, _default_mongo
+from utils import cut_words, cut_words_noun
 
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
