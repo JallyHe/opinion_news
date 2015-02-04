@@ -181,13 +181,6 @@ function refreshDrawOpinionTab(tabs_list, select_tab){
     $("#OpinionTabDiv").append(html);
 }
 
-function gweight_comparator(a, b){
-    return parseInt(b.gweight) - parseInt(a.gweight);
-}
-function weight_comparator(a, b){
-    return parseInt(b.weight) - parseInt(a.weight);
-}
-
 function refreshDrawCommentsOpinion(data){
     var news_div = "#vertical-ticker_opinion";
     $(news_div).empty();
@@ -211,9 +204,6 @@ function refreshDrawCommentsOpinion(data){
         var weight;
         if ('weight' in d){
             weight = d['weight'];
-        }
-        else if('gweight' in d){
-            weight = d['gweight'];
         }
         else{
             weight = 0;
@@ -263,7 +253,6 @@ function refreshDrawComments(data, select_sentiment){
     var html = "";
 
     if (select_sentiment in data){
-        data[select_sentiment].sort(gweight_comparator);
         var da = data[select_sentiment];
     }
     else{
@@ -281,9 +270,6 @@ function refreshDrawComments(data, select_sentiment){
         var weight;
         if ('weight' in d){
             weight = d['weight'];
-        }
-        else if('gweight' in d){
-            weight = d['gweight'];
         }
         else{
             weight = 0;

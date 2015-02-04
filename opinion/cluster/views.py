@@ -1,5 +1,7 @@
 #-*- coding:utf-8 -*-
 
+import os
+import sys
 import json
 from bson.objectid import ObjectId
 from flask import Blueprint, render_template, request
@@ -18,13 +20,6 @@ def index():
     topic_name = request.args.get('query', default_topic_name) # 话题名
     topicid = em.getEventIDByName(topic_name)
     subevent_id = request.args.get('subevent_id', 'global')
-    '''
-    eventcomment = EventComments(topicid)
-
-    news = News(news_id, topicid)
-    news_subeventid = news.get_news_subeventid()
-    news_url = news.get_news_url()
-    '''
 
     return render_template('index/topic_comment.html', topic=topic_name, topic_id=topicid, subevent_id=subevent_id)
 
@@ -68,13 +63,11 @@ def subevents():
 
 @mod.route('/comments_list/')
 def comments_list():
-    import os
-    import sys
     AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
     sys.path.append(AB_PATH)
     from comment_module import comments_calculation
 
-    topicid = request.args.get('topicid')
+    topicid = request.args.get('topicid', default_topic_id)
     subeventid = request.args.get('subeventid', 'global')
 
     ec = EventComments(topicid)
@@ -83,55 +76,12 @@ def comments_list():
     else:
         comments = ec.getCommentsBySubeventid(subeventid)
 
-    results = comments_calculation(comments)
+    if not comments:
+        return json.dumps({"status":"fail"})
 
-    return json.dumps(results)
-
-
-@mod.route('/ratio/')
-def ratio():
-    """子观点占比
-    """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
-    subevent_id = request.args.get('subevent_id', 'global')
-    topicid = em.getEventIDByName(topic_name)
-
-    '''
-    eventcomment = EventComments(topicid)
-    comments = eventcomment.getNewsComments(news_id)
-
-    cluster_ratio = dict()
-    for comment in comments:
-        if 'clusterid' in comment:
-            clusterid = comment['clusterid']
-
-            try:
-                cluster_ratio[clusterid] += 1
-            except KeyError:
-                cluster_ratio[clusterid] = 1
-
-    results = dict()
-    total_count = sum(cluster_ratio.values())
-    for clusterid, ratio in cluster_ratio.iteritems():
-        feature = eventcomment.get_feature_words(clusterid)
-        if feature and len(feature):
-            results[','.join(feature[:3])] = float(ratio) / float(total_count)
-
-    return json.dumps(results)
-    '''
-    return json.dumps({})
-
-@mod.route('/sentiratio/')
-def sentiratio():
-    """
-    情绪占比
-    """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
-    subevent_id = request.args.get('subevent_id', 'global')
-    topicid = em.getEventIDByName(topic_name)
-    '''
-    eventcomment = EventComments(topicid)
-    comments = eventcomment.getNewsComments(news_id)
+    cal_results = comments_calculation(comments)
+    features = cal_results['cluster_infos']['features']
+    item_infos = cal_results['item_infos']
 
     senti_dict = {
             0:'中性',
@@ -139,8 +89,24 @@ def sentiratio():
             2:'愤怒',
             3:'悲伤'
         }
+
+    cluster_ratio = dict()
     senti_ratio = dict()
-    for comment in comments:
+    sentiment_comments = dict()
+    cluster_results = dict()
+    for comment in item_infos:
+        if ('clusterid' in comment) and (comment['clusterid'] != 'nonsense') :
+            clusterid = comment['clusterid']
+
+            try:
+                cluster_ratio[clusterid] += 1
+            except KeyError:
+                cluster_ratio[clusterid] = 1
+            try:
+                cluster_results[clusterid].append(comment)
+            except KeyError:
+                cluster_results[clusterid] = [comment]
+
         if 'sentiment' in comment:
             sentiment = comment['sentiment']
 
@@ -148,79 +114,37 @@ def sentiratio():
                 senti_ratio[sentiment] += 1
             except KeyError:
                 senti_ratio[sentiment] = 1
-
-    results = dict()
-    total_count = sum(senti_ratio.values())
-    for sentiment, ratio in senti_ratio.iteritems():
-        label = senti_dict[sentiment]
-        if label and len(label):
-            results[label] = float(ratio) / float(total_count)
-
-    return json.dumps(results)
-    '''
-    return json.dumps({})
-
-@mod.route('/sentiment/')
-def sentiment():
-    """评论情绪
-    """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
-    subevent_id = request.args.get('subevent_id', 'global')
-    topicid = em.getEventIDByName(topic_name)
-    '''
-    eventcomment = EventComments(topicid)
-    comments = eventcomment.getNewsComments(news_id)
-
-    sentiment_comments = dict()
-    for comment in comments:
-        if 'sentiment' in comment:
-            sentiment = comment['sentiment']
             try:
                 sentiment_comments[sentiment].append(comment)
             except KeyError:
                 sentiment_comments[sentiment] = [comment]
 
-    return json.dumps(sentiment_comments)
-    '''
-    return json.dumps({})
+    ratio_results = dict()
+    ratio_total_count = sum(cluster_ratio.values())
+    for clusterid, ratio in cluster_ratio.iteritems():
+        if clusterid in features:
+            feature = features[clusterid]
+            if feature and len(feature):
+                ratio_results[','.join(feature[:3])] = float(ratio) / float(ratio_total_count)
 
-@mod.route('/cluster/')
-def cluster():
-    """展现聚类结果
-    """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
-    subevent_id = request.args.get('subevent_id', 'global')
-    topicid = em.getEventIDByName(topic_name)
-    '''
-    eventcomment = EventComments(topicid)
-    comments = eventcomment.getNewsComments(news_id)
-    cluster_results = dict()
-    for comment in comments:
-        if 'clusterid' in comment:
-            clusterid = comment['clusterid']
-            try:
-                cluster_results[clusterid].append(comment)
-            except KeyError:
-                cluster_results[clusterid] = [comment]
+    sentiratio_results = dict()
+    sentiratio_total_count = sum(senti_ratio.values())
+    for sentiment, ratio in senti_ratio.iteritems():
+        if sentiment in senti_dict:
+            label = senti_dict[sentiment]
+            if label and len(label):
+                sentiratio_results[label] = float(ratio) / float(sentiratio_total_count)
 
-    sentiment_dict = dict()
-    for clusterid, comments in cluster_results.iteritems():
-        positive = 0
-        negative = 0
-        for c in comments:
-            if c['sentiment'] == 1:
-                positive += 1
-            if c['sentiment'] in [2, 3]:
-                negative += 1
+    for sentiment in sentiment_comments:
+        sentiment_comments[sentiment].sort(key=lambda c:c['weight'], reverse=True)
 
-        sentiment_dict[clusterid] = u'(积极：' + str(positive) + ',' + u'消极：' + str(negative) + ')'
+    cluster_comments = dict()
+    for clusterid, contents in cluster_results.iteritems():
+        if clusterid in features:
+            feature = features[clusterid]
+            if feature and len(feature):
+                cluster_comments[clusterid] = [','.join(feature[:5]),sorted(contents, key=lambda c: c['weight'], reverse=True)]
 
-    results = dict()
-    for clusterid, comments in cluster_results.iteritems():
-        feature = eventcomment.get_feature_words(clusterid)
-        if feature and len(feature):
-            results[clusterid] = [','.join(feature[:5]),sorted(comments, key=lambda c: c['weight'], reverse=True)]
+    return json.dumps({"ratio":ratio_results, "sentiratio":sentiratio_results,\
+            "sentiment_comments":sentiment_comments, "cluster_comments":cluster_comments})
 
-    return json.dumps(results)
-    '''
-    return json.dumps({})
