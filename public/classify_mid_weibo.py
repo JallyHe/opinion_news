@@ -23,7 +23,7 @@ def load_angry():
 
 def load_sad():
     sad_list = []
-    reader = csv.reader(file(os.path.join(AB_PATH, './words/happy.txt'), 'rb'))
+    reader = csv.reader(file(os.path.join(AB_PATH, './words/sad.txt'), 'rb'))
     for line in reader:
         sad_list.append(line[0])
     return sad_list
