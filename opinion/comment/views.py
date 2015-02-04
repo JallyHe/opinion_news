@@ -117,6 +117,8 @@ def sentiment():
                 sentiment_comments[sentiment].append(comment)
             except KeyError:
                 sentiment_comments[sentiment] = [comment]
+    for sentiment in sentiment_comments:
+        sentiment_comments[sentiment].sort(key=lambda c:c['weight'], reverse=True)
 
     return json.dumps(sentiment_comments)
 

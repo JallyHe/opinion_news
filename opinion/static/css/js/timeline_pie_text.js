@@ -27,7 +27,7 @@ function Opinion_timeline(query, start_ts, end_ts, pointInterval){
     this.pointInterval = pointInterval; // 图上一点的时间间隔
     this.weibo_limit_count = 10; // 每次加载10条微博
     this.weibo_skip = 0; // 当前页面已显示的微博数
-    this.weibo_sort = "weight"; // 当前页面微博排序依据
+    this.weibo_sort = sort_weight; // 当前页面微博排序依据
 	this.eventriver_ajax_url = function(query, end_ts, during){
 		return "/news/eventriver/?query=" + query + "&during=" + during + "&ts=" + end_ts;
 	}
@@ -811,7 +811,6 @@ function drawSubeventSelect(data){
         html += '<option value="' + subeventid +'">' + name +'</option>';
     }
     $("#subevents_select").append(html);
-    //subevent_tab_click(that);
 }
 
 
@@ -854,7 +853,6 @@ function jump_comments(){
     var ajax_url = "/cluster?query=" + query + "&subevent_id=" + subevent_value;
     // window.location.href="/weibo?query=APEC2014-微博";
     window.open(ajax_url);
-    alert(query+subevent_value);
 }
 
 function subevent_tab_click(that){
@@ -929,11 +927,8 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
             url = d["showurl"];
         }
         var weight;
-        if ('weight' in d){
-            weight = d['weight'];
-        }
-        else if('gweight' in d){
-            weight = d['gweight'];
+        if (sort_weight in d){
+            weight = d[sort_weight];
         }
         else{
             weight = 0;
@@ -984,11 +979,8 @@ function refreshWeibodata(data){  //需要传过来的是新闻的data
                 d_url = dd["showurl"];
             }
             var same_weight;
-            if ('weight' in dd){
-                same_weight = dd['weight'];
-            }
-            else if ('gweight' in dd){
-                same_weight = dd['gweight'];
+            if (sort_weight in dd){
+                same_weight = dd[sort_weight];
             }
             else{
                 same_weight = 0;
@@ -1069,6 +1061,7 @@ var start_ts = START_TS;
 var end_ts = END_TS;
 var pointInterval = 3600 * 24;
 var global_sub_weibos;
+var sort_weight = "weight";
 var opinion = new Opinion_timeline(query, start_ts, end_ts, pointInterval);
 opinion.pull_eventriver_data();
 opinion.drawEventriver();

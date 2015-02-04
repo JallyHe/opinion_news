@@ -79,17 +79,19 @@ def comments_calculation(comments):
                 clusters_infos['features'][label] = results[label]
 
                 for item in items:
-                    item['label'] = label
+                    item['clusterid'] = label
                     item['weight'] = item['weight']
             else:
-                item['label'] = OTHER_CLUSTER_ID
+                item['clusterid'] = OTHER_CLUSTER_ID
     else:
         # 如果信息条数小于,则直接归为其他类
         for r in inputs:
-            r['label'] = OTHER_CLUSTER_ID
+            r['clusterid'] = OTHER_CLUSTER_ID
 
     # 情绪计算
     for r in inputs:
+        if "label" in r:
+            del r["label"]
         if r['subob_rub_neu_label'] == 2:
             sentiment = 0 # 0 中性
         elif r['subob_rub_neu_label'] == -1:
