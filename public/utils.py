@@ -3,10 +3,9 @@
 import os
 import time
 import pymongo
+from config import MONGOD_HOST, MONGOD_PORT
 from xapian_case.utils import load_scws, cut
 
-MONGOD_HOST = '219.224.135.46'
-MONGOD_PORT = 27019
 
 def _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb='boat'):
     # 强制写journal，并强制safe
@@ -18,6 +17,7 @@ def _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb='boat'):
 
 def ts2date(timestamp):
     return time.strftime('%Y-%m-%d', time.localtime(timestamp))
+
 
 def ts2datetime(timestamp):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))

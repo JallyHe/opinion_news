@@ -1,8 +1,13 @@
 #-*-coding=utf-8-*-
 
-from utils import datetime2ts
+import time
+
+def datetime2ts(date):
+    return int(time.mktime(time.strptime(date, '%Y-%m-%d %H:%M:%S')))
 
 
+MONGOD_PORT = 27019
+MONGOD_HOST = '219.224.135.46'
 MONGO_DB_NAME = "news"
 EVENTS_COLLECTION = "news_topic"
 SUB_EVENTS_COLLECTION = "news_subevent"

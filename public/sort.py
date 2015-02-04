@@ -3,8 +3,6 @@
 # Date: 2014-12-22 10:00:00
 # Version: 0.1.0
 
-import time
-
 def text_weight_cal(item, feature_words):
     """根据类的特征词计算单条文本的权重
        input:
@@ -15,8 +13,4 @@ def text_weight_cal(item, feature_words):
     """
     text = item["title"] + item["content"]
     return sum([text.count(word) for word, count in feature_words.iteritems()])
-
-
-if __name__ == "__main__":
-    pass
 

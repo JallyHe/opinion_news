@@ -9,9 +9,7 @@ import time
 import math
 import uuid
 from gensim import corpora
-from utils import cut_words, _default_mongo
-from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION
+from utils import cut_words
 
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
@@ -297,18 +295,3 @@ def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=
 
     return items_dict, tfidf_dict
 
-
-if __name__=="__main__":
-    topic = "APEC2014"
-    topicid = "54916b0d955230e752f2a94e"
-    mongo = _default_mongo(usedb=MONGO_DB_NAME)
-    results = mongo[EVENTS_NEWS_COLLECTION_PREFIX + topicid].find()
-    inputs = [{"title": r["title"].encode("utf-8"), "content": r["content168"].encode("utf-8")} for r in results]
-
-    # kmeans 聚类
-    results = kmeans(inputs)
-
-    # cluster evaluation
-    results = cluster_evaluation(results)
-    for k, v in results.iteritems():
-        print k, len(v)

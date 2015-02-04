@@ -7,6 +7,7 @@ from weibo_subob_rub_neu_classifier import weibo_subob_rub_neu_classifier
 from comment_clustering_tfidf_v7 import tfidf_v2, text_classify, \
         cluster_evaluation, choose_cluster
 
+
 def comments_calculation(comments):
     # 无意义信息的clusterid，包括ad_filter分出来的广告，svm分出的垃圾，主客观分类器分出的新闻
     NON_CLUSTER_ID = 'nonsense'

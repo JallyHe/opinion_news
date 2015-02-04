@@ -4,8 +4,6 @@ import os
 import sys
 import math
 
-AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../public/')
-
 sys.path.append(os.path.join(AB_PATH, './liblinear-1.96/python/'))
 from rubbish_filter import rubbish_filter
 
