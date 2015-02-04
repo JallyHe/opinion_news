@@ -3,7 +3,7 @@
 import os
 import time
 import pymongo
-from config import MONGOD_HOST, MONGOD_PORT
+from consts import MONGOD_HOST, MONGOD_PORT
 from xapian_case.utils import load_scws, cut
 
 
