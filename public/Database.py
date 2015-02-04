@@ -8,7 +8,8 @@
 from utils import _default_mongo
 from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
         EVENTS_COMMENTS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
-        SUB_EVENTS_FEATURE_COLLECTION, COMMENTS_CLUSTER_COLLECTION
+        SUB_EVENTS_FEATURE_COLLECTION, COMMENTS_CLUSTER_COLLECTION, \
+        EVENTS_NEWS_COLLECTION_PREFIX
 
 class EventManager(object):
     """
@@ -42,16 +43,33 @@ class EventComments(object):
         self.id = topicid
         self.comments_cluster_collection = COMMENTS_CLUSTER_COLLECTION
         self.comments_collection = EVENTS_COMMENTS_COLLECTION_PREFIX + str(self.id)
+        self.news_collection = EVENTS_NEWS_COLLECTION_PREFIX + str(self.id)
         self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
 
     def saveItem(self,item):
-        """
-        保存单条item
+        """保存单条item
         """
         self.mongo[self.comments_collection].save(item)
 
-    def getNewsIds(self):
+    def getAllComments(self):
+        """获取话题下所有的评论
         """
+        results = self.mongo[self.comments_collection].find()
+        return [r for r in results]
+
+    def getSubeventComments(self, subeventid):
+        """获取某个子事件（新闻）的评论
+        """
+        comments = []
+        news_list = self.mongo[self.news_collection].find({"subeventid": subeventid})
+        for news in news_list:
+            news_id = news['_id']
+            comments.extend(getNewsComments(news_id))
+
+        return comments
+
+    def getNewsIds(self):
+        """获取评论表中不同的NewsId
         """
         return self.mongo[self.comments_collection].distinct("news_id")
 

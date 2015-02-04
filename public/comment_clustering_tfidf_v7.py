@@ -11,12 +11,6 @@ import numpy as np
 from gensim import corpora
 from collections import Counter
 from utils import cut_words, cut_words_noun, _default_mongo
-from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
-        EVENTS_COMMENTS_COLLECTION_PREFIX
-import sys
-reload (sys)
-sys.setdefaultencoding('utf-8')
 
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
@@ -364,6 +358,8 @@ def kmeans(word, inputs, k):
             word_label[l] = item
 
     return word_label,evaluation_file
+
+
 def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     '''
     选取聚类个数2~15个中聚类效果最好的保留
@@ -478,61 +474,4 @@ def cluster_evaluation(items, min_size=5):
         items_dict['other'] = other_items
 
     return items_dict
-    
-if __name__=="__main__":
-##    topic_topicid = [("APEC2014", "54916b0d955230e752f2a94e"), ("呼格案", "549d1d782253274b5070aa23"), ("复旦投毒案", "549d1de52253274b61368312"), \
-##            ("非法占中", "549e2dde22532715af6c2eb8"), ("马航失联", "549e2ebb22532715d43e7609"), ("昆明火车站暴恐案", "549e31132253271680b44b95"), \
-##            ("全军政治工作会议", "549e31b42253271697914027"), ("乌鲁木齐火车站暴恐", "549e320c22532716a6ca8a36"),("外滩踩踏","54c34b3d2253270fd4dd5598"),\
-##            ("亚洲杯中国队","54c4e4592253272a2bf6b44b")]
-    topic_topicid = [("apec微博","54c5b301d8b487851c2434f9")]
-    for topic, topicid in topic_topicid:
-        print topic,topicid
-        mongo = _default_mongo(usedb=MONGO_DB_NAME)
-        results = mongo[EVENTS_COMMENTS_COLLECTION_PREFIX + topicid].find()
-        inputs = []
-        input_count = 0
-        for r in results:
-            inputs.append({"_id":input_count,"news_id":r["news_id"].encode("utf-8"),"content": r["content168"].encode("utf-8")})
-            input_count += 1
-            
-        comment_inputs=comment_news(inputs)
-                
-        #找出评论对应的新闻
-        news_list = comment_inputs.keys()
-        for id in news_list:
-            print id
-            mongo = _default_mongo(usedb=MONGO_DB_NAME)
-            results = mongo[EVENTS_NEWS_COLLECTION_PREFIX + topicid].find({"_id":id})
-            news = {}#存对应的新闻
-            for r in results:
-                news[id] = r["content168"].encode("utf-8")
-                filtered_inputs = filter_comment(comment_inputs[id],news[id],topicid)
 
-                if len(filtered_inputs)>=30:
-                    tfidf_word,input_dict = tfidf_v2(filtered_inputs)
-                    results = choose_cluster(tfidf_word,filtered_inputs,2,10)
-                    with open('./tfidf_result/v7/word_cluster_noun_%s_%s.csv'%(topicid,id),'wb')as f:
-                        writer = csv.writer(f)
-                        for k,v in results.iteritems():
-                            row = [k]
-                            row.extend(v)
-                            writer.writerow((row))
-
-                   #评论文本聚类
-                    cluster_text = text_classify(filtered_inputs,results,tfidf_word)
-        
-                    #为每条记录打标签
-                    evaluation_inputs = []
-                    for k,v in cluster_text.iteritems():
-                        inputs[k]['label'] = v[0]
-                        inputs[k]['weight'] = v[1]
-                        evaluation_inputs.append(inputs[k])
-
-                    #簇评价
-                    recommend_text = cluster_evaluation(evaluation_inputs)
-                    with open('./tfidf_result/v7/comment_clustering_noun_%s_%s.csv'%(topicid,id),'wb')as f:
-                        writer =csv.writer(f)
-                        for k,v in recommend_text.iteritems():
-                            for i in range(len(v)):
-                                row = [k,v[i]["news_id"],v[i]["content"],v[i]["weight"],v[i]["label"]]
-                                writer.writerow((row))

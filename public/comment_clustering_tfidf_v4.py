@@ -8,8 +8,6 @@ import re
 from gensim import corpora
 from collections import Counter
 from utils import cut_words, _default_mongo
-from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION
 
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
@@ -404,81 +402,3 @@ def cluster_evaluation(items, min_size=5):
 
     return items_dict
 
-if __name__=="__main__":
-    topic_topicid = [("APEC2014", "54916b0d955230e752f2a94e"), ("呼格案", "549d1d782253274b5070aa23"), ("复旦投毒案", "549d1de52253274b61368312"), \
-            ("非法占中", "549e2dde22532715af6c2eb8"), ("马航失联", "549e2ebb22532715d43e7609"), ("昆明火车站暴恐案", "549e31132253271680b44b95"), \
-            ("全军政治工作会议", "549e31b42253271697914027"), ("乌鲁木齐火车站暴恐", "549e320c22532716a6ca8a36")]
-    #topic_topicid = [("马航失联", "549e2ebb22532715d43e7609")]
-    for topic, topicid in topic_topicid:
-        print topic,topicid
-        mongo = _default_mongo(usedb=MONGO_DB_NAME)
-        results = mongo[ COMMENT_COLLECTION + topicid].find()
-        inputs = []
-        input_count = 0
-        for r in results:
-            inputs.append({"_id":input_count,"news_id":r["news_id"].encode("utf-8"),"content": r["content168"].encode("utf-8")})
-            input_count += 1
-
-        print ' num before filter:%s'%input_count
-        filtered_inputs = filter_comment(inputs)
-        print ' num after filter:%s'%len(filtered_inputs)
-
-        if len(filtered_inputs)>=50:
-            tfidf_word,input_dict = tfidf_v2(filtered_inputs)
-            results = choose_cluster(tfidf_word,filtered_inputs,2,15)
-            with open('./tfidf_result/v4/word_cluster_%s.csv'%topicid,'wb')as f:
-                writer = csv.writer(f)
-                for k,v in results.iteritems():
-                    row = [k]
-                    row.extend(v)
-                    writer.writerow((row))
-                
-        #聚类个数=过滤后文本数/2向上取整，大于10的取10
-##        k = int(math.ceil(float(len(filtered_inputs))/5.0))
-##        if k>10:
-##            k = 10
-
-##        for i in range(2,15,1):
-##            results,evaluation = kmeans(tfidf_word,filtered_inputs,i)
-##            #输出词聚类结果
-##            with open('./tfidf_result/v4/word_cluster_result_tfidf_%s_%s.csv'%(topicid,i),'wb')as f:
-##                writer =csv.writer(f)
-##                for k,v in results.iteritems():
-##                    for w in v:
-##                        row = [k,w]
-##                        writer.writerow((row))
-
-##            #评价词的聚类效果
-##            word_matrix = word_cooccur(results,filtered_inputs)
-##            with open('./tfidf_result/v4/wordmatrix_%s_%s.csv'%(topicid,i),'wb')as f:
-##                writer = csv.writer(f)
-##                for k,v in word_matrix.iteritems():
-##                    item = [k]
-##                    item.extend(v)
-##                    writer.writerow((item))
-##
-##            reserved = cut_cluster_net(word_matrix)
-
-            #评论文本聚类
-            cluster_text = text_classify(filtered_inputs,results,tfidf_word)
-##            with open('./tfidf_result/v4/text_classify_%s.csv'%topicid,'wb')as f:
-##                writer = csv.writer(f)
-##                for k,v in cluster_text.iteritems():
-##                    row = [k,inputs[k]['content'],v[1],v[0]]
-##                    writer.writerow((row))
-        
-            #为每条记录打标签
-            evaluation_inputs = []
-            for k,v in cluster_text.iteritems():
-                inputs[k]['label'] = v[0]
-                inputs[k]['weight'] = v[1]
-                evaluation_inputs.append(inputs[k])
-
-            #簇评价
-            recommend_text = cluster_evaluation(evaluation_inputs)
-            with open('./tfidf_result/v4/comment_clustering_%s.csv'%topicid,'wb')as f:
-                writer =csv.writer(f)
-                for k,v in recommend_text.iteritems():
-                    for i in range(len(v)):
-                        row = [k,v[i]["news_id"],v[i]["content"],v[i]["weight"],v[i]["label"]]
-                        writer.writerow((row))

@@ -51,7 +51,7 @@ class EventComments(object):
         news_list = event.getSubeventInfos(subeventid)
         results = []
         for news in news_list:
-            resutls.extend(self.getNewsComments(news['_id']))
+            results.extend(self.getNewsComments(news['_id']))
 
         return results
 

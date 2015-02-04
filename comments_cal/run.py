@@ -259,30 +259,13 @@ def one_topic_calculation_comments_v7(topicid):
                 # 1表示垃圾文本，0表示新闻文本
                 inputs.append(item)
 
-        # 情绪计算
-        for r in inputs:
-            if r['subob_rub_neu_label'] == 2:
-                sentiment = 0 # 0 中性
-            elif r['subob_rub_neu_label'] == -1:
-                sentiment = triple_classifier(r) # 1 高兴、2 愤怒、3 悲伤、0无情感
-                if sentiment == 0:
-                    sentiment = mid_sentiment_classify(r['text'])
-
-                if sentiment == -1:
-                    sentiment = 0 # 中性
-
-            comment = Comment(r['_id'], topicid)
-            comment.update_comment_sentiment(sentiment)
-
         MIN_CLUSTERING_INPUT = 30
         MIN_CLUSTER_NUM = 2
         MAX_CLUSTER_NUM = 10
+        # TFIDF词、聚类数量自动选择、vsm作属性也要可设成参数
         if len(inputs) >= MIN_CLUSTERING_INPUT:
             tfidf_word, input_dict = tfidf_v2(inputs)
             results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
-
-            # for k, v in results.iteritems():
-            #     print k, len(v)
 
             #评论文本聚类
             cluster_text = text_classify(inputs, results, tfidf_word)
@@ -311,6 +294,21 @@ def one_topic_calculation_comments_v7(topicid):
                     comment = Comment(item['_id'], topicid)
                     comment.update_comment_label(label)
                     comment.update_comment_weight(item['weight'])
+
+        # 情绪计算
+        for r in inputs:
+            if r['subob_rub_neu_label'] == 2:
+                sentiment = 0 # 0 中性
+            elif r['subob_rub_neu_label'] == -1:
+                sentiment = triple_classifier(r) # 1 高兴、2 愤怒、3 悲伤、0无情感
+                if sentiment == 0:
+                    sentiment = mid_sentiment_classify(r['text'])
+
+                if sentiment == -1:
+                    sentiment = 0 # 中性
+
+            comment = Comment(r['_id'], topicid)
+            comment.update_comment_sentiment(sentiment)
 
 
 if __name__=="__main__":

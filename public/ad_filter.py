@@ -2,14 +2,7 @@
 
 import os
 import re
-
-import sys
-AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test/')
-sys.path.append(AB_PATH)
-
 from utils import cut_words, _default_mongo
-from config import MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX, EVENTS_COLLECTION, EVENTS_COMMENTS_COLLECTION_PREFIX
 
 EXTRA_MARKET_LIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'market_words.txt')
 
@@ -65,14 +58,3 @@ def ad_filter(item, market_words=market_words):
 
     return item
 
-
-if __name__=="__main__":
-    topic = "APEC2014"
-    topicid = "54916b0d955230e752f2a94e"
-    mongo = _default_mongo(usedb=MONGO_DB_NAME)
-    results = mongo[EVENTS_COMMENTS_COLLECTION_PREFIX + topicid].find()
-    inputs = [{"_id":r["_id"].encode("utf-8"), "news_id":r["news_id"].encode("utf-8"), "content": r["content168"].encode("utf-8")} for r in results]
-
-    for item in inputs:
-        item = ad_filter(item)
-        print item

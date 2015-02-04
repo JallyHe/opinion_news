@@ -68,8 +68,25 @@ def subevents():
 
 @mod.route('/comments_list/')
 def comments_list():
+    import os
+    import sys
+    AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
+    sys.path.append(AB_PATH)
+    from comment_module import comments_calculation
+
     topicid = request.args.get('topicid')
     subeventid = request.args.get('subeventid', 'global')
+
+    ec = EventComments(topicid)
+    if subeventid == 'global':
+        comments = ec.getAllNewsComments()
+    else:
+        comments = ec.getCommentsBySubeventid(subeventid)
+
+    results = comments_calculation(comments)
+
+    return json.dumps(results)
+
 
 @mod.route('/ratio/')
 def ratio():
@@ -80,7 +97,6 @@ def ratio():
     topicid = em.getEventIDByName(topic_name)
 
     '''
-
     eventcomment = EventComments(topicid)
     comments = eventcomment.getNewsComments(news_id)
 
