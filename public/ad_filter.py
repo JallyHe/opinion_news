@@ -2,7 +2,7 @@
 
 import os
 import re
-from utils import cut_words, _default_mongo
+from utils import cut_words
 
 EXTRA_MARKET_LIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'market_words.txt')
 
@@ -22,6 +22,7 @@ def remove_at(text):
     text = text.strip()
 
     return text
+
 
 def remove_emoticon(text):
     """text去除emoticon

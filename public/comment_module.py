@@ -1,5 +1,6 @@
 #-*-coding=utf-8-*-
 
+from duplicate import duplicate
 from ad_filter import ad_filter
 from rubbish_classifier import rubbish_classifier
 from weibo_subob_classifier import subob_classifier
@@ -114,6 +115,44 @@ def comments_calculation(comments):
 
 
 def comments_calculation_v2(comments):
+    """评论计算
+       将sentiment和clustering的结果进行合并，取并集
+       cluster_infos: 聚簇信息
+       item_infos:  单条信息列表
+                    情绪数据字段：sentiment、same_from、duplicate
+                    聚类数据字段：clusterid、weight、same_from、duplicate
+                    合并后：sentiment、same_from_sentiment、duplicate_sentiment、
+                            clusterid、weight、same_from、duplicate
+    """
+    import copy
+    comments_copy = copy.deepcopy(comments)
+    sentiment_results = comments_sentiment_rubbish_calculation(comments)
+    clustering_results = comments_rubbish_clustering_calculation(comments_copy)
+
+    sentiment_dict = {r['_id']: r for r in sentiment_results['item_infos']}
+    clustering_dict = {r['_id']: r for r in clustering_results['item_infos']}
+
+    # 以clustering_dict为模板，将sentiment和clustering的item_infos合并，用并集
+    merge_results = []
+    for _id, r in clustering_dict.iteritems():
+        if _id in sentiment_dict:
+            cr = sentiment_dict[_id]
+
+            added_info = {'sentiment': cr['sentiment'], 'same_from_sentiment': cr['same_from'], \
+                    'duplicate_sentiment': cr['duplicate']}
+
+            r.update(added_info)
+
+        merge_results.append(r)
+
+    return {'cluster_infos': clustering_results['cluster_infos'], 'item_infos': merge_results}
+
+
+def comments_rubbish_clustering_calculation(comments):
+    """评论垃圾过滤、聚类
+       cluster_infos: 聚簇信息
+       item_infos:单条信息列表, 数据字段：clusterid、weight、same_from、duplicate
+    """
     # 无意义信息的clusterid，包括ad_filter分出来的广告，svm分出的垃圾，主客观分类器分出的新闻
     NON_CLUSTER_ID = 'nonsense'
 
@@ -136,8 +175,115 @@ def comments_calculation_v2(comments):
     # 单条信息list，每条信息存储 clusterid weight sentiment字段
     items_infos = []
 
+    # 数据字段预处理
+    inputs = []
+    for r in comments:
+        r['title'] = ''
+        r['content168'] = r['content168'].encode('utf-8')
+        r['content'] = r['content168']
+        r['text'] = r['content168']
+
+        # 简单规则过滤广告
+        item = ad_filter(r)
+        if item['ad_label'] == 0:
+            inputs.append(item)
+        else:
+            item['clusterid'] = NON_CLUSTER_ID + '_rub'
+            items_infos.append(item)
+
+    # svm去除垃圾和规则筛选新闻文本
+    items = weibo_subob_rub_neu_classifier(inputs)
+    inputs = []
+    for item in items:
+        subob_rub_neu_label = item['subob_rub_neu_label']
+        if not subob_rub_neu_label in [1, 0]:
+            # 1表示垃圾文本，0表示新闻文本
+            inputs.append(item)
+        elif subob_rub_neu_label == 1:
+            item['clusterid'] = NON_CLUSTER_ID + '_rub'
+            items_infos.append(item)
+        elif subob_rub_neu_label == 0:
+            item['clusterid'] = NON_CLUSTER_ID + '_news'
+            items_infos.append(item)
+
+    if len(inputs) >= MIN_CLUSTERING_INPUT:
+        tfidf_word, input_dict = tfidf_v2(inputs)
+        results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
+
+        #评论文本聚类
+        cluster_text = text_classify(inputs, results, tfidf_word)
+
+        evaluation_inputs = []
+
+        for k,v in enumerate(cluster_text):
+            inputs[k]['label'] = v['label']
+            inputs[k]['weight'] = v['weight']
+            evaluation_inputs.append(inputs[k])
+
+        #簇评价, 权重及簇标签
+        recommend_text = cluster_evaluation(evaluation_inputs)
+        for label, items in recommend_text.iteritems():
+            if label != OTHER_CLUSTER_ID:
+                clusters_infos['features'][label] = results[label]
+
+                for item in items:
+                    item['clusterid'] = label
+                    item['weight'] = item['weight']
+            else:
+                item['clusterid'] = OTHER_CLUSTER_ID
+    else:
+        # 如果信息条数小于,则直接归为其他类
+        for r in inputs:
+            r['clusterid'] = OTHER_CLUSTER_ID
+
+    # 去重，根据子观点类别去重
+    cluster_items = dict()
+    for r in inputs:
+        clusterid = r['clusterid']
+        try:
+            cluster_items[clusterid].append(r)
+        except KeyError:
+            cluster_items[clusterid] = [r]
+
+    for clusterid, items in cluster_items.iteritems():
+        results = duplicate(items)
+        items_infos.extend(results)
+
+    return {'cluster_infos': clusters_infos, 'item_infos': items_infos}
+
+
+def comments_sentiment_rubbish_calculation(comments):
+    """输入为一堆comments, 字段包括title、content168
+       输出：
+           item_infos:单条信息列表, 数据字段：sentiment、same_from、duplicate
+    """
+    # 无意义信息的clusterid，包括ad_filter分出来的广告，svm分出的垃圾，主客观分类器分出的新闻
+    NON_CLUSTER_ID = 'nonsense'
+
+    # 有意义的信息clusterid
+    MEAN_CLUSTER_ID = 'sentiment'
+
+    # 其他类的clusterid
+    OTHER_CLUSTER_ID = 'other'
+
+    # 最小聚类输入信息条数，少于则不聚类
+    MIN_CLUSTERING_INPUT = 30
+
+    # 最少簇数量
+    MIN_CLUSTER_NUM = 2
+
+    # 最多簇数量
+    MAX_CLUSTER_NUM = 10
+
+    # TFIDF词、聚类数量自动选择、vsm作属性也要可设成参数
+    # 簇信息，主要是簇的特征词信息
+    clusters_infos = {'features': dict()}
+
+    # 单条信息list，每条信息存储 clusterid weight sentiment字段
+    items_infos = []
+
     # 去除sentiment label clusterid ad_label subob_label rub_label
-    clear_keys = ['sentiment', 'label', 'clusterid ad_label', 'subob_label', 'rub_label']
+    clear_keys = ['sentiment', 'label', 'clusterid', 'ad_label', 'subob_label', 'rub_label']
     inputs = []
     for r in comments:
         for key in clear_keys:
@@ -167,7 +313,6 @@ def comments_calculation_v2(comments):
             if sentiment == 0:
                 svm_inputs.append(r)
             else:
-                r['clusterid'] = 'sentiment'
                 r['sentiment'] = sentiment
                 items_infos.append(r)
         else:
@@ -181,7 +326,6 @@ def comments_calculation_v2(comments):
             sentiment = 0 # 中性
 
         if sentiment != 0:
-            r['clusterid'] = 'sentiment'
             r['sentiment'] = sentiment
             items_infos.append(r)
         else:
@@ -194,7 +338,7 @@ def comments_calculation_v2(comments):
         r = subob_classifier(r)
         if r['subob_label'] == 1:
             # 主客观文本分类
-            r['clusterid'] = NON_CLUSTER_ID + '_news' # 新闻
+            r['sentiment'] = NON_CLUSTER_ID + '_news' # 新闻
             items_infos.append(r)
         else:
             inputs.append(r)
@@ -204,18 +348,29 @@ def comments_calculation_v2(comments):
     for item in items:
         if item['rub_label'] == 1:
             # svm去垃圾
-            item['clusterid'] = NON_CLUSTER_ID + '_rub'
-            if 'sentiment' in item:
-                del item['sentiment']
+            item['sentiment'] = NON_CLUSTER_ID + '_rub'
         else:
             # 简单规则过滤广告
             item = ad_filter(item)
             if item['ad_label'] == 1:
-                item['clusterid'] = NON_CLUSTER_ID + '_rub'
-                if 'sentiment' in item:
-                    del item['sentiment']
+                item['sentiment'] = NON_CLUSTER_ID + '_rub'
 
         items_infos.append(item)
 
-    return {'cluster_infos': clusters_infos, 'item_infos': items_infos}
+    # 去重，在一个情绪类别下将文本去重
+    sentiment_dict = dict()
+    for item in items_infos:
+        if 'sentiment' in item:
+            sentiment = item['sentiment']
+            try:
+                sentiment_dict[sentiment].append(item)
+            except KeyError:
+                sentiment_dict[sentiment] = [item]
+
+    items_infos = []
+    for sentiment, items in sentiment_dict.iteritems():
+        items_list = duplicate(items)
+        items_infos.extend(items_list)
+
+    return {'item_infos': items_infos}
 
