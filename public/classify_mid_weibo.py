@@ -46,7 +46,7 @@ def mid_sentiment_classify(text):
     return label 
 
 def label_adjust(label,text):
-    """#类别标签调整
+    """根据标点符号调整类别标签
     """
     n1 = text.count('！')
     n2 = text.count('？')
@@ -69,7 +69,7 @@ def label_adjust(label,text):
 
 
 def label_classify(text):
-    """中性文本分类
+    """根据情感词表对中性文本分类
     """
     happy_count = 0
     angry_count = 0

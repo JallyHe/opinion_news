@@ -72,7 +72,7 @@ def comments_list():
     import sys
     AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
     sys.path.append(AB_PATH)
-    from comment_module import comments_calculation
+    from comment_module import comments_calculation_v2
 
     topicid = request.args.get('topicid')
     subeventid = request.args.get('subeventid', 'global')
@@ -83,7 +83,7 @@ def comments_list():
     else:
         comments = ec.getCommentsBySubeventid(subeventid)
 
-    results = comments_calculation(comments)
+    results = comments_calculation_v2(comments)
 
     return json.dumps(results)
 
