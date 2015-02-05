@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
 from opinion.Database import EventComments, EventManager, \
         Feature, DbManager, News, Event
-from opinion.global_config import default_topic_name, default_news_id, emotions_vk
+from opinion.global_config import default_weibo_topic_name, default_news_id
 
 mod = Blueprint('weibo', __name__, url_prefix='/weibo')
 
@@ -16,7 +16,7 @@ em = EventManager()
 def index():
     """返回页面
     """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = request.args.get('query', default_weibo_topic_name) # 话题名
     # topic_name = u'APEC2014-微博'
     news_id = request.args.get('news_id', default_news_id)
     news_id = 'weibo'
@@ -37,7 +37,7 @@ def index():
 def ratio():
     """子观点占比
     """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = request.args.get('query', default_weibo_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
     topicid = em.getEventIDByName(topic_name)
 
@@ -69,7 +69,7 @@ def sentiratio():
     """
     情绪占比
     """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = request.args.get('query', default_weibo_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
     topicid = em.getEventIDByName(topic_name)
 
@@ -106,8 +106,9 @@ def sentiratio():
 def sentiment():
     """评论情绪
     """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = request.args.get('query', default_weibo_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
+    sort_by = request.args.get('sort', 'weight')
     topicid = em.getEventIDByName(topic_name)
 
     eventcomment = EventComments(topicid)
@@ -122,7 +123,7 @@ def sentiment():
             except KeyError:
                 sentiment_comments[sentiment] = [comment]
     for sentiment in sentiment_comments:
-        sentiment_comments[sentiment].sort(key=lambda c:c['weight'], reverse=True)
+        sentiment_comments[sentiment].sort(key=lambda c:c[sort_by], reverse=True)
 
     return json.dumps(sentiment_comments)
 
@@ -131,7 +132,7 @@ def sentiment():
 def keywords():
     """关键词
     """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = request.args.get('query', default_weibo_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
     topicid = em.getEventIDByName(topic_name)
 
@@ -150,8 +151,9 @@ def keywords():
 def cluster():
     """展现聚类结果
     """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
+    topic_name = request.args.get('query', default_weibo_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
+    sort_by = request.args.get('sort', 'weight')
     topicid = em.getEventIDByName(topic_name)
 
     eventcomment = EventComments(topicid)
@@ -182,7 +184,8 @@ def cluster():
     for clusterid, comments in cluster_results.iteritems():
         feature = eventcomment.get_feature_words(clusterid)
         if feature and len(feature):
-            results[clusterid] = [','.join(feature[:5]),sorted(comments, key=lambda c: c['weight'], reverse=True)]
+            cluster_results[clusterid].sort(key=lambda c: c[sort_by], reverse=True)
+            results[clusterid] = [','.join(feature[:5]), cluster_results[clusterid]]
 
     return json.dumps(results)
 

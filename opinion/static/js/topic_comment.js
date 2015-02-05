@@ -134,7 +134,6 @@ Comment_opinion.prototype = {
         global_comments_data = data;
         var select_sentiment = 1;
         refreshDrawComments(data, select_sentiment);
-        $("#vertical-ticker").hideLoading();
 	},
 
     Cluster_function: function(data){
@@ -155,7 +154,6 @@ Comment_opinion.prototype = {
 
         refreshDrawOpinionTab(tabs_list, select_tab);
         refreshDrawCommentsOpinion(select_data);
-        $("#vertical-ticker_opinion").hideLoading();
     },
 }
 
@@ -450,20 +448,73 @@ function check_comments(data){
     if ("status" in data){
         $("#main").hideLoading();
         $("#senti_pie").hideLoading();
-        $("#vertical-ticker").hideLoading();
-        $("#vertical-ticker_opinion").hideLoading();
         alert('此子事件暂无评论。');
     }
     else{
-        global_data = data;
+        global_pie_data = data;
         console.log(data);
-        comment.Pie_function(global_data['ratio']);
-        comment.SentiPie_function(global_data['sentiratio']);
-        comment.News_function(global_data['sentiment_comments']);
-        comment.Cluster_function(global_data['cluster_comments']);
+        comment.Pie_function(global_pie_data['ratio']);
+        comment.SentiPie_function(global_pie_data['sentiratio']);
+        comment.call_sync_ajax_request(cluster_comments_pre+"weight", comment.ajax_method, comment.Cluster_function);
+        comment.call_sync_ajax_request(sentiment_comments_pre+"weight", comment.ajax_method, comment.News_function);
     }
 }
 
+function bindClusterSortClick(){
+    $("#cluster_sort_by_weight").click(function(){
+        $("#cluster_sort_by_weight").css("color", "#333");
+        $("#cluster_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#cluster_sort_by_timestamp").css("color", "-webkit-link");
+        if (global_pie_data){
+            comment.call_sync_ajax_request(cluster_comments_pre+"weight", comment.ajax_method, comment.Cluster_function);
+        }
+    });
+
+    $("#cluster_sort_by_attitudes_count").click(function(){
+        $("#cluster_sort_by_weight").css("color", "-webkit-link");
+        $("#cluster_sort_by_attitudes_count").css("color", "#333");
+        $("#cluster_sort_by_timestamp").css("color", "-webkit-link");
+        if (global_pie_data){
+            comment.call_sync_ajax_request(cluster_comments_pre+"attitudes_count", comment.ajax_method, comment.Cluster_function);
+        }
+    });
+
+    $("#cluster_sort_by_timestamp").click(function(){
+        $("#cluster_sort_by_weight").css("color", "-webkit-link");
+        $("#cluster_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#cluster_sort_by_timestamp").css("color", "#333");
+        if (global_pie_data){
+            comment.call_sync_ajax_request(cluster_comments_pre+"timestamp", comment.ajax_method, comment.Cluster_function);
+        }
+    });
+}
+
+function bindSentiSortClick(){
+    $("#sentiment_sort_by_weight").click(function(){
+        $("#sentiment_sort_by_weight").css("color", "#333");
+        $("#sentiment_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#sentiment_sort_by_timestamp").css("color", "-webkit-link");
+        if (global_pie_data){
+            comment.call_sync_ajax_request(sentiment_comments_pre+"weight", comment.ajax_method, comment.News_function);
+        }
+    });
+    $("#sentiment_sort_by_attitudes_count").click(function(){
+        $("#sentiment_sort_by_weight").css("color", "-webkit-link");
+        $("#sentiment_sort_by_attitudes_count").css("color", "#333");
+        $("#sentiment_sort_by_timestamp").css("color", "-webkit-link");
+        if (global_pie_data){
+            comment.call_sync_ajax_request(sentiment_comments_pre+"attitudes_count", comment.ajax_method, comment.News_function);
+        }
+    });
+    $("#sentiment_sort_by_timestamp").click(function(){
+        $("#sentiment_sort_by_weight").css("color", "-webkit-link");
+        $("#sentiment_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#sentiment_sort_by_timestamp").css("color", "#333");
+        if (global_pie_data){
+            comment.call_sync_ajax_request(sentiment_comments_pre+"timestamp", comment.ajax_method, comment.News_function);
+        }
+    });
+}
 
 var query = QUERY;
 var topic_id = TOPIC_ID;
@@ -472,7 +523,7 @@ var kmeans = KMEANS;
 var reserve = RESERVE;
 var start_ts = undefined;
 var end_ts = undefined;
-var global_data = undefined;
+var global_pie_data = undefined;
 var global_subevents_data = undefined;
 var global_comments_data = undefined;
 var global_comments_opinion = undefined;
@@ -482,6 +533,8 @@ var addition = 10;
 var topic_url = "/cluster/topics/";
 var subevent_url = "/cluster/subevents/";
 var global_ajax_url = "/cluster/comments_list/?topicid=" + topic_id + "&subeventid=" + subevent_id + "&kmeans=" + kmeans + "&reserve=" + reserve;
+var sentiment_comments_pre = "/cluster/sentiment_comments?sort=";
+var cluster_comments_pre = "/cluster/cluster_comments?sort=";
 
 comment = new Comment_opinion(query, start_ts, end_ts);
 console.log("QUERY"+QUERY);
@@ -489,10 +542,10 @@ comment.call_sync_ajax_request(topic_url, comment.ajax_method, drawTopicSelect);
 comment.call_sync_ajax_request(subevent_url, comment.ajax_method, drawSubeventSelect);
 $("#main").showLoading();
 $("#senti_pie").showLoading();
-$("#vertical-ticker").showLoading();
-$("#vertical-ticker_opinion").showLoading();
 comment.call_sync_ajax_request(global_ajax_url, comment.ajax_method, check_comments);
 bindSentimentTabClick(comment);
 bindSentiMoreClick();
+bindSentiSortClick();
 bindSubeventMoreClick();
 bindOpinionTabClick(comment);
+bindClusterSortClick();

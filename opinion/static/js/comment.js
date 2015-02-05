@@ -51,6 +51,7 @@ Comment_opinion.prototype = {
     },
 
     Cluster_function: function(data){
+        console.log(data);
         global_comments_opinion = data;
 
         var select_data;
@@ -155,6 +156,7 @@ Comment_opinion.prototype = {
 
 	//新闻
 	News_function: function(data){
+        console.log(data);
         global_comments_data = data;
         var select_sentiment = 1;
         refreshDrawComments(data, select_sentiment);
@@ -380,6 +382,49 @@ function bindSubeventMoreClick(){
     });
 }
 
+function bindClusterSortClick(){
+    $("#cluster_sort_by_weight").click(function(){
+        $("#cluster_sort_by_weight").css("color", "#333");
+        $("#cluster_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#cluster_sort_by_timestamp").css("color", "-webkit-link");
+        comment.call_sync_ajax_request(cluster_url+"weight", comment.ajax_method, comment.Cluster_function);
+    });
+
+    $("#cluster_sort_by_attitudes_count").click(function(){
+        $("#cluster_sort_by_weight").css("color", "-webkit-link");
+        $("#cluster_sort_by_attitudes_count").css("color", "#333");
+        $("#cluster_sort_by_timestamp").css("color", "-webkit-link");
+        comment.call_sync_ajax_request(cluster_url+"attitudes_count", comment.ajax_method, comment.Cluster_function);
+    });
+
+    $("#cluster_sort_by_timestamp").click(function(){
+        $("#cluster_sort_by_weight").css("color", "-webkit-link");
+        $("#cluster_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#cluster_sort_by_timestamp").css("color", "#333");
+        comment.call_sync_ajax_request(cluster_url+"timestamp", comment.ajax_method, comment.Cluster_function);
+    });
+}
+
+function bindSentiSortClick(){
+    $("#sentiment_sort_by_weight").click(function(){
+        $("#sentiment_sort_by_weight").css("color", "#333");
+        $("#sentiment_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#sentiment_sort_by_timestamp").css("color", "-webkit-link");
+        comment.call_sync_ajax_request(sentiment_url+"weight", comment.ajax_method, comment.News_function);
+    });
+    $("#sentiment_sort_by_attitudes_count").click(function(){
+        $("#sentiment_sort_by_weight").css("color", "-webkit-link");
+        $("#sentiment_sort_by_attitudes_count").css("color", "#333");
+        $("#sentiment_sort_by_timestamp").css("color", "-webkit-link");
+        comment.call_sync_ajax_request(sentiment_url+"attitudes_count", comment.ajax_method, comment.News_function);
+    });
+    $("#sentiment_sort_by_timestamp").click(function(){
+        $("#sentiment_sort_by_weight").css("color", "-webkit-link");
+        $("#sentiment_sort_by_attitudes_count").css("color", "-webkit-link");
+        $("#sentiment_sort_by_timestamp").css("color", "#333");
+        comment.call_sync_ajax_request(sentiment_url+"timestamp", comment.ajax_method, comment.News_function);
+    });
+}
 
 var query = QUERY;
 var news_id = NEWS_ID;
@@ -388,17 +433,19 @@ var end_ts = undefined;
 var pie_url = "/comment/ratio/?query=" + query + "&news_id=" + news_id;
 var senti_pie_url = "/comment/sentiratio/?query=" + query + "&news_id=" + news_id;
 // var keywords_url = "/comment/keywords/?query=" + query + "&news_id=" + news_id;
-var sentiment_url = "/comment/sentiment/?query=" + query + "&news_id=" + news_id;
-var cluster_url = "/comment/cluster/?query=" + query + "&news_id=" + news_id;
+var sentiment_url = "/comment/sentiment/?query=" + query + "&news_id=" + news_id + "&sort=";
+var cluster_url = "/comment/cluster/?query=" + query + "&news_id=" + news_id + "&sort=";
 
 comment = new Comment_opinion(query, start_ts, end_ts);
 comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
 comment.call_sync_ajax_request(senti_pie_url, comment.ajax_method, comment.SentiPie_function);
 // comment.call_sync_ajax_request(keywords_url, comment.ajax_method, comment.Table_function);
-comment.call_sync_ajax_request(sentiment_url, comment.ajax_method, comment.News_function);
+comment.call_sync_ajax_request(sentiment_url+"weight", comment.ajax_method, comment.News_function);
 bindSentiMoreClick();
 bindSentimentTabClick(comment);
-comment.call_sync_ajax_request(cluster_url, comment.ajax_method, comment.Cluster_function);
+bindSentiSortClick();
+comment.call_sync_ajax_request(cluster_url+"weight", comment.ajax_method, comment.Cluster_function);
 bindOpinionTabClick(comment);
 bindSubeventMoreClick();
+bindClusterSortClick();
 

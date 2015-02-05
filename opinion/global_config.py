@@ -9,6 +9,7 @@ if IS_PROD == 1:
 else:
     # 219.224.135.47
     default_topic_name = u'APEC2014'
+    default_weibo_topic_name = u'APEC2014-微博'
     default_topic_id = '54916b0d955230e752f2a94e'
     default_news_id = '1-1-30963839'
     default_news_url = 'http://news.sina.com.cn/c/2014-10-09/145630963839.shtml'
