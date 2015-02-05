@@ -44,27 +44,6 @@ Comment_opinion.prototype = {
             success: callback
         })
     },
-
-    Cluster_function: function(data){
-        global_comments_opinion = data;
-
-        var select_data;
-        var select_tab;
-        for(var k in data){
-            select_tab = k;
-            select_data = data[k];
-            break;
-        }
-
-        var tabs_list = [];
-        for(var k in data){
-            tabs_list.push([k, data[k][0]]);
-        }
-
-        refreshDrawOpinionTab(tabs_list, select_tab);
-        refreshDrawCommentsOpinion(select_data);
-    },
-
     //饼图
 	Pie_function: function(data){
         var pie_div = "main";
@@ -155,8 +134,29 @@ Comment_opinion.prototype = {
         global_comments_data = data;
         var select_sentiment = 1;
         refreshDrawComments(data, select_sentiment);
+        $("#vertical-ticker").hideLoading();
 	},
 
+    Cluster_function: function(data){
+        global_comments_opinion = data;
+
+        var select_data;
+        var select_tab;
+        for(var k in data){
+            select_tab = k;
+            select_data = data[k];
+            break;
+        }
+
+        var tabs_list = [];
+        for(var k in data){
+            tabs_list.push([k, data[k][0]]);
+        }
+
+        refreshDrawOpinionTab(tabs_list, select_tab);
+        refreshDrawCommentsOpinion(select_data);
+        $("#vertical-ticker_opinion").hideLoading();
+    },
 }
 
 function refreshDrawOpinionTab(tabs_list, select_tab){
@@ -176,13 +176,6 @@ function refreshDrawOpinionTab(tabs_list, select_tab){
         html += '</a>';
     }
     $("#OpinionTabDiv").append(html);
-}
-
-function gweight_comparator(a, b){
-    return parseInt(b.gweight) - parseInt(a.gweight);
-}
-function weight_comparator(a, b){
-    return parseInt(b.weight) - parseInt(a.weight);
 }
 
 function refreshDrawCommentsOpinion(data){
@@ -208,9 +201,6 @@ function refreshDrawCommentsOpinion(data){
         var weight;
         if ('weight' in d){
             weight = d['weight'];
-        }
-        else if('gweight' in d){
-            weight = d['gweight'];
         }
         else{
             weight = 0;
@@ -241,7 +231,6 @@ function refreshDrawCommentsOpinion(data){
     if (counter < global_subevent_display){
         $("#subevent_more_information").html("加载完毕");
     }
-    $(news_div).hideLoading();
     $(news_div).append(html);
     $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
@@ -260,8 +249,7 @@ function refreshDrawComments(data, select_sentiment){
     var counter = 0;
     var html = "";
 
-    if (select_sentiment in data){
-        data[select_sentiment].sort(gweight_comparator);
+    if (data && (select_sentiment in data)){
         var da = data[select_sentiment];
     }
     else{
@@ -279,9 +267,6 @@ function refreshDrawComments(data, select_sentiment){
         var weight;
         if ('weight' in d){
             weight = d['weight'];
-        }
-        else if('gweight' in d){
-            weight = d['gweight'];
         }
         else{
             weight = 0;
@@ -311,7 +296,6 @@ function refreshDrawComments(data, select_sentiment){
     if (counter < global_senti_display){
         $("#senti_more_information").html("加载完毕");
     }
-    $(news_div).hideLoading();
     $(news_div).append(html);
     $("#content_control_height").css("height", $("#weibo_ul").css("height"));
 }
@@ -462,12 +446,31 @@ function bindSubeventChange(){
     });
 }
 
+function check_comments(data){
+    if ("status" in data){
+        $("#main").hideLoading();
+        $("#senti_pie").hideLoading();
+        $("#vertical-ticker").hideLoading();
+        $("#vertical-ticker_opinion").hideLoading();
+        alert('此子事件暂无评论。');
+    }
+    else{
+        global_data = data;
+        console.log(data);
+        comment.Pie_function(global_data['ratio']);
+        comment.SentiPie_function(global_data['sentiratio']);
+        comment.News_function(global_data['sentiment_comments']);
+        comment.Cluster_function(global_data['cluster_comments']);
+    }
+}
+
 
 var query = QUERY;
 var topic_id = TOPIC_ID;
 var subevent_id = SUBEVENT_ID;
 var start_ts = undefined;
 var end_ts = undefined;
+var global_data = undefined;
 var global_subevents_data = undefined;
 var global_comments_data = undefined;
 var global_comments_opinion = undefined;
@@ -476,11 +479,8 @@ var global_senti_display = 10;
 var addition = 10;
 var topic_url = "/cluster/topics/";
 var subevent_url = "/cluster/subevents/";
+var global_ajax_url = "/cluster/comments_list/?topicid=" + topic_id + "&subeventid=" + subevent_id;
 
-var pie_url = "/cluster/ratio/?query=" + query + "&subevent_id=" + subevent_id;
-var senti_pie_url = "/cluster/sentiratio/?query=" + query + "&subevent_id=" + subevent_id;
-var sentiment_url = "/cluster/sentiment/?query=" + query + "&subevent_id=" + subevent_id;
-var cluster_url = "/cluster/cluster/?query=" + query + "&subevent_id=" + subevent_id;
 
 
 comment = new Comment_opinion(query, start_ts, end_ts);
@@ -488,15 +488,11 @@ console.log("QUERY"+QUERY);
 comment.call_sync_ajax_request(topic_url, comment.ajax_method, drawTopicSelect);
 comment.call_sync_ajax_request(subevent_url, comment.ajax_method, drawSubeventSelect);
 $("#main").showLoading();
-comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
 $("#senti_pie").showLoading();
-comment.call_sync_ajax_request(senti_pie_url, comment.ajax_method, comment.SentiPie_function);
 $("#vertical-ticker").showLoading();
-comment.call_sync_ajax_request(sentiment_url, comment.ajax_method, comment.News_function);
+$("#vertical-ticker_opinion").showLoading();
+comment.call_sync_ajax_request(global_ajax_url, comment.ajax_method, check_comments);
 bindSentimentTabClick(comment);
 bindSentiMoreClick();
-$("#vertical-ticker_opinion").showLoading();
-comment.call_sync_ajax_request(cluster_url, comment.ajax_method, comment.Cluster_function);
-bindOpinionTabClick(comment);
 bindSubeventMoreClick();
-
+bindOpinionTabClick(comment);
