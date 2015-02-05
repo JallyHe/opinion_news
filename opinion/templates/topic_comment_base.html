@@ -334,20 +334,19 @@
                     <form id=subevent_form></form>
                 </div>
 
-                
-                <!--
+                <div class="compVsplit"></div>
+
                 <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
-                    <span class="input-group-addon">话题</span>
-                    <input id="keyword_input" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ topic }}" disabled>
+                    <span class="input-group-addon">Kmeans聚类数</span>
+                    <input id="kmeans_input" type="number" min="0" value="{{ kmeans }}" class="form-control " style="text-align:right;">
                 </div>
  
                 <div class="compVsplit"></div>
 
                 <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
-                    <span class="input-group-addon">子事件</span>
-                    <input id="news_id" type="text" class="form-control " style="text-align:right;" placeholder="未指定" value="{{ news_id }}" disabled>
+                    <span class="input-group-addon">保留聚簇数</span>
+                    <input id="reserve_input" type="number" min="0" value="{{ reserve }}" class="form-control " style="text-align:right;">
                 </div>
-                -->
 
                 <div class="compVsplit"></div>
 
@@ -366,11 +365,20 @@
 {% endblock navbar %}
     <script>
         $("#submit_request").click(function(){
-            window.location.href = "/cluster/?query=" + query + "&subevent_id=" + subevent_id;
+            var kmeans_input = $("#kmeans_input").val();
+            var reserve_input = $("#reserve_input").val();
+            if (reserve_input > kmeans_input){
+                alert('保留聚簇数应当小于Kmeans聚类数!');
+            }
+            else{
+                window.location.href = "/cluster/?query=" + query + "&subevent_id=" + subevent_id + "&kmeans=" + kmeans_input + "&reserve=" + reserve_input;
+            }
         });
         var QUERY = "{{topic}}";
         var TOPIC_ID="{{topic_id}}";
         var SUBEVENT_ID = "{{subevent_id}}";
+        var KMEANS = "{{ kmeans }}";
+        var RESERVE = "{{ reserve }}"
     </script>
     {% block tail_js %}
 

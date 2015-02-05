@@ -3,11 +3,11 @@
 import os
 import sys
 import json
-from bson.objectid import ObjectId
 from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
-from opinion.Database import Event, EventComments, EventManager, Feature, DbManager, News
-from opinion.global_config import default_topic_name, default_topic_id, default_news_id, emotions_vk, default_subevent_id
+from opinion.Database import Event, EventComments, EventManager, Feature
+from opinion.global_config import default_topic_name, default_topic_id, default_subevent_id,\
+        default_kmeans_number, default_reserve_number
 
 mod = Blueprint('cluster', __name__, url_prefix='/cluster')
 
@@ -20,8 +20,11 @@ def index():
     topic_name = request.args.get('query', default_topic_name) # 话题名
     topicid = em.getEventIDByName(topic_name)
     subevent_id = request.args.get('subevent_id', 'global')
+    kmeans = request.args.get('kmeans', default_kmeans_number)
+    reserve = request.args.get('reserve', default_reserve_number)
 
-    return render_template('index/topic_comment.html', topic=topic_name, topic_id=topicid, subevent_id=subevent_id)
+    return render_template('index/topic_comment.html', topic=topic_name, topic_id=topicid, subevent_id=subevent_id,\
+            kmeans=kmeans, reserve=reserve)
 
 @mod.route('/topics/')
 def topics():
@@ -69,6 +72,9 @@ def comments_list():
 
     topicid = request.args.get('topicid', default_topic_id)
     subeventid = request.args.get('subeventid', 'global')
+    kmeans = request.args.get('kmeans', default_kmeans_number) # KMEANS聚类数
+    reserve = request.args.get('reserve', default_reserve_number) # 保留聚簇数
+    print kmeans, reserve
 
     ec = EventComments(topicid)
     if subeventid == 'global':
@@ -92,10 +98,10 @@ def comments_list():
 
     cluster_ratio = dict()
     senti_ratio = dict()
-    sentiment_comments = dict()
+    sentiment_results = dict()
     cluster_results = dict()
     for comment in item_infos:
-        if ('clusterid' in comment) and (comment['clusterid'] != 'nonsense') :
+        if ('clusterid' in comment) and (comment['clusterid'][:8] != 'nonsense') : 
             clusterid = comment['clusterid']
 
             try:
@@ -107,7 +113,7 @@ def comments_list():
             except KeyError:
                 cluster_results[clusterid] = [comment]
 
-        if 'sentiment' in comment:
+        if ('sentiment' in comment) and (comment['sentiment'] in senti_dict) :
             sentiment = comment['sentiment']
 
             try:
@@ -115,9 +121,9 @@ def comments_list():
             except KeyError:
                 senti_ratio[sentiment] = 1
             try:
-                sentiment_comments[sentiment].append(comment)
+                sentiment_results[sentiment].append(comment)
             except KeyError:
-                sentiment_comments[sentiment] = [comment]
+                sentiment_results[sentiment] = [comment]
 
     ratio_results = dict()
     ratio_total_count = sum(cluster_ratio.values())
@@ -135,16 +141,45 @@ def comments_list():
             if label and len(label):
                 sentiratio_results[label] = float(ratio) / float(sentiratio_total_count)
 
-    for sentiment in sentiment_comments:
-        sentiment_comments[sentiment].sort(key=lambda c:c['weight'], reverse=True)
+    # 情感分类去重
+    sentiment_comments = dict()
+    for sentiment, contents in sentiment_results.iteritems():
+        dump_dict = dict()
+        for comment in contents:
+            same_from_sentiment = comment["same_from_sentiment"]
+            try:
+                dump_dict[same_from_sentiment].append(comment)
+            except KeyError:
+                dump_dict[same_from_sentiment] = [comment]
+        for same_from in dump_dict:
+            dump_dict[same_from].sort(key=lambda c:c['attitudes_count'], reverse=True)
+            try:
+                sentiment_comments[sentiment].append(dump_dict[same_from][0])
+            except KeyError:
+                sentiment_comments[sentiment] = [dump_dict[same_from][0]]
+        sentiment_comments[sentiment].sort(key=lambda c:c['attitudes_count'], reverse=True)
 
+    # 子观点分类去重
     cluster_comments = dict()
     for clusterid, contents in cluster_results.iteritems():
         if clusterid in features:
             feature = features[clusterid]
             if feature and len(feature):
-                cluster_comments[clusterid] = [','.join(feature[:5]),sorted(contents, key=lambda c: c['weight'], reverse=True)]
+                cluster_comments[clusterid] = []
+                cluster_comments[clusterid].append(','.join(feature[:5]))
+                dump_dict = dict()
+                for comment in contents:
+                    same_from_cluster = comment["same_from"]
+                    try:
+                        dump_dict[same_from_cluster].append(comment)
+                    except KeyError:
+                        dump_dict[same_from_cluster] = [comment]
+                dump_list = []
+                for same_from in dump_dict:
+                    dump_dict[same_from].sort(key=lambda c:c['weight'], reverse=True)
+                    dump_list.append(dump_dict[same_from][0])
+                dump_list.sort(key=lambda c:c['weight'], reverse=True)
+                cluster_comments[clusterid].append(dump_list)
 
     return json.dumps({"ratio":ratio_results, "sentiratio":sentiratio_results,\
             "sentiment_comments":sentiment_comments, "cluster_comments":cluster_comments})
-
