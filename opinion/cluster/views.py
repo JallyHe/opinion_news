@@ -12,7 +12,7 @@ from opinion.global_config import default_topic_name, default_topic_id, default_
 mod = Blueprint('cluster', __name__, url_prefix='/cluster')
 
 em = EventManager()
-temp_file = 'dump_dict.txt'
+temp_file = 'cluster_dump_dict.txt'
 
 @mod.route('/')
 def index():

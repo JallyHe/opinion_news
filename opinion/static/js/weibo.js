@@ -110,6 +110,7 @@ Comment_opinion.prototype = {
 	    };
 	    var myChart = echarts.init(document.getElementById(pie_div));
 	    myChart.setOption(option);
+	    $("#"+pie_div).hideLoading();
 	},
     //情绪饼图
 	SentiPie_function: function(data){
@@ -151,6 +152,7 @@ Comment_opinion.prototype = {
 	    };
 	    var myChart = echarts.init(document.getElementById(pie_div));
 	    myChart.setOption(option);
+	    $("#"+pie_div).hideLoading();
 	},
 
 	//新闻
@@ -208,7 +210,7 @@ function refreshDrawCommentsOpinion(data){
         else{
             weight = 0;
         }
-        html += '<li class="item" style="width:1010px">';
+        html += '<li class="item" style="width:1068px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
         html += '</a></div>';
@@ -218,7 +220,7 @@ function refreshDrawCommentsOpinion(data){
         html += '</p>';
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">转发数(' + d['reposts_count'] + ')</a></span>&nbsp;&nbsp;|&nbsp;&nbsp;';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         //html += '<span><a class="undlin" href="javascript:;" target="_blank">情绪(' + sentiment_dict[d['sentiment']] + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
@@ -274,7 +276,7 @@ function refreshDrawComments(data, select_sentiment){
         else{
             weight = 0;
         }
-        html += '<li class="item" style="width:1010px">';
+        html += '<li class="item" style="width:1068px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
         html += '</a></div>';
@@ -284,7 +286,7 @@ function refreshDrawComments(data, select_sentiment){
         html += '</p>';
         html += '<div class="weibo_info">';
         html += '<div class="weibo_pz" style="margin-right:10px;">';
-        html += '<span><a class="undlin" href="javascript:;" target="_blank">赞数(' + d['attitudes_count'] + ')</a></span>&nbsp;&nbsp;';
+        html += '<span><a class="undlin" href="javascript:;" target="_blank">转发数(' + d['reposts_count'] + ')</a></span>&nbsp;&nbsp;';
         html += '<span><a class="undlin" href="javascript:;" target="_blank">相关度(' + d['weight'].toFixed(3) + ')</a></span>&nbsp;&nbsp;';
         html += "</div>";
         html += '<div class="m">';
@@ -392,7 +394,7 @@ function bindClusterSortClick(){
         $("#cluster_sort_by_weight").css("color", "-webkit-link");
         $("#cluster_sort_by_attitudes_count").css("color", "#333");
         $("#cluster_sort_by_timestamp").css("color", "-webkit-link");
-        comment.call_sync_ajax_request(cluster_url+"attitudes_count", comment.ajax_method, comment.Cluster_function);
+        comment.call_sync_ajax_request(cluster_url+"reposts_count", comment.ajax_method, comment.Cluster_function);
     });
 
     $("#cluster_sort_by_timestamp").click(function(){
@@ -414,7 +416,7 @@ function bindSentiSortClick(){
         $("#sentiment_sort_by_weight").css("color", "-webkit-link");
         $("#sentiment_sort_by_attitudes_count").css("color", "#333");
         $("#sentiment_sort_by_timestamp").css("color", "-webkit-link");
-        comment.call_sync_ajax_request(sentiment_url+"attitudes_count", comment.ajax_method, comment.News_function);
+        comment.call_sync_ajax_request(sentiment_url+"reposts_count", comment.ajax_method, comment.News_function);
     });
     $("#sentiment_sort_by_timestamp").click(function(){
         $("#sentiment_sort_by_weight").css("color", "-webkit-link");
@@ -424,25 +426,38 @@ function bindSentiSortClick(){
     });
 }
 
+function check_comments(data){
+    if ("status" in data){
+        $("#main").hideLoading();
+        $("#senti_pie").hideLoading();
+        alert('此事件暂无评论。');
+    }
+    else{
+        global_pie_data = data;
+        console.log(data);
+        comment.Pie_function(global_pie_data['ratio']);
+        comment.SentiPie_function(global_pie_data['sentiratio']);
+        comment.call_sync_ajax_request(sentiment_url+"weight", comment.ajax_method, comment.News_function);
+        comment.call_sync_ajax_request(cluster_url+"weight", comment.ajax_method, comment.Cluster_function);
+    }
+}
+
 var query = QUERY;
 var news_id = NEWS_ID;
 var start_ts = undefined;
 var end_ts = undefined;
+var global_pie_data = undefined;
 var pie_url = "/weibo/ratio/?query=" + query + "&news_id=" + news_id;
-var senti_pie_url = "/weibo/sentiratio/?query=" + query + "&news_id=" + news_id;
-// var keywords_url = "/weibo/keywords/?query=" + query + "&news_id=" + news_id;
-var sentiment_url = "/weibo/sentiment/?query=" + query + "&news_id=" + news_id + "&sort=";
-var cluster_url = "/weibo/cluster/?query=" + query + "&news_id=" + news_id + "&sort=";
+var sentiment_url = "/weibo/sentiment/?&sort=";
+var cluster_url = "/weibo/cluster/?&sort=";
 
 comment = new Comment_opinion(query, start_ts, end_ts);
-comment.call_sync_ajax_request(pie_url, comment.ajax_method, comment.Pie_function);
-comment.call_sync_ajax_request(senti_pie_url, comment.ajax_method, comment.SentiPie_function);
-// comment.call_sync_ajax_request(keywords_url, comment.ajax_method, comment.Table_function);
-comment.call_sync_ajax_request(sentiment_url+"weight", comment.ajax_method, comment.News_function);
+$("#main").showLoading();
+$("#senti_pie").showLoading();
+comment.call_sync_ajax_request(pie_url, comment.ajax_method, check_comments);
 bindSentiMoreClick();
 bindSentimentTabClick(comment);
 bindSentiSortClick();
-comment.call_sync_ajax_request(cluster_url+"weight", comment.ajax_method, comment.Cluster_function);
 bindOpinionTabClick(comment);
 bindSubeventMoreClick();
 bindClusterSortClick();

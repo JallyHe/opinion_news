@@ -210,7 +210,7 @@ function refreshDrawCommentsOpinion(data){
         else{
             weight = 0;
         }
-        html += '<li class="item" style="width:1010px">';
+        html += '<li class="item" style="width:1068px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
         html += '</a></div>';
@@ -276,7 +276,7 @@ function refreshDrawComments(data, select_sentiment){
         else{
             weight = 0;
         }
-        html += '<li class="item" style="width:1010px">';
+        html += '<li class="item" style="width:1068px">';
         html += '<div class="weibo_face"><a target="_blank" href="#">';
         html += '<img src="' + user_img_link + '">';
         html += '</a></div>';

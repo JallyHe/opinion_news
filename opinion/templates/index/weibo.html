@@ -11,6 +11,7 @@
     <link type="text/css" rel="stylesheet" href="/static/css/css/timeline.css">
     <link type="text/css" rel="stylesheet" href="/static/css/css/table.css">
     <link rel="stylesheet" href="/static/css/css/tab.css" type="text/css" media="all">
+    <link rel="stylesheet" href="/static/showloading/showLoading.css" type="text/css"/>
 
         <style type="text/css">
         /* keywords tag cloud */
@@ -258,6 +259,7 @@
 {% block head_js %}
     <script src="/static/css/js/timeline.js"></script>
     <script src="/static/js/echarts-2.0.1/_build/echarts-plain.js" type="text/javascript"></script>
+    <script src="/static/showloading/jquery.showLoading.min.js" type="text/javascript"></script>
 {% endblock head_js %}
 
 {% block content %}
@@ -284,7 +286,7 @@
             <span class="pull-right" style="margin:-3px -2px -10px auto;cursor: pointer;">
                 <div id="sort_cluster" class="r_v2" style="float: right;">
                     排序：<span id="cluster_sort_by_weight" style="color: #333">按相关度</span> |
-                    <span id="cluster_sort_by_attitudes_count" style="color: -webkit-link;">按赞数</span> |
+                    <span id="cluster_sort_by_attitudes_count" style="color: -webkit-link;">按转发数</span> |
                     <span id="cluster_sort_by_timestamp" style="color: -webkit-link;" >按时间</span>
                 </div>
             </span>
@@ -314,7 +316,7 @@
             <span class="pull-right" style="margin:-3px -2px -10px auto;cursor: pointer;">
                 <div id="sort_sentiment" class="r_v2" style="float: right;">
                     排序：<span id="sentiment_sort_by_weight" style="color: #333">按相关度</span> |
-                    <span id="sentiment_sort_by_attitudes_count" style="color: -webkit-link;">按赞数</span> |
+                    <span id="sentiment_sort_by_attitudes_count" style="color: -webkit-link;">按转发数</span> |
                     <span id="sentiment_sort_by_timestamp" style="color: -webkit-link;" >按时间</span>
                 </div>
             </span>

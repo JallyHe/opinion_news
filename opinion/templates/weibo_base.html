@@ -345,7 +345,7 @@
 
                 <div class="compVsplit"></div>
 
-                <!--<span id="submit_request"><a class="compOK" ><i class="glyphicon glyphicon-ok icons iOK"></i>搜索</a></span>-->
+                <span id="submit_request"><a class="compOK" ><i class="glyphicon glyphicon-ok icons iOK"></i>搜索</a></span>
             </div>
         </div>
 
@@ -361,13 +361,11 @@
     <script>
         var QUERY = "{{topic}}";
         var NEWS_ID = "{{news_id}}";
-        /*
         $("#submit_request").click(function(){
             var QUERY = document.getElementById('keyword_input').value;
             var TIME_RANGE = $('#all_time').html();
-            window.location.href = "/news/?query=" + QUERY + "&time_range=" + TIME_RANGE;
+            window.open("/news/?query=" + QUERY.split('-')[0]);
         });
-        */
         /*var TIME_RANGE = $('#all_time').html();
         var START_TS = date2ts(TIME_RANGE.split('-')[0]);
         var END_TS = date2ts(TIME_RANGE.split('-')[1]);

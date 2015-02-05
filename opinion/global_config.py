@@ -12,6 +12,7 @@ else:
     default_weibo_topic_name = u'APEC2014-微博'
     default_topic_id = '54916b0d955230e752f2a94e'
     default_news_id = '1-1-30963839'
+    default_weibo_news_id = 'weibo'
     default_news_url = 'http://news.sina.com.cn/c/2014-10-09/145630963839.shtml'
     default_subevent_id = '7325a077-76b8-4b03-bbed-d8f0faaf28fd'
     default_kmeans_number = 10
