@@ -379,7 +379,7 @@ function bindSubeventMoreClick(){
 function drawTopicSelect(data){
     $("#topic_form").empty();
     var html = '';
-    html += '<select style="width:140px;float:right;height:30px" id="topic_select" name="topics">';
+    html += '<select style="width:155px;float:right;height:30px" id="topic_select" name="topics">';
 
     for (var i = 0;i < data.length;i++) {
         var value = data[i]['_id'];
@@ -410,7 +410,7 @@ function drawSubeventSelect(data){
     }
     $("#subevent_form").empty();
     var html = '';
-    html += '<select style="width:140px;height:30px;float:right" id="subevent_select" name="subevents">';
+    html += '<select style="width:143px;height:30px;float:right" id="subevent_select" name="subevents">';
 
     if (subevent_id == 'global'){
         html += '<option selected="selected" value="global">全部</option>';
@@ -468,6 +468,8 @@ function check_comments(data){
 var query = QUERY;
 var topic_id = TOPIC_ID;
 var subevent_id = SUBEVENT_ID;
+var kmeans = KMEANS;
+var reserve = RESERVE;
 var start_ts = undefined;
 var end_ts = undefined;
 var global_data = undefined;
@@ -479,9 +481,7 @@ var global_senti_display = 10;
 var addition = 10;
 var topic_url = "/cluster/topics/";
 var subevent_url = "/cluster/subevents/";
-var global_ajax_url = "/cluster/comments_list/?topicid=" + topic_id + "&subeventid=" + subevent_id;
-
-
+var global_ajax_url = "/cluster/comments_list/?topicid=" + topic_id + "&subeventid=" + subevent_id + "&kmeans=" + kmeans + "&reserve=" + reserve;
 
 comment = new Comment_opinion(query, start_ts, end_ts);
 console.log("QUERY"+QUERY);

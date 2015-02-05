@@ -13,6 +13,8 @@ else:
     default_news_id = '1-1-30963839'
     default_news_url = 'http://news.sina.com.cn/c/2014-10-09/145630963839.shtml'
     default_subevent_id = '7325a077-76b8-4b03-bbed-d8f0faaf28fd'
+    default_kmeans_number = 10
+    default_reserve_number = 5
 
 def get_db_names():
     results = _default_mongo_db().database_names()
