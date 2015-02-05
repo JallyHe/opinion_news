@@ -104,6 +104,7 @@ def sentiment():
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
+    sort_by = request.args.get('sort', 'weight')
     topicid = em.getEventIDByName(topic_name)
 
     eventcomment = EventComments(topicid)
@@ -118,7 +119,7 @@ def sentiment():
             except KeyError:
                 sentiment_comments[sentiment] = [comment]
     for sentiment in sentiment_comments:
-        sentiment_comments[sentiment].sort(key=lambda c:c['weight'], reverse=True)
+        sentiment_comments[sentiment].sort(key=lambda c:c[sort_by], reverse=True)
 
     return json.dumps(sentiment_comments)
 
@@ -146,6 +147,7 @@ def cluster():
     """
     topic_name = request.args.get('query', default_topic_name) # 话题名
     news_id = request.args.get('news_id', default_news_id)
+    sort_by = request.args.get('sort', 'weight')
     topicid = em.getEventIDByName(topic_name)
 
     eventcomment = EventComments(topicid)
@@ -174,10 +176,11 @@ def cluster():
     '''
 
     results = dict()
-    for clusterid, comments in cluster_results.iteritems():
+    for clusterid in cluster_results:
         feature = eventcomment.get_feature_words(clusterid)
         if feature and len(feature):
-            results[clusterid] = [','.join(feature[:5]),sorted(comments, key=lambda c: c['weight'], reverse=True)]
+            cluster_results[clusterid].sort(key=lambda c: c[sort_by], reverse=True)
+            results[clusterid] = [','.join(feature[:5]), cluster_results[clusterid]]
 
     return json.dumps(results)
 

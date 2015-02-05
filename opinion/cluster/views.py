@@ -12,6 +12,7 @@ from opinion.global_config import default_topic_name, default_topic_id, default_
 mod = Blueprint('cluster', __name__, url_prefix='/cluster')
 
 em = EventManager()
+temp_file = 'cluster_dump_dict.txt'
 
 @mod.route('/')
 def index():
@@ -66,6 +67,9 @@ def subevents():
 
 @mod.route('/comments_list/')
 def comments_list():
+
+    if os.path.exists(temp_file):
+        os.remove(temp_file)
     AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
     sys.path.append(AB_PATH)
     from comment_module import comments_calculation_v2
@@ -113,7 +117,8 @@ def comments_list():
             except KeyError:
                 cluster_results[clusterid] = [comment]
 
-        if ('sentiment' in comment) and (comment['sentiment'] in senti_dict) :
+        if ('sentiment' in comment) and (comment['sentiment'] in senti_dict) and ('clusterid' in comment) \
+                and (comment['clusterid'][:8] != 'nonsense'):
             sentiment = comment['sentiment']
 
             try:
@@ -142,7 +147,7 @@ def comments_list():
                 sentiratio_results[label] = float(ratio) / float(sentiratio_total_count)
 
     # 情感分类去重
-    sentiment_comments = dict()
+    sentiment_dump_dict = dict()
     for sentiment, contents in sentiment_results.iteritems():
         dump_dict = dict()
         for comment in contents:
@@ -151,22 +156,15 @@ def comments_list():
                 dump_dict[same_from_sentiment].append(comment)
             except KeyError:
                 dump_dict[same_from_sentiment] = [comment]
-        for same_from in dump_dict:
-            dump_dict[same_from].sort(key=lambda c:c['attitudes_count'], reverse=True)
-            try:
-                sentiment_comments[sentiment].append(dump_dict[same_from][0])
-            except KeyError:
-                sentiment_comments[sentiment] = [dump_dict[same_from][0]]
-        sentiment_comments[sentiment].sort(key=lambda c:c['attitudes_count'], reverse=True)
+        sentiment_dump_dict[sentiment] = dump_dict
+
 
     # 子观点分类去重
-    cluster_comments = dict()
+    cluster_dump_dict = dict()
     for clusterid, contents in cluster_results.iteritems():
         if clusterid in features:
             feature = features[clusterid]
             if feature and len(feature):
-                cluster_comments[clusterid] = []
-                cluster_comments[clusterid].append(','.join(feature[:5]))
                 dump_dict = dict()
                 for comment in contents:
                     same_from_cluster = comment["same_from"]
@@ -174,12 +172,56 @@ def comments_list():
                         dump_dict[same_from_cluster].append(comment)
                     except KeyError:
                         dump_dict[same_from_cluster] = [comment]
+                    cluster_dump_dict[clusterid] = dump_dict
+
+    dump_file = open(temp_file, 'w')
+    dump_file.write(json.dumps({"features":features, "senti_dump_dict":sentiment_dump_dict,\
+            "cluster_dump_dict":cluster_dump_dict}));
+    dump_file.close();
+
+    return json.dumps({"ratio":ratio_results, "sentiratio":sentiratio_results,})
+
+@mod.route('/sentiment_comments/')
+def sentiment_comments():
+
+    sort_by = request.args.get('sort', 'weight')
+    dump_file = open(temp_file,'r')
+    dump_dict = json.loads(dump_file.read())
+    sentiment_dump_dict = dump_dict["senti_dump_dict"]
+    dump_file.close()
+    sentiment_comments = dict()
+    for sentiment, dump_dict in sentiment_dump_dict.iteritems():
+        for same_from in dump_dict:
+            dump_dict[same_from].sort(key=lambda c:c[sort_by], reverse=True)
+            try:
+                sentiment_comments[sentiment].append(dump_dict[same_from][0])
+            except KeyError:
+                sentiment_comments[sentiment] = [dump_dict[same_from][0]]
+        sentiment_comments[sentiment].sort(key=lambda c:c[sort_by], reverse=True)
+    return json.dumps(sentiment_comments)
+
+@mod.route('/cluster_comments/')
+def cluster_comments():
+
+    sort_by = request.args.get('sort', 'weight')
+    dump_file = open(temp_file,'r')
+    dump_dict = json.loads(dump_file.read())
+    cluster_dump_dict = dump_dict["cluster_dump_dict"]
+    features = dump_dict["features"]
+    dump_file.close()
+
+    cluster_comments = dict()
+    for clusterid, dump_dict in cluster_dump_dict.iteritems():
+        if clusterid in features:
+            feature = features[clusterid]
+            if feature and len(feature):
+                cluster_comments[clusterid] = []
+                cluster_comments[clusterid].append(','.join(feature[:5]))
                 dump_list = []
                 for same_from in dump_dict:
-                    dump_dict[same_from].sort(key=lambda c:c['weight'], reverse=True)
+                    dump_dict[same_from].sort(key=lambda c:c[sort_by], reverse=True)
                     dump_list.append(dump_dict[same_from][0])
-                dump_list.sort(key=lambda c:c['weight'], reverse=True)
+                dump_list.sort(key=lambda c:c[sort_by], reverse=True)
                 cluster_comments[clusterid].append(dump_list)
 
-    return json.dumps({"ratio":ratio_results, "sentiratio":sentiratio_results,\
-            "sentiment_comments":sentiment_comments, "cluster_comments":cluster_comments})
+    return json.dumps(cluster_comments)
