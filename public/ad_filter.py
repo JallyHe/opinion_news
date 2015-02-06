@@ -3,8 +3,12 @@
 import os
 import re
 from utils import cut_words
+from load_settings import load_settings
 
-EXTRA_MARKET_LIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'market_words.txt')
+# 加载配置参数
+settings = load_settings()
+MARKET_WORDS = settings.get('MARKET_WORDS')
+EXTRA_MARKET_LIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), MARKET_WORDS)
 
 def load_market_words():
     one_words = set([line.strip('\r\n') for line in file(EXTRA_MARKET_LIST_PATH)])

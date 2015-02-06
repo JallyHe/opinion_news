@@ -6,35 +6,42 @@
 """
 
 from utils import _default_mongo
-from default_settings import MONGOD_HOST, MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_COMMENTS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
-        SUB_EVENTS_FEATURE_COLLECTION, COMMENTS_CLUSTER_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX
-from settings import MONGOD_HOST, MONGO_DB_NAME, SUB_EVENTS_COLLECTION, \
-        EVENTS_COMMENTS_COLLECTION_PREFIX, EVENTS_COLLECTION, \
-        SUB_EVENTS_FEATURE_COLLECTION, COMMENTS_CLUSTER_COLLECTION, \
-        EVENTS_NEWS_COLLECTION_PREFIX
+from load_settings import load_settings
+
+settings = load_settings()
+
+MONGOD_HOST = settings.get('MONGOD_HOST')
+MONGOD_PORT = settings.get('MONGOD_PORT')
+
+MONGO_DB_NAME = settings.get('MONGO_DB_NAME')
+SUB_EVENTS_COLLECTION = settings.get('SUB_EVENTS_COLLECTION')
+EVENTS_COMMENTS_COLLECTION_PREFIX = settings.get('EVENTS_COMMENTS_COLLECTION_PREFIX')
+EVENTS_COLLECTION = settings.get('EVENTS_COLLECTION')
+SUB_EVENTS_FEATURE_COLLECTION = settings.get('SUB_EVENTS_FEATURE_COLLECTION')
+COMMENTS_CLUSTER_COLLECTION = settings.get('COMMENTS_CLUSTER_COLLECTION')
+EVENTS_NEWS_COLLECTION_PREFIX = settings.get('EVENTS_NEWS_COLLECTION_PREFIX')
 
 
 class EventManager(object):
-    """
-    话题管理类
+    """话题管理类
     """
     def __init__(self):
-        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+        self.mongo = _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb=MONGO_DB_NAME)
+        self.events_collection = EVENTS_COLLECTION
 
     def getEventIDByName(self,name):
-        result = self.mongo[EVENTS_COLLECTION].find_one({"topic": name})
+        result = self.mongo[self.events_collection].find_one({"topic": name})
         if result:
             return result['_id']
         else:
             return None
 
+
 class CommentsManager(object):
     """评论管理
     """
     def __init__(self):
-        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+        self.mongo = _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb=MONGO_DB_NAME)
 
     def get_comments_collection_name(self):
         results = self.mongo.collection_names()
@@ -49,7 +56,7 @@ class EventComments(object):
         self.comments_cluster_collection = COMMENTS_CLUSTER_COLLECTION
         self.comments_collection = EVENTS_COMMENTS_COLLECTION_PREFIX + str(self.id)
         self.news_collection = EVENTS_NEWS_COLLECTION_PREFIX + str(self.id)
-        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+        self.mongo = _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb=MONGO_DB_NAME)
 
     def saveItem(self,item):
         """保存单条item
@@ -100,6 +107,7 @@ class News(object):
     def __init__(self, id):
         self.id = id
         self.otherClusterId = self.getOtherClusterId()
+        self.mongo = _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb=MONGO_DB_NAME)
 
     def getOtherClusterId(self):
         """获取评论的其他簇id
@@ -113,7 +121,7 @@ class Comment(object):
     def __init__(self, id, topicid):
         self.id = id
         self.comments_collection = EVENTS_COMMENTS_COLLECTION_PREFIX + str(topicid)
-        self.mongo = _default_mongo(usedb=MONGO_DB_NAME)
+        self.mongo = _default_mongo(host=MONGOD_HOST, port=MONGOD_PORT, usedb=MONGO_DB_NAME)
 
     def update_comment_label(self, label):
         return self.mongo[self.comments_collection].update({"_id": self.id}, {"$set": {"clusterid": label}})

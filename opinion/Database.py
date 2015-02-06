@@ -50,8 +50,12 @@ class EventComments(object):
         event = Event(self.id)
         news_list = event.getSubeventInfos(subeventid)
         results = []
+
         for news in news_list:
-            results.extend(self.getNewsComments(news['_id']))
+            news_comments = self.getNewsComments(news['_id'])
+            for r in news_comments:
+                r.update({"news_content": news["content168"]})
+                results.append(r)
 
         return results
 
@@ -61,7 +65,17 @@ class EventComments(object):
 
     def getAllNewsComments(self):
         results = self.mongo[self.comments_collection].find({"clusterid": {"$ne": 'weibo_other'}})
-        return [r for r in results]
+        rs = []
+        for r in results:
+            if 'news_id' in r:
+                news = News(r['news_id'], self.id)
+                r['news_content'] = news.get_news_content()
+            else:
+                r['news_id'] = None
+                r['news_content'] = None
+            print r['news_content']
+            rs.append(r)
+        return rs
 
     def save_cluster(self, id, news_id, timestamp):
         self.mongo[self.comments_cluster_collection].save({"_id": id, "eventid": self.id, \
@@ -708,6 +722,16 @@ class News(object):
         """更新条信息的duplicate、same_from字段
         """
         self.mongo[self.news_collection].update({"_id": self.id}, {"$set": {"duplicate": duplicate, "same_from": same_from}})
+
+    def get_news_content(self):
+        """获取新闻文本内容
+        """
+        news = self.mongo[self.news_collection].find_one({"news_id": self.id})
+        if news:
+            content = news['content168']
+        else:
+            content = None
+        return content
 
 
 class Feature(object):

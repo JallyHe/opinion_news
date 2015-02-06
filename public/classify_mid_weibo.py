@@ -4,26 +4,31 @@ import os
 import csv
 import re
 import time
+from load_settings import load_settings
 
+settings = load_settings()
+HAPPY_WORDS = settings.get('HAPPY_WORDS')
+ANGRY_WORDS = settings.get('ANGRY_WORDS')
+SAD_WORDS = settings.get('SAD_WORDS')
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
 def load_happy():
     happy_list = []
-    reader = csv.reader(file(os.path.join(AB_PATH, './words/happy.txt'), 'rb'))
+    reader = csv.reader(file(os.path.join(AB_PATH, HAPPY_WORDS), 'rb'))
     for line in reader:
         happy_list.append(line[0])
     return happy_list
 
 def load_angry():
     angry_list = []
-    reader = csv.reader(file(os.path.join(AB_PATH, './words/angry.txt'), 'rb'))
+    reader = csv.reader(file(os.path.join(AB_PATH, ANGRY_WORDS), 'rb'))
     for line in reader:
         angry_list.append(line[0])
     return angry_list
 
 def load_sad():
     sad_list = []
-    reader = csv.reader(file(os.path.join(AB_PATH, './words/sad.txt'), 'rb'))
+    reader = csv.reader(file(os.path.join(AB_PATH, SAD_WORDS), 'rb'))
     for line in reader:
         sad_list.append(line[0])
     return sad_list

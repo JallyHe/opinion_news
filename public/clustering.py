@@ -10,8 +10,19 @@ import math
 import uuid
 from gensim import corpora
 from utils import cut_words
+from collections import Counter
+from load_settings import load_settings
 
+settings = load_settings()
+CLUTO_FOLDER = settings.get('CLUSTERING_CLUTO_FOLDER')
+KMEANS_CLUSTERING_NUM = settings.get('CLUSTERING_KMEANS_CLUSTERING_NUM')
+CLUTO_EXECUTE_PATH = settings.get('CLUSTERING_CLUTO_EXECUTE_PATH')
+TOPK_FREQ_WORD_NUM = settings.get('CLUSTERING_TOPK_FREQ_WORD')
+CLUSTER_EVA_TOP_NUM = settings.get('CLUSTERING_CLUSTER_EVA_TOP_NUM')
+CLUSTER_EVA_LEAST_FREQ = settings.get('CLUSTERING_CLUSTER_EVA_LEAST_FREQ')
+CLUSTER_EVA_LEAST_SIZE = settings.get('CLUSTERING_CLUSTER_EVA_LEAST_SIZE')
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
+
 
 def process_for_cluto(inputs, cluto_input_folder=None):
     """
@@ -23,7 +34,7 @@ def process_for_cluto(inputs, cluto_input_folder=None):
     """
     # handle default
     if not cluto_input_folder:
-        cluto_input_folder = os.path.join(AB_PATH, "cluto")
+        cluto_input_folder = os.path.join(AB_PATH, CLUTO_FOLDER)
 
     feature_set = set() # 不重复的词集合
     words_list = [] # 所有新闻分词结果集合
@@ -62,7 +73,7 @@ def process_for_cluto(inputs, cluto_input_folder=None):
     return file_name
 
 
-def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
+def cluto_kmeans_vcluster(k=KMEANS_CLUSTERING_NUM, input_file=None, vcluster=None):
     '''
     cluto kmeans聚类
     input：
@@ -75,14 +86,14 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
     # handle default
     # 聚类结果文件, result_file
     if not input_file:
-        cluto_input_folder = os.path.join(AB_PATH, "cluto")
+        cluto_input_folder = os.path.join(AB_PATH, CLUTO_FOLDER)
         input_file = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
         result_file = os.path.join(cluto_input_folder, '%s.txt.clustering.%s' % (os.getpid(), k))
     else:
         result_file = '%s.clustering.%s' % (input_file, k)
 
     if not vcluster:
-        vcluster = os.path.join(AB_PATH, './cluto-2.1.2/Linux-i686/vcluster')
+        vcluster = os.path.join(AB_PATH, CLUTO_EXECUTE_PATH)
 
     command = "%s -niter=20 %s %s" % (vcluster, input_file, k)
     os.popen(command)
@@ -113,7 +124,7 @@ def label2uniqueid(labels):
     return label2id
 
 
-def kmeans(items, k=10):
+def kmeans(items, k=KMEANS_CLUSTERING_NUM):
     """kmeans聚类
        input:
            cluto要求至少输入两条文本
@@ -138,7 +149,7 @@ def kmeans(items, k=10):
 
     return items
 
-def freq_word(items, topk=20):
+def freq_word(items, topk=TOPK_FREQ_WORD_NUM):
     '''
     统计一批文本的topk高频词
     input：
@@ -149,8 +160,6 @@ def freq_word(items, topk=20):
     output：
         topk_words: 词、词频组成的列表, 数据示例：[(词，词频)，(词，词频)...]
     '''
-    from utils import cut_words
-    from collections import Counter
     words_list = []
     for item in items:
         text = item['title'] + item['content']
@@ -190,7 +199,8 @@ def cluster_tfidf(keywords_count_list, total_weight_list, least_freq=10):
     return cluster_tf_idf
 
 
-def cluster_evaluation(items, top_num=5, topk_freq=20, least_freq=10, min_tfidf=None, least_size=8):
+def cluster_evaluation(items, top_num=CLUSTER_EVA_TOP_NUM, topk_freq=TOPK_FREQ_WORD_NUM, least_freq=CLUSTER_EVA_LEAST_FREQ, min_tfidf=None, \
+        least_size=CLUSTER_EVA_LEAST_SIZE):
     '''
     聚类评价，计算每一类的tf-idf: 计算每一类top词的tfidf，目前top词选取该类下前20个高频词，一个词在一个类中出现次数大于10算作在该类中出现
     input:

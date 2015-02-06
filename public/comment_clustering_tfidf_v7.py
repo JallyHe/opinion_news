@@ -11,6 +11,11 @@ import numpy as np
 from gensim import corpora
 from collections import Counter
 from utils import cut_words, cut_words_noun
+from load_settings import load_settings
+
+settings = load_settings()
+CLUTO_FOLDER = settings.get("CLUSTERING_CLUTO_FOLDER")
+CLUTO_EXECUTE_PATH = settings.get("CLUSTERING_CLUTO_EXECUTE_PATH")
 
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
@@ -110,20 +115,22 @@ def comment_word_in_news(word_comment,word_news,inputs):
         else:
             inputs[int(k)]["count"] = count
             input_filtered.append(inputs[int(k)])
-            
-    return input_reserved,input_filtered  
+
+    return input_reserved,input_filtered
 
 
-def filter_comment(inputs,news,topicid):
+def filter_comment(inputs):
     """
+    针对一条新闻下的一组评论进行过滤
     过滤评论函数：将评论中@及后面用户名、表情符号去掉，只保留名词、动词、形容词次数大于3的评论;如果评论中的名词在高频（新闻+评论）词中出现过则保留该条评论，否则删除掉
     输入数据:
         inputs:评论数据，示例：[{'_id':评论id,'news_id':新闻id,'content':评论内容}]
         news:新闻数据，"新闻"
-        topicid:新闻id
     输出数据:
         过滤后的评论数据
     """
+    for r in inputs:
+        news_content = r['news_content']
 
     item_reserved = []
     at_pattern = r'@(.+?)\s'
@@ -149,11 +156,12 @@ def filter_comment(inputs,news,topicid):
 
     #如果评论中的名词出现在过新闻中，则保留该评论
     comment_top, comment_noun = freq_word_comment(item_reserved)#评论中的词及词频
-    news_word = freq_word_news(news)#新闻中的词及词频
+    news_word = freq_word_news(news_content)#新闻中的词及词频
     imp_word = word_list(comment_top,news_word)#评论和新闻中的词及词频结合
-    reserved,filtered = comment_word_in_news(comment_noun,imp_word,item_reserved)
+    reserved, filtered = comment_word_in_news(comment_noun,imp_word,item_reserved)
 
     return reserved
+
 
 def comment_news(inputs):
     '''
@@ -161,18 +169,18 @@ def comment_news(inputs):
     输入数据：评论数组组成的列表，示例：[{"_id":评论编号，"news_id":新闻编号，"content":评论内容}]
     输出数据：按新闻id归类的新闻评论，示例：{新闻编号：[{"_id":评论编号，"news_id":新闻编号，"content":评论内容}]}
     '''
-    comment_inputs={}
-    for input in inputs:
-        news_id = input["news_id"].encode("utf-8")
-        if comment_inputs.has_key(news_id):
-            item = comment_inputs[news_id]
-            item.append(input)
-        else:
-            item = []
-            item.append(input)
-            comment_inputs[news_id] = item
+    results = dict()
 
-    return comment_inputs
+    for input in inputs:
+        news_id = input["news_id"]
+
+        try:
+            results[news_id].append(input)
+        except KeyError:
+            results[news_id] = [input]
+
+    return results
+
 
 def freq_word(items):
     '''
@@ -234,7 +242,44 @@ def tfidf_v2(inputs):
     topk = int(math.ceil(float(len(result_tfidf))*0.2))#取前20%的tfidf词
     return result_tfidf[:topk],input_word_dict
 
-def process_for_cluto(word,inputs):
+
+def word_bag(word, inputs, gram):
+    '''
+    取出一个词前三个词和后三个词，包括动词、名词、形容词
+    输入数据：
+    word:选取出的特征词
+    inputs:过滤后的评论文本
+    gram:取特征词前面gram个词和后面gram个词
+    输出数据：
+    counter_dict:{特征词：counter(在每个维度上特征值)}
+    '''
+    #一个词与前后三个词构成词袋
+    words_bag = []
+    counter_dict = {}
+    for w in word:
+        for input in inputs:
+            if w[0] in input['content']:
+                text = input['content']
+                words = cut_words(text)
+                if w[0] in words:
+                    index = words.index(w[0])
+                    if index-gram<0:
+                        bag = words[:index]
+                    else:
+                        bag = words[index-gram:index]
+                    bag.extend(words[index:index+gram])
+                    words_bag.extend(bag)
+            counter = Counter(words_bag)
+            top_words = counter.most_common()
+            counter_dict[w] = {k:v for k,v in top_words}
+
+    #特征词列表
+    feature_list = list(set(words_bag))
+
+    return counter_dict,feature_list
+
+
+def process_for_cluto(word, inputs, version='v1', gram=3):
     '''
     处理成cluto的输入格式，词-文本聚类
     输入数据：
@@ -244,32 +289,59 @@ def process_for_cluto(word,inputs):
     输出数据：
         cluto输入文件的位置
     '''
+    if version == 'v1':
+        #生成cluto输入文件
+        row = len(word)#词数
+        column = len(inputs)#特征列数
+        nonzero_count = 0#非0特征数
 
-    #生成cluto输入文件
-    row = len(word)#词数
-    column = len(inputs)#特征列数
-    nonzero_count = 0#非0特征数
+        cluto_input_folder = os.path.join(AB_PATH, CLUTO_FOLDER)
+        if not os.path.exists(cluto_input_folder):
+            os.makedirs(cluto_input_folder)
+        file_name = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
 
-    cluto_input_folder = os.path.join(AB_PATH, "cluto")
-    if not os.path.exists(cluto_input_folder):
-        os.makedirs(cluto_input_folder)
-    file_name = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
+        with open(file_name, 'w') as fw:
+            lines = []    
+            #词频聚类
+            for w in word:
+                row_record = []#记录每行特征
+                for i in range(len(inputs)):
+                    n = str(inputs[i]['content']).count(str(w[0]))
+                    if n!= 0:
+                        nonzero_count += 1
+                        row_record.append('%s %s'%(str(i+1),n))
+                line = ' '.join(row_record) + '\r\n'
+                lines.append(line)
+            fw.write('%s %s %s\r\n'%(row, column, nonzero_count))
+            fw.writelines(lines)
 
-    with open(file_name, 'w') as fw:
-        lines = []    
-        #词频聚类
-        for w in word:
-            row_record = []#记录每行特征
-            for i in range(len(inputs)):
-                n = str(inputs[i]['content']).count(str(w[0]))
-                if n!= 0:
-                    nonzero_count += 1
-                    row_record.append('%s %s'%(str(i+1),n))
-            line = ' '.join(row_record) + '\r\n'
-            lines.append(line)
-        fw.write('%s %s %s\r\n'%(row, column, nonzero_count))
-        fw.writelines(lines)
-                    
+    elif version == 'v2':
+        words_feature,feature_list = word_bag(word,inputs,gram)
+        #生成cluto输入文件
+        row = len(word)#词数
+        column = len(feature_list)#特征列数
+        nonzero_count = 0#非0特征数
+
+        cluto_input_folder = "cluto"
+        if not os.path.exists(cluto_input_folder):
+            os.makedirs(cluto_input_folder)
+        file_name = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
+
+        with open(file_name, 'w') as fw:
+            lines = []    
+            #词频聚类
+            for k,v in words_feature.iteritems():
+                row_record = []
+                feature_line = v
+                for f in feature_list:
+                    if f in feature_line:
+                        nonzero_count += 1
+                        row_record.append('%s %s'%(int(feature_list.index(f))+1,feature_line[f]))
+                line = ' '.join(row_record)+'\r\n'
+                lines.append(line)
+            fw.write('%s %s %s\r\n'%(row, column, nonzero_count))
+            fw.writelines(lines)
+
     return file_name
 
 def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
@@ -286,7 +358,7 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
     '''
     # 聚类结果文件, result_file
 
-    cluto_input_folder = os.path.join(AB_PATH, "cluto")
+    cluto_input_folder = os.path.join(AB_PATH, CLUTO_FOLDER)
 
     if not input_file:
         input_file = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
@@ -326,7 +398,8 @@ def label2uniqueid(labels):
         label2id[label] = str(uuid.uuid4())
 
     return label2id
-def kmeans(word, inputs, k):
+
+def kmeans(word, inputs, k, version='v1', gram=3):
     '''
     kmeans聚类函数
     输入数据：
@@ -340,8 +413,8 @@ def kmeans(word, inputs, k):
     '''
     if len(inputs) < 2:
         raise ValueError("length of input items must be larger than 2")
-    
-    input_file = process_for_cluto(word, inputs)
+
+    input_file = process_for_cluto(word, inputs, version=version, gram=gram)
     label,evaluation_file = cluto_kmeans_vcluster(k=k, input_file = input_file)
     label2id = label2uniqueid(label)
 

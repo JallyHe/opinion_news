@@ -9,7 +9,7 @@ from triple_sentiment_classifier import triple_classifier
 from neutral_classifier import triple_classifier as neutral_classifier
 from weibo_subob_rub_neu_classifier import weibo_subob_rub_neu_classifier
 from comment_clustering_tfidf_v7 import tfidf_v2, text_classify, \
-        cluster_evaluation, choose_cluster
+        cluster_evaluation, choose_cluster, comment_news, filter_comment
 
 
 def comments_calculation(comments):
@@ -152,6 +152,8 @@ def comments_calculation_v2(comments):
 
 def comments_rubbish_clustering_calculation(comments):
     """评论垃圾过滤、聚类
+       input: comments  
+           comment中包含news_id, news_content
        cluster_infos: 聚簇信息
        item_infos:单条信息列表, 数据字段：clusterid、weight、same_from、duplicate
     """
@@ -184,6 +186,7 @@ def comments_rubbish_clustering_calculation(comments):
         r['content168'] = r['content168'].encode('utf-8')
         r['content'] = r['content168']
         r['text'] = r['content168']
+        r['news_content'] = r['news_content'].encode('utf-8')
 
         # 简单规则过滤广告
         item = ad_filter(r)
@@ -193,50 +196,52 @@ def comments_rubbish_clustering_calculation(comments):
             item['clusterid'] = NON_CLUSTER_ID + '_rub'
             items_infos.append(item)
 
-    # svm去除垃圾和规则筛选新闻文本
-    items = weibo_subob_rub_neu_classifier(inputs)
+    # svm去除垃圾
+    items = rubbish_classifier(inputs)
     inputs = []
     for item in items:
-        subob_rub_neu_label = item['subob_rub_neu_label']
-        if not subob_rub_neu_label in [1, 0]:
-            # 1表示垃圾文本，0表示新闻文本
-            inputs.append(item)
-        elif subob_rub_neu_label == 1:
+        if item['rub_label'] == 1:
             item['clusterid'] = NON_CLUSTER_ID + '_rub'
             items_infos.append(item)
-        elif subob_rub_neu_label == 0:
-            item['clusterid'] = NON_CLUSTER_ID + '_news'
-            items_infos.append(item)
+        else:
+            inputs.append(item)
 
-    if len(inputs) >= MIN_CLUSTERING_INPUT:
-        tfidf_word, input_dict = tfidf_v2(inputs)
-        results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
+    # 按新闻对评论归类
+    results = comment_news(inputs)
 
-        #评论文本聚类
-        cluster_text = text_classify(inputs, results, tfidf_word)
+    for news_id, inputs in results.iteritems():
+        # 过滤评论函数
+        # inputs = filter_comment(inputs)
 
-        evaluation_inputs = []
+        if len(inputs) >= MIN_CLUSTERING_INPUT:
+            tfidf_word, input_dict = tfidf_v2(inputs)
+            results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
 
-        for k,v in enumerate(cluster_text):
-            inputs[k]['label'] = v['label']
-            inputs[k]['weight'] = v['weight']
-            evaluation_inputs.append(inputs[k])
+            #评论文本聚类
+            cluster_text = text_classify(inputs, results, tfidf_word)
 
-        #簇评价, 权重及簇标签
-        recommend_text = cluster_evaluation(evaluation_inputs)
-        for label, items in recommend_text.iteritems():
-            if label != OTHER_CLUSTER_ID:
-                clusters_infos['features'][label] = results[label]
+            evaluation_inputs = []
 
-                for item in items:
-                    item['clusterid'] = label
-                    item['weight'] = item['weight']
-            else:
-                item['clusterid'] = OTHER_CLUSTER_ID
-    else:
-        # 如果信息条数小于,则直接归为其他类
-        for r in inputs:
-            r['clusterid'] = OTHER_CLUSTER_ID
+            for k,v in enumerate(cluster_text):
+                inputs[k]['label'] = v['label']
+                inputs[k]['weight'] = v['weight']
+                evaluation_inputs.append(inputs[k])
+
+            #簇评价, 权重及簇标签
+            recommend_text = cluster_evaluation(evaluation_inputs)
+            for label, items in recommend_text.iteritems():
+                if label != OTHER_CLUSTER_ID:
+                    clusters_infos['features'][label] = results[label]
+
+                    for item in items:
+                        item['clusterid'] = label
+                        item['weight'] = item['weight']
+                else:
+                    item['clusterid'] = OTHER_CLUSTER_ID
+        else:
+            # 如果信息条数小于,则直接归为其他类
+            for r in inputs:
+                r['clusterid'] = OTHER_CLUSTER_ID
 
     # 去重，根据子观点类别去重
     cluster_items = dict()
