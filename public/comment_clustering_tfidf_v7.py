@@ -16,6 +16,11 @@ from load_settings import load_settings
 settings = load_settings()
 CLUTO_FOLDER = settings.get("CLUSTERING_CLUTO_FOLDER")
 CLUTO_EXECUTE_PATH = settings.get("CLUSTERING_CLUTO_EXECUTE_PATH")
+PROCESS_FOR_CLUTO_VERSION = settings.get("COMMENT_CLUSTERING_PROCESS_FOR_CLUTO_VERSION")
+PROCESS_GRAM = settings.get("COMMENT_CLUSTERING_PROCESS_GRAM")
+CLUSTERING_KMEANS_CLUSTERING_NUM = settings.get("CLUSTERING_KMEANS_CLUSTERING_NUM")
+CLUSTERING_CLUTO_EXECUTE_PATH = settings.get("CLUSTERING_CLUTO_EXECUTE_PATH")
+COMMENT_CLUSTERING_CLUSTER_EVA_MIN_SIZE = settings.get("COMMENT_CLUSTERING_CLUSTER_EVA_MIN_SIZE")
 
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), './')
 
@@ -279,7 +284,7 @@ def word_bag(word, inputs, gram):
     return counter_dict,feature_list
 
 
-def process_for_cluto(word, inputs, version='v1', gram=3):
+def process_for_cluto(word, inputs, version=PROCESS_FOR_CLUTO_VERSION, gram=PROCESS_GRAM):
     '''
     处理成cluto的输入格式，词-文本聚类
     输入数据：
@@ -316,13 +321,13 @@ def process_for_cluto(word, inputs, version='v1', gram=3):
             fw.writelines(lines)
 
     elif version == 'v2':
-        words_feature,feature_list = word_bag(word,inputs,gram)
+        words_feature, feature_list = word_bag(word,inputs,gram)
         #生成cluto输入文件
         row = len(word)#词数
         column = len(feature_list)#特征列数
         nonzero_count = 0#非0特征数
 
-        cluto_input_folder = "cluto"
+        cluto_input_folder = os.path.join(AB_PATH, CLUTO_FOLDER)
         if not os.path.exists(cluto_input_folder):
             os.makedirs(cluto_input_folder)
         file_name = os.path.join(cluto_input_folder, '%s.txt' % os.getpid())
@@ -344,7 +349,7 @@ def process_for_cluto(word, inputs, version='v1', gram=3):
 
     return file_name
 
-def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
+def cluto_kmeans_vcluster(k=CLUSTERING_KMEANS_CLUSTERING_NUM, input_file=None, vcluster=None):
     '''
     cluto kmeans聚类
     输入数据：
@@ -369,7 +374,7 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
         evaluation_file = os.path.join(cluto_input_folder,'%s_%s.txt'%(os.getpid(),k))
 
     if not vcluster:
-        vcluster = os.path.join(AB_PATH, './cluto-2.1.2/Linux_i686/vcluster')
+        vcluster = os.path.join(AB_PATH, CLUSTERING_CLUTO_EXECUTE_PATH)
 
     command = "%s -niter=20 %s %s > %s" % (vcluster, input_file, k, evaluation_file)
     os.popen(command)
@@ -381,7 +386,6 @@ def cluto_kmeans_vcluster(k=10, input_file=None, vcluster=None):
 
     if os.path.isfile(input_file):
         os.remove(input_file)
-
 
     return results,evaluation_file
 
@@ -399,7 +403,7 @@ def label2uniqueid(labels):
 
     return label2id
 
-def kmeans(word, inputs, k, version='v1', gram=3):
+def kmeans(word, inputs, k, version=PROCESS_FOR_CLUTO_VERSION, gram=PROCESS_GRAM):
     '''
     kmeans聚类函数
     输入数据：
@@ -514,7 +518,7 @@ def text_classify(inputs,word_label,tfidf_word):
 
     return inputs
 
-def cluster_evaluation(items, min_size=5):
+def cluster_evaluation(items, min_size=COMMENT_CLUSTERING_CLUSTER_EVA_MIN_SIZE):
     '''
     只保留文本数大于num的类
     输入数据:
