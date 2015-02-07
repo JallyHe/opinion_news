@@ -17,6 +17,9 @@ else:
     default_subevent_id = '7325a077-76b8-4b03-bbed-d8f0faaf28fd'
     default_kmeans_number = 10
     default_reserve_number = 5
+    # ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+    ALLOWED_EXTENSIONS = set(['jl'])
+    UPLOAD_FOLDER = '/tmp/upload/'
 
 def get_db_names():
     results = _default_mongo_db().database_names()
