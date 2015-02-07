@@ -224,7 +224,8 @@ def comments_rubbish_clustering_calculation(comments, min_cluster_num=MIN_CLUSTE
 
         if len(inputs) >= MIN_CLUSTERING_INPUT:
             tfidf_word, input_dict = tfidf_v2(inputs)
-            results = choose_cluster(tfidf_word, inputs, min_cluster_num, max_cluster_num)
+            results = choose_cluster(tfidf_word, inputs, min_cluster_num, \
+                    max_cluster_num, version=version)
 
             #评论文本聚类
             cluster_text = text_classify(inputs, results, tfidf_word)
