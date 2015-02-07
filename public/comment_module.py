@@ -138,8 +138,10 @@ def comments_calculation_v2(comments, min_cluster_num=MIN_CLUSTER_NUM, \
                             clusterid、weight、same_from、duplicate
     """
     comments_copy = copy.deepcopy(comments)
+
     # 情绪计算
     sentiment_results = comments_sentiment_rubbish_calculation(comments)
+
     # 观点计算
     clustering_results = comments_rubbish_clustering_calculation(comments_copy, \
             min_cluster_num=min_cluster_num, max_cluster_num=max_cluster_num, \
@@ -218,9 +220,15 @@ def comments_rubbish_clustering_calculation(comments, min_cluster_num=MIN_CLUSTE
     # 按新闻对评论归类
     results = comment_news(inputs)
 
-    for news_id, inputs in results.iteritems():
-        # 过滤评论函数
-        # inputs = filter_comment(inputs)
+    final_inputs = []
+    for news_id, _inputs in results.iteritems():
+        # 结合新闻，过滤评论
+        _inputs = filter_comment(_inputs)
+        inputs = [r for r in _inputs if r['rub_label'] == 0]
+        inputs_rubbish = [r for r in _inputs if r['rub_label'] == 1]
+        for r in inputs_rubbish:
+            r['clusterid'] =  NON_CLUSTER_ID + '_rub'
+            items_infos.append(r)
 
         if len(inputs) >= MIN_CLUSTERING_INPUT:
             tfidf_word, input_dict = tfidf_v2(inputs)
@@ -232,7 +240,7 @@ def comments_rubbish_clustering_calculation(comments, min_cluster_num=MIN_CLUSTE
 
             evaluation_inputs = []
 
-            for k,v in enumerate(cluster_text):
+            for k, v in enumerate(cluster_text):
                 inputs[k]['label'] = v['label']
                 inputs[k]['weight'] = v['weight']
                 evaluation_inputs.append(inputs[k])
@@ -246,16 +254,22 @@ def comments_rubbish_clustering_calculation(comments, min_cluster_num=MIN_CLUSTE
                     for item in items:
                         item['clusterid'] = label
                         item['weight'] = item['weight']
+
+                    final_inputs.extend(items)
                 else:
-                    item['clusterid'] = OTHER_CLUSTER_ID
+                    for item in items:
+                        item['clusterid'] = OTHER_CLUSTER_ID
+                    items_infos.extend(items)
         else:
             # 如果信息条数小于,则直接归为其他类
             for r in inputs:
                 r['clusterid'] = OTHER_CLUSTER_ID
 
+            items_infos.extend(inputs)
+
     # 去重，根据子观点类别去重
     cluster_items = dict()
-    for r in inputs:
+    for r in final_inputs:
         clusterid = r['clusterid']
         try:
             cluster_items[clusterid].append(r)

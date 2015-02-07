@@ -11,6 +11,7 @@ import numpy as np
 from gensim import corpora
 from collections import Counter
 from utils import cut_words, cut_words_noun
+from ad_filter import market_words
 from load_settings import load_settings
 
 settings = load_settings()
@@ -34,7 +35,7 @@ def freq_word_comment(items):
         word_comment:每条评论的名词，{"_id":[名词1，名词2，...]}
     '''
     words_list = []
-    word_comment = {}#记录每条评论的名词
+    word_comment = {} # 记录每条评论的名词
     for item in items:
         text = item['content']
         words = cut_words_noun(text)
@@ -95,7 +96,7 @@ def word_list(comment_word,news_word):
 
     return result_word[:int(len(result_word)*0.2)]
 
-def comment_word_in_news(word_comment,word_news,inputs):
+def comment_word_in_news(word_comment, word_news, inputs):
     '''
     判断一条评论中的名词是否在新闻中出现过
     输入数据：
@@ -103,25 +104,27 @@ def comment_word_in_news(word_comment,word_news,inputs):
         word_news:相应新闻的词及词频列表，[(词，词频)]
         inputs:过滤后的评论文本的集合,[{'_id':评论id,'news_id':新闻id,'content':新闻内容}]
     输出数据：
-        input_reserved:评论中的名词在新闻中出现过,[{'_id':评论id,'news_id':新闻id,'content':新闻内容}]
-        input_filtered:评论中的名词在新闻中没出现过，[{'_id':评论id,'news_id':新闻id,'content':新闻内容}]
+        list: rub_label, 每条评论中的名词是否在新闻中出现过，0表示出现过, 1表示没有出现
     '''
-    input_reserved = []
-    input_filtered = []
+    results = []
     news_word = [item[0] for item in word_news]
-    for k,v in word_comment.iteritems():
+    for k, v in word_comment.iteritems():
         count = 0#每条评论中包含的新闻词数
         for w in v:
             if w in news_word:
                 count += 1
-        if count >=2:
-            inputs[int(k)]["count"] = count
-            input_reserved.append(inputs[int(k)])
-        else:
-            inputs[int(k)]["count"] = count
-            input_filtered.append(inputs[int(k)])
 
-    return input_reserved,input_filtered
+        if count >= 2:
+             comment_news_label = 0
+        else:
+             comment_news_label = 1
+
+        item = inputs[k]
+        item['rub_label'] = comment_news_label
+
+        results.append(item)
+
+    return results
 
 
 def filter_comment(inputs):
@@ -138,34 +141,40 @@ def filter_comment(inputs):
         news_content = r['news_content']
 
     item_reserved = []
+    item_rubbish = []
+
     at_pattern = r'@(.+?)\s'
     emotion_pattern = r'\[(\S+?)\]'
-    market_words = [u'兼职',u'包邮',u'大酬宾',u'网页链接',u'请关注',u'求互粉']
-    
+
     for input in inputs:
-        item = {}
-        item['_id'] = input['_id']
-        item['news_id'] = input['news_id']
+        rub_label = 0 # 表示不是垃圾
         text = re.sub(at_pattern, '',input['content']+' ')#在每个input后加一个空格，以去掉@在末尾的情况
         text = text.strip(' ')
         text = re.sub(emotion_pattern,'',text)
         words = cut_words(text)
         if len(words) >= 3 and len(words)<=20:
-            flag = 1#标记评论词汇中是否含有营销词汇
             for word in words:
                 if word in market_words:
-                    flag = 0
-            if flag == 1:
-                item['content'] = text
-                item_reserved.append(item)
+                    rub_label = 1 # 表示命中广告词，是垃圾
+                    input['rub_label'] = rub_label
+                    item_rubbish.append(input)
+                    break
 
-    #如果评论中的名词出现在过新闻中，则保留该评论
-    comment_top, comment_noun = freq_word_comment(item_reserved)#评论中的词及词频
-    news_word = freq_word_news(news_content)#新闻中的词及词频
-    imp_word = word_list(comment_top,news_word)#评论和新闻中的词及词频结合
-    reserved, filtered = comment_word_in_news(comment_noun,imp_word,item_reserved)
+            if rub_label == 0:
+                input['content'] = text
+                item_reserved.append(input)
+        else:
+            rub_label = 1
+            input['rub_label'] = rub_label
+            item_rubbish.append(input)
 
-    return reserved
+    # 如果评论中的名词出现在过新闻中，则保留该评论
+    comment_top, comment_noun = freq_word_comment(item_reserved) # 评论中的词及词频
+    news_word = freq_word_news(news_content) # 新闻中的词及词频
+    imp_word = word_list(comment_top,news_word) # 评论和新闻中的词及词频结合
+    results = comment_word_in_news(comment_noun, imp_word, item_reserved)
+
+    return results + item_rubbish
 
 
 def comment_news(inputs):
