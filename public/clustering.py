@@ -174,7 +174,7 @@ def freq_word(items, topk=TOPK_FREQ_WORD_NUM):
     return keywords_dict, total_weight
 
 
-def cluster_tfidf(keywords_count_list, total_weight_list, least_freq=10):
+def cluster_tfidf(keywords_count_list, total_weight_list, least_freq=CLUSTER_EVA_LEAST_FREQ):
     '''计算tfidf
        input
            keywords_count_list: 不同簇的关键词, 词及词频字典的list

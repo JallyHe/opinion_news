@@ -403,7 +403,7 @@ def label2uniqueid(labels):
 
     return label2id
 
-def kmeans(word, inputs, k, version=PROCESS_FOR_CLUTO_VERSION, gram=PROCESS_GRAM):
+def kmeans(word, inputs, k=CLUSTERING_KMEANS_CLUSTERING_NUM, version=PROCESS_FOR_CLUTO_VERSION, gram=PROCESS_GRAM):
     '''
     kmeans聚类函数
     输入数据：
@@ -419,13 +419,18 @@ def kmeans(word, inputs, k, version=PROCESS_FOR_CLUTO_VERSION, gram=PROCESS_GRAM
         raise ValueError("length of input items must be larger than 2")
 
     input_file = process_for_cluto(word, inputs, version=version, gram=gram)
-    label,evaluation_file = cluto_kmeans_vcluster(k=k, input_file = input_file)
-    label2id = label2uniqueid(label)
+    labels, evaluation_file = cluto_kmeans_vcluster(k=k, input_file=input_file)
+    label2id = label2uniqueid(labels)
 
     #将词对归类，{类标签：[词1，词2，...]}
     word_label = {}
     for i in range(len(word)):
-        l = label2id[label[i]]
+        l = labels[i]
+        if int(l) != -1:
+            l = label2id[l]
+        else:
+            l = 'other'
+
         if word_label.has_key(l):
             item = word_label[l]
             item.append(word[i][0])
@@ -434,7 +439,7 @@ def kmeans(word, inputs, k, version=PROCESS_FOR_CLUTO_VERSION, gram=PROCESS_GRAM
             item.append(word[i][0])
             word_label[l] = item
 
-    return word_label,evaluation_file
+    return word_label, evaluation_file
 
 
 def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
@@ -448,12 +453,10 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     输出数据：
         聚类效果最好的聚类个数下的词聚类结果
     '''
-    from comment_clustering_tfidf_v4 import kmeans
-
     evaluation_result = {}#每类的聚类评价效果
     cluster_result={}#记录每个聚类个数下，kmeans词聚类结果，{聚类个数：{类标签：[词1，词2，...]}}
     for i in range(cluster_min,cluster_max,1):
-        results,evaluation = kmeans(tfidf_word,inputs,i)
+        results, evaluation = kmeans(tfidf_word,inputs,i)
         cluster_result[i]=results
         #提取每类聚类效果
         f = open(evaluation)

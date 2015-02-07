@@ -67,7 +67,6 @@ def subevents():
 
 @mod.route('/comments_list/')
 def comments_list():
-
     if os.path.exists(temp_file):
         os.remove(temp_file)
     AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
@@ -78,7 +77,6 @@ def comments_list():
     subeventid = request.args.get('subeventid', 'global')
     kmeans = request.args.get('kmeans', default_kmeans_number) # KMEANS聚类数
     reserve = request.args.get('reserve', default_reserve_number) # 保留聚簇数
-    print kmeans, reserve
 
     ec = EventComments(topicid)
     if subeventid == 'global':
