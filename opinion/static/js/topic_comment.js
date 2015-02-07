@@ -444,6 +444,23 @@ function bindSubeventChange(){
     });
 }
 
+function drawVsmSelect(){
+    $("#select_vsm").empty();
+    var html = '';
+    var vsm_list = ['v1', 'v2'];
+    var vsm_name = ['普通', '基于上下文'];
+    for (var i=0;i < vsm_list.length;i++){
+        var name = vsm_name[i];
+        var value = vsm_list[i];
+        if (value == vsm){
+            html += '<option selected="selected" value="' + value +'">' + name +'</option>';
+        }
+        else{
+            html += '<option value="' + value +'">' + name +'</option>';
+        }
+    }
+    $("#select_vsm").append(html);
+}
 function check_comments(data){
     if ("status" in data){
         $("#main").hideLoading();
@@ -519,8 +536,10 @@ function bindSentiSortClick(){
 var query = QUERY;
 var topic_id = TOPIC_ID;
 var subevent_id = SUBEVENT_ID;
-var kmeans = KMEANS;
-var reserve = RESERVE;
+var min_cluster_num = MIN_CLUSTER_NUM;
+var max_cluster_num = MAX_CLUSTER_NUM;
+var cluster_eva_min_size = CLUSTER_EVA_MIN_SIZE;
+var vsm = VSM;
 var start_ts = undefined;
 var end_ts = undefined;
 var global_pie_data = undefined;
@@ -532,7 +551,7 @@ var global_senti_display = 10;
 var addition = 10;
 var topic_url = "/cluster/topics/";
 var subevent_url = "/cluster/subevents/";
-var global_ajax_url = "/cluster/comments_list/?topicid=" + topic_id + "&subeventid=" + subevent_id + "&kmeans=" + kmeans + "&reserve=" + reserve;
+var global_ajax_url = "/cluster/comments_list/?topicid=" + topic_id + "&subeventid=" + subevent_id + "&min_cluster_num=" + min_cluster_num + "&max_cluster_num=" + max_cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
 var sentiment_comments_pre = "/cluster/sentiment_comments?sort=";
 var cluster_comments_pre = "/cluster/cluster_comments?sort=";
 
@@ -540,6 +559,7 @@ comment = new Comment_opinion(query, start_ts, end_ts);
 console.log("QUERY"+QUERY);
 comment.call_sync_ajax_request(topic_url, comment.ajax_method, drawTopicSelect);
 comment.call_sync_ajax_request(subevent_url, comment.ajax_method, drawSubeventSelect);
+drawVsmSelect();
 $("#main").showLoading();
 $("#senti_pie").showLoading();
 comment.call_sync_ajax_request(global_ajax_url, comment.ajax_method, check_comments);

@@ -7,7 +7,7 @@ from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
 from opinion.Database import Event, EventComments, EventManager, Feature
 from opinion.global_config import default_topic_name, default_topic_id, default_subevent_id,\
-        default_kmeans_number, default_reserve_number
+        default_min_cluster_num, default_max_cluster_num, default_cluster_eva_min_size, default_vsm
 
 mod = Blueprint('cluster', __name__, url_prefix='/cluster')
 
@@ -21,11 +21,14 @@ def index():
     topic_name = request.args.get('query', default_topic_name) # 话题名
     topicid = em.getEventIDByName(topic_name)
     subevent_id = request.args.get('subevent_id', 'global')
-    kmeans = request.args.get('kmeans', default_kmeans_number)
-    reserve = request.args.get('reserve', default_reserve_number)
+    min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
+    max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
+    cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
+    vsm = request.args.get('vsm', default_vsm)
 
     return render_template('index/topic_comment.html', topic=topic_name, topic_id=topicid, subevent_id=subevent_id,\
-            kmeans=kmeans, reserve=reserve)
+            min_cluster_num=min_cluster_num, max_cluster_num=max_cluster_num, cluster_eva_min_size=cluster_eva_min_size,\
+            vsm=vsm)
 
 @mod.route('/topics/')
 def topics():
@@ -75,8 +78,10 @@ def comments_list():
 
     topicid = request.args.get('topicid', default_topic_id)
     subeventid = request.args.get('subeventid', 'global')
-    kmeans = request.args.get('kmeans', default_kmeans_number) # KMEANS聚类数
-    reserve = request.args.get('reserve', default_reserve_number) # 保留聚簇数
+    min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
+    max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
+    cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
+    vsm = request.args.get('vsm', default_vsm)
 
     ec = EventComments(topicid)
     if subeventid == 'global':
@@ -87,7 +92,7 @@ def comments_list():
     if not comments:
         return json.dumps({"status":"fail"})
 
-    cal_results = comments_calculation_v2(comments)
+    cal_results = comments_calculation_v2(comments, min_cluster_num, max_cluster_num, cluster_eva_min_size, vsm)
     features = cal_results['cluster_infos']['features']
     item_infos = cal_results['item_infos']
 
