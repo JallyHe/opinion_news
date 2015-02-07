@@ -17,6 +17,7 @@ settings = load_settings()
 MIN_CLUSTER_NUM = settings.get("MIN_CLUSTER_NUM")
 MAX_CLUSTER_NUM = settings.get("MAX_CLUSTER_NUM")
 CLUSTER_EVA_MIN_SIZE = settings.get("CLUSTER_EVA_MIN_SIZE")
+COMMENT_CLUSTERING_PROCESS_FOR_CLUTO_VERSION = settings.get("COMMENT_CLUSTERING_PROCESS_FOR_CLUTO_VERSION")
 
 """
 def comments_calculation(comments):
@@ -123,8 +124,10 @@ def comments_calculation(comments):
     return {'cluster_infos': clusters_infos, 'item_infos': items_infos}
 """
 
+
 def comments_calculation_v2(comments, min_cluster_num=MIN_CLUSTER_NUM, \
-        max_cluster_num=MAX_CLUSTER_NUM, cluster_eva_min_size=CLUSTER_EVA_MIN_SIZE):
+        max_cluster_num=MAX_CLUSTER_NUM, cluster_eva_min_size=CLUSTER_EVA_MIN_SIZE, \
+        version=COMMENT_CLUSTERING_PROCESS_FOR_CLUTO_VERSION):
     """评论计算
        将sentiment和clustering的结果进行合并，取并集
        cluster_infos: 聚簇信息
@@ -138,7 +141,9 @@ def comments_calculation_v2(comments, min_cluster_num=MIN_CLUSTER_NUM, \
     # 情绪计算
     sentiment_results = comments_sentiment_rubbish_calculation(comments)
     # 观点计算
-    clustering_results = comments_rubbish_clustering_calculation(comments_copy, min_cluster_num, max_cluster_num, cluster_eva_min_size)
+    clustering_results = comments_rubbish_clustering_calculation(comments_copy, \
+            min_cluster_num=min_cluster_num, max_cluster_num=max_cluster_num, \
+            cluster_eva_min_size=cluster_eva_min_size, version=version)
 
     sentiment_dict = {r['_id']: r for r in sentiment_results['item_infos']}
     clustering_dict = {r['_id']: r for r in clustering_results['item_infos']}
@@ -160,7 +165,8 @@ def comments_calculation_v2(comments, min_cluster_num=MIN_CLUSTER_NUM, \
 
 
 def comments_rubbish_clustering_calculation(comments, min_cluster_num=MIN_CLUSTER_NUM, \
-        max_cluster_num=MAX_CLUSTER_NUM, cluster_eva_min_size=CLUSTER_EVA_MIN_SIZE):
+        max_cluster_num=MAX_CLUSTER_NUM, cluster_eva_min_size=CLUSTER_EVA_MIN_SIZE, \
+        version=COMMENT_CLUSTERING_PROCESS_FOR_CLUTO_VERSION):
     """评论垃圾过滤、聚类
        input: comments
            comment中包含news_id, news_content
