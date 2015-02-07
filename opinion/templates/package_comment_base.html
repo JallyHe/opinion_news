@@ -323,15 +323,10 @@
 
             <div class="tabConts">
                 <div style="margin: 20px auto 10px 20px;border-bottom: 1px dotted #666;width: 182px;font-weight: bold;font-size: 14px;">参数选择</div>
-                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
-                    <span class="input-group-addon">话题</span>
-                    <form id=topic_form></form>
-                </div>
-                <div class="compVsplit"></div>
 
                 <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
-                    <span class="input-group-addon">子事件</span>
-                    <form id=subevent_form></form>
+                    <span class="input-group-addon">TaskID</span>
+                    <input id="taskid" type="text" class="form-control" style="text-align:right;" placeholder="未指定" value="{{ taskid }}" disabled>
                 </div>
 
                 <div class="compVsplit"></div>
@@ -379,23 +374,22 @@
 
 {% endblock navbar %}
     <script>
-        var QUERY = "{{topic}}";
-        var TOPIC_ID="{{topic_id}}";
-        var SUBEVENT_ID = "{{subevent_id}}";
+        var TASK_ID="{{ taskid }}";
         var MIN_CLUSTER_NUM = "{{ min_cluster_num }}";
         var MAX_CLUSTER_NUM = "{{ max_cluster_num }}";
         var CLUSTER_EVA_MIN_SIZE = "{{ cluster_eva_min_size }}";
         var VSM = "{{ vsm }}";
         $("#submit_request").click(function(){
-            var min_cluster_num = $("#min_cluster_num").val();
-            var max_cluster_num = $("#max_cluster_num").val();
-            var cluster_eva_min_size = $("#cluster_eva_min_size").val();
-            var vsm = $("select_vsm").val();
-            if (max_cluster_num < min_cluster_num){
-                alert('最大聚簇数应当大于最小聚簇数!');
+            var minclusternum = $("#min_cluster_num").val();
+            var maxclusternum = $("#max_cluster_num").val();
+            var clusterevaminsize = $("#cluster_eva_min_size").val();
+            var vsm = $("#select_vsm").val();
+            if (parseInt(maxclusternum) < parseInt(minclusternum)){
+
+                alert('最大聚簇数不能小于最小聚簇数!');
             }
             else{
-                window.location.href = "/cluster/?query=" + query + "&subevent_id=" + subevent_id + "&min_cluster_num=" + min_cluster_num + "&max_cluster_num=" + max_cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
+                window.location.href = "/package/?taskid=" + TASK_ID + "&min_cluster_num=" + minclusternum + "&max_cluster_num=" + maxclusternum + "&cluster_eva_min_size=" + clusterevaminsize + "&vsm=" + vsm;
             }
         });
     </script>

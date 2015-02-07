@@ -345,6 +345,35 @@
 
                 <div class="compVsplit"></div>
 
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">最小聚簇数</span>
+                    <input id="min_cluster_num" type="number" min="2" value="{{ min_cluster_num }}" class="form-control " style="text-align:right;">
+                </div>
+ 
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">最大聚簇数</span>
+                    <input id="max_cluster_num" type="number" min="1" value="{{ max_cluster_num }}" class="form-control " style="text-align:right;">
+                </div>
+
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">最小簇大小</span>
+                    <input id="cluster_eva_min_size" type="number" min="1" value="{{ cluster_eva_min_size }}" class="form-control " style="text-align:right;">
+                </div>
+
+                <div class="compVsplit"></div>
+
+                <div class="input-group input-group-sm" style="width: 200px; margin: 2px auto 2px 10px;">
+                    <span class="input-group-addon">VSM方法</span>
+                    <form id="vsm_form">
+                        <select id="select_vsm" name="vsm" style="width:129px;float:right;height:30px;"></select>
+                    </form>
+                </div>
+
+                <div class="compVsplit"></div>
                 <span id="submit_request"><a class="compOK" ><i class="glyphicon glyphicon-ok icons iOK"></i>搜索</a></span>
             </div>
         </div>
@@ -361,55 +390,22 @@
     <script>
         var QUERY = "{{topic}}";
         var NEWS_ID = "{{news_id}}";
+        var MIN_CLUSTER_NUM = "{{ min_cluster_num }}";
+        var MAX_CLUSTER_NUM = "{{ max_cluster_num }}";
+        var CLUSTER_EVA_MIN_SIZE = "{{ cluster_eva_min_size }}";
+        var VSM = "{{ vsm }}";
         $("#submit_request").click(function(){
-            var QUERY = document.getElementById('keyword_input').value;
-            var TIME_RANGE = $('#all_time').html();
-            window.open("/news/?query=" + QUERY.split('-')[0]);
+            var min_cluster_num = $("#min_cluster_num").val();
+            var max_cluster_num = $("#max_cluster_num").val();
+            var cluster_eva_min_size = $("#cluster_eva_min_size").val();
+            var vsm = $("select_vsm").val();
+            if (max_cluster_num < min_cluster_num){
+                alert('最大聚簇数应当大于最小聚簇数!');
+            }
+            else{
+                window.location.href = "/weibo/?query=" + QUERY + "&news_id=" + NEWS_ID + "&min_cluster_num=" + MIN_CLUSTER_NUM + "&max_cluster_num=" + MAX_CLUSTER_NUM + "&cluster_eva_min_size=" + CLUSTER_EVA_MIN_SIZE + "&vsm=" + VSM;
+            }
         });
-        /*var TIME_RANGE = $('#all_time').html();
-        var START_TS = date2ts(TIME_RANGE.split('-')[0]);
-        var END_TS = date2ts(TIME_RANGE.split('-')[1]);
-
-        //var all_startDate = new Date('09/01/2013');
-        var all_endDate = new Date();
-        //var all_maxDate = new Date('09/21/2013');
-        //var all_minDate = new Date('09/01/2013');
-        var week_ago = subtract(all_endDate,7);
-
-        function subtract(date,days){
-            var nd = new Date(date);
-            nd = nd.valueOf();
-            nd = nd - days * 24 * 60 * 60 * 1000;
-            nd = new Date(nd);
-            var y = nd.getFullYear();
-            var m = nd.getMonth()+1;
-            var d = nd.getDate();
-            if(m <= 9) m = "0"+m;
-            if(d <= 9) d = "0"+d; 
-            var cdate = y+"-"+m+"-"+d;
-            return cdate;
-        }
-        $('#reportrange').daterangepicker({
-            ranges: {
-                '今天': [all_endDate, all_endDate],
-                '最近7天': [week_ago, all_endDate],
-            },
-            //startDate: all_startDate,
-            endDate: all_endDate,
-            //minDate: all_minDate,
-            //maxDate: all_maxDate
-        },
-        function(start, end) {
-            $('#reportrange span').html(start.format('YYYYMMDD') + '-' + end.format('YYYYMMDD'));
-        }
-        );
-
-        function date2ts(date){
-            var year = date.substring(0, 4);
-            var month = date.substring(4, 6);
-            var day = date.substring(6, 8);
-            return new Date(year, month-1, day).getTime() / 1000;
-        }*/
     </script>
     {% block tail_js %}
 

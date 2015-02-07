@@ -1,0 +1,73 @@
+{% extends "package_base.html" %}
+{% block module_title %}新闻评论观点分析{% endblock %}
+
+{% block head_css %}
+    <link type="text/css" rel="stylesheet" href="/static/css/css/timeline.css">
+    <link type="text/css" rel="stylesheet" href="/static/css/css/table.css">
+    <link rel="stylesheet" href="/static/css/css/tab.css" type="text/css" media="all">
+
+    <style>
+        .blkUnit {
+            position: relative;
+            clear: both;
+            margin-top: 25px;
+            background-color: #fff;
+        }
+        .blkUnit .titlBar {
+            z-index: 4;
+            position: relative;
+            height: 16px;
+            padding: 20px;
+            background-color: #f6f6f6;
+        }
+        .titlBar h4 {
+            display: inline-block;
+            margin-top: -5px;
+            padding-right: 0px;
+            font-size: 15px;
+            color: #666;
+        }
+        .titlBar .compInfo {
+            padding-right: 15px;
+            color: #858585;
+        }
+
+    </style>
+{% endblock head_css %}
+
+{% block head_js %}
+{% endblock head_js %}
+
+{% block content %}
+    <div class="blkUnit grpUnit" id="trendProfile">
+        <div class="titlBar" style="padding-bottom:25px;">
+            <h4>提交新任务</h4>
+        </div>
+
+        <div class="tabUnit">
+            <div class="tabTitle" style="padding-top:1px;background-color:#f6f6f6;" id="auto_gsid_3">
+            </div>
+            <div class="tabConts">
+                <form action="" method=post enctype=multipart/form-data>
+                   <span>
+                        <input type=file name=file>
+                        <input type=submit value='上传'>
+                        {% if get_flashed_messages()%}
+                           {{ get_flashed_messages()[0] }}
+                        {% endif %}
+                   </span>
+                </form>
+                <h5>已上传文件</h5>
+                {% for m in get_flashed_messages()[1:] %}
+                <span> {{ m }} <a href="/package/?taskid={{m}}" target="_blank">计算并查看分析结果</a></span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
+
+{% block tail_js %}
+    <script type="text/javascript">
+    </script>
+{% endblock tail_js %}
