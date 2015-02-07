@@ -63,7 +63,7 @@ def ratio():
     if not comments:
         return json.dumps({"status":"fail"})
 
-    cal_results = comments_calculation_v2(comments, min_cluster_num, max_cluster_num, cluster_eva_min_size, vsm)
+    cal_results = comments_calculation_v2(comments, int(min_cluster_num), int(max_cluster_num), int(cluster_eva_min_size), vsm)
     features = cal_results['cluster_infos']['features']
     item_infos = cal_results['item_infos']
 

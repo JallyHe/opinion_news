@@ -21,6 +21,7 @@ else:
     default_weibo_news_id = 'weibo'
     default_news_url = 'http://news.sina.com.cn/c/2014-10-09/145630963839.shtml'
     default_subevent_id = '7325a077-76b8-4b03-bbed-d8f0faaf28fd'
+    default_task_id = default_topic_id
     default_min_cluster_num = MIN_CLUSTER_NUM
     default_max_cluster_num = MAX_CLUSTER_NUM
     default_cluster_eva_min_size = CLUSTER_EVA_MIN_SIZE

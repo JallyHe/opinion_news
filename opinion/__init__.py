@@ -6,16 +6,18 @@ from opinion.news.views import mod as newsModule
 from opinion.comment.views import mod as commentsModule
 from opinion.weibo.views import mod as weibosModule
 from opinion.cluster.views import mod as clusterModule
+from opinion.package.views import mod as packageModule
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config')
 
     # Create modules
-    app.register_blueprint(newsModule)
-    app.register_blueprint(commentsModule)
-    app.register_blueprint(weibosModule)
-    app.register_blueprint(clusterModule)
+    # app.register_blueprint(newsModule)
+    # app.register_blueprint(commentsModule)
+    # app.register_blueprint(weibosModule)
+    # app.register_blueprint(clusterModule)
+    app.register_blueprint(packageModule)
 
     # Enable the toolbar?
     app.config['DEBUG_TB_ENABLED'] = app.debug
