@@ -6,88 +6,44 @@ import json
 from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
 from opinion.Database import Event, EventComments, EventManager, Feature
-from opinion.global_config import default_topic_name, default_topic_id, default_subevent_id,\
-        default_min_cluster_num, default_max_cluster_num, default_cluster_eva_min_size, default_vsm
+from opinion.global_config import default_task_id, default_min_cluster_num, default_max_cluster_num, default_cluster_eva_min_size, default_vsm
+from comment_module import comments_calculation_v2
+AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
+sys.path.append(AB_PATH)
 
-mod = Blueprint('cluster', __name__, url_prefix='/cluster')
+mod = Blueprint('package', __name__, url_prefix='/package')
 
 em = EventManager()
-temp_file = 'cluster_dump_dict.txt'
+temp_file_post = 'package.txt'
 
 @mod.route('/')
 def index():
     """返回页面
     """
-    topic_name = request.args.get('query', default_topic_name) # 话题名
-    topicid = em.getEventIDByName(topic_name)
-    subevent_id = request.args.get('subevent_id', 'global')
+    taskid = request.args.get('taskid', default_task_id)
     min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
     max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
     cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
     vsm = request.args.get('vsm', default_vsm)
 
-    return render_template('index/topic_comment.html', topic=topic_name, topic_id=topicid, subevent_id=subevent_id,\
-            min_cluster_num=min_cluster_num, max_cluster_num=max_cluster_num, cluster_eva_min_size=cluster_eva_min_size,\
-            vsm=vsm)
-
-@mod.route('/topics/')
-def topics():
-    """获取新闻话题信息
-    """
-    results = []
-    events = em.getEvents()
-
-    for event in events:
-        results.append({'_id': str(event['_id']), 'topic': event['topic']})
-
-    return json.dumps(results)
-
-
-@mod.route('/subevents/')
-def subevents():
-    """获取子事件信息
-    """
-    subevents = []
-    events = em.getEvents()
-    for event in events:
-        e = Event(event['_id'])
-        subevents.extend(e.getSubEvents())
-
-    results_dict = dict()
-    for s in subevents:
-        feature = Feature(s['_id'])
-        fwords = feature.get_newest()
-        words = sorted(fwords.iteritems(), key=lambda(k, v): v, reverse=True)[:5]
-        name = ','.join([k for k, v in words])
-        subevent = {'_id': s['_id'], 'eventid': str(s['eventid']), 'name': name}
-        try:
-            results_dict[str(s['eventid'])].append(subevent)
-        except KeyError:
-            results_dict[str(s['eventid'])] = [subevent]
-
-    return json.dumps(results_dict)
-
+    return render_template('index/package_comment.html', min_cluster_num=min_cluster_num, max_cluster_num=max_cluster_num, cluster_eva_min_size=cluster_eva_min_size,\
+            vsm=vsm, taskid=taskid)
 
 @mod.route('/comments_list/')
 def comments_list():
-    if os.path.exists(temp_file):
-        os.remove(temp_file)
-    AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
-    sys.path.append(AB_PATH)
-    from comment_module import comments_calculation_v2
 
-    topicid = request.args.get('topicid', default_topic_id)
-    subeventid = request.args.get('subeventid', 'global')
+    taskid = request.args.get('taskid', default_task_id)
     min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
     max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
     cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
     vsm = request.args.get('vsm', default_vsm)
 
-    ec = EventComments(topicid)
-    if subeventid == 'global':
-        comments = ec.getAllNewsComments()
-    else:
-        comments = ec.getCommentsBySubeventid(subeventid)
+    temp_file = taskid + temp_file_post
+    if os.path.exists(temp_file):
+        os.remove(temp_file)
+
+    ec = EventComments(taskid)
+    comments = ec.getAllNewsComments()
 
     if not comments:
         return json.dumps({"status":"fail"})
@@ -179,15 +135,18 @@ def comments_list():
 
     dump_file = open(temp_file, 'w')
     dump_file.write(json.dumps({"features":features, "senti_dump_dict":sentiment_dump_dict,\
-            "cluster_dump_dict":cluster_dump_dict}));
-    dump_file.close();
+            "cluster_dump_dict":cluster_dump_dict, "ratio":ratio_results, "sentiratio": sentiratio_results}))
+    dump_file.close()
 
-    return json.dumps({"ratio":ratio_results, "sentiratio":sentiratio_results,})
+    return json.dumps({"ratio":ratio_results, "sentiratio":sentiratio_results})
 
 @mod.route('/sentiment_comments/')
 def sentiment_comments():
 
+    taskid = request.args.get('taskid', default_task_id)
     sort_by = request.args.get('sort', 'weight')
+
+    temp_file = taskid + temp_file_post
     dump_file = open(temp_file,'r')
     dump_dict = json.loads(dump_file.read())
     sentiment_dump_dict = dump_dict["senti_dump_dict"]
@@ -206,7 +165,10 @@ def sentiment_comments():
 @mod.route('/cluster_comments/')
 def cluster_comments():
 
+    taskid = request.args.get('taskid', default_task_id)
     sort_by = request.args.get('sort', 'weight')
+
+    temp_file = taskid + temp_file_post
     dump_file = open(temp_file,'r')
     dump_dict = json.loads(dump_file.read())
     cluster_dump_dict = dump_dict["cluster_dump_dict"]

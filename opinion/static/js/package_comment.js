@@ -21,9 +21,9 @@ Date.prototype.format = function(format) {
 }
 
 
-function Comment_opinion(query, start_ts, end_ts){
+function Comment_opinion(task_id, start_ts, end_ts){
 	//传进来的参数，可以有
-	this.query = query;
+	this.task_id = task_id;
 	this.start_ts = start_ts;
 	this.end_ts = end_ts;
 	this.ajax_method = "GET";
@@ -374,76 +374,6 @@ function bindSubeventMoreClick(){
     });
 }
 
-function drawTopicSelect(data){
-    $("#topic_form").empty();
-    var html = '';
-    html += '<select style="width:155px;float:right;height:30px" id="topic_select" name="topics">';
-
-    for (var i = 0;i < data.length;i++) {
-        var value = data[i]['_id'];
-        var name = data[i]['topic'];
-        if (name == query){
-            html += '<option selected="selected" value="' + value +'">' + name +'</option>';
-        }
-        else{
-            html += '<option value="' + value +'">' + name +'</option>';
-        }
-    }
-    html += '</select>';
-    $("#topic_form").append(html);
-    bindTopicChange();
-}
-function bindTopicChange(){
-    $("#topic_select").change(function(){
-        topic_id = $(this).val();
-        query = $(this).find("option:selected").text();
-        subevent_id = 'global';   //默认显示全部子事件汇总
-        drawSubeventSelect(global_subevents_data);
-    });
-}
-
-function drawSubeventSelect(data){
-    if (!global_subevents_data){
-        global_subevents_data = data;
-    }
-    $("#subevent_form").empty();
-    var html = '';
-    html += '<select style="width:143px;height:30px;float:right" id="subevent_select" name="subevents">';
-
-    if (subevent_id == 'global'){
-        html += '<option selected="selected" value="global">全部</option>';
-    }
-    else{
-        html += '<option value="global">全部</option>';
-    }
-    if (topic_id in data){
-        var subevents = data[topic_id];
-    }
-    else{
-        var subevents = [];
-    }
-
-    for (var i = 0;i < subevents.length;i++){
-        var value = subevents[i]['_id'];
-        var name = subevents[i]['name'];
-        if (value == subevent_id){
-            html += '<option selected="selected" value="' + value +'">' + name +'</option>';
-        }
-        else{
-            html += '<option value="' + value +'">' + name +'</option>';
-        }
-    }
-    html += '</select>';
-    $("#subevent_form").append(html);
-    bindSubeventChange();
-}
-
-function bindSubeventChange(){
-    $("#subevent_select").change(function(){
-        subevent_id = $(this).val();
-    });
-}
-
 function drawVsmSelect(){
     $("#select_vsm").empty();
     var html = '';
@@ -533,9 +463,7 @@ function bindSentiSortClick(){
     });
 }
 
-var query = QUERY;
-var topic_id = TOPIC_ID;
-var subevent_id = SUBEVENT_ID;
+var task_id = TASK_ID;
 var min_cluster_num = MIN_CLUSTER_NUM;
 var max_cluster_num = MAX_CLUSTER_NUM;
 var cluster_eva_min_size = CLUSTER_EVA_MIN_SIZE;
@@ -549,16 +477,11 @@ var global_comments_opinion = undefined;
 var global_subevent_display = 10;
 var global_senti_display = 10;
 var addition = 10;
-var topic_url = "/cluster/topics/";
-var subevent_url = "/cluster/subevents/";
-var global_ajax_url = "/cluster/comments_list/?topicid=" + topic_id + "&subeventid=" + subevent_id + "&min_cluster_num=" + min_cluster_num + "&max_cluster_num=" + max_cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
-var sentiment_comments_pre = "/cluster/sentiment_comments?sort=";
-var cluster_comments_pre = "/cluster/cluster_comments?sort=";
+var global_ajax_url = "/package/comments_list/?taskid=" + task_id + "&min_cluster_num=" + min_cluster_num + "&max_cluster_num=" + max_cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
+var sentiment_comments_pre = "/package/sentiment_comments?taskid=" + task_id + "&sort=";
+var cluster_comments_pre = "/package/cluster_comments?taskid=" + task_id +"&sort=";
 
-comment = new Comment_opinion(query, start_ts, end_ts);
-console.log("QUERY"+QUERY);
-comment.call_sync_ajax_request(topic_url, comment.ajax_method, drawTopicSelect);
-comment.call_sync_ajax_request(subevent_url, comment.ajax_method, drawSubeventSelect);
+comment = new Comment_opinion(task_id, start_ts, end_ts);
 drawVsmSelect();
 $("#main").showLoading();
 $("#senti_pie").showLoading();
