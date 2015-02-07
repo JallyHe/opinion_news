@@ -197,7 +197,7 @@ def comments_rubbish_clustering_calculation(comments, min_cluster_num=MIN_CLUSTE
         r['content168'] = r['content168'].encode('utf-8')
         r['content'] = r['content168']
         r['text'] = r['content168']
-        if not r['news_content']:
+        if r['news_content']:
             r['news_content'] = r['news_content'].encode('utf-8')
         else:
             r['news_content'] = ''
