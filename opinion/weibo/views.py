@@ -7,7 +7,8 @@ from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
 from opinion.Database import EventComments, EventManager, \
         Feature, DbManager, News, Event
-from opinion.global_config import default_weibo_topic_name, default_weibo_news_id
+from opinion.global_config import default_weibo_topic_name, default_weibo_news_id,\
+        default_min_cluster_num, default_max_cluster_num, default_cluster_eva_min_size, default_vsm
 
 mod = Blueprint('weibo', __name__, url_prefix='/weibo')
 
@@ -22,6 +23,10 @@ def index():
     # topic_name = u'APEC2014-微博'
     news_id = request.args.get('news_id', default_weibo_news_id)
     topicid = em.getEventIDByName(topic_name)
+    min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
+    max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
+    cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
+    vsm = request.args.get('vsm', default_vsm)
 
     news = News(news_id, topicid)
     news_subeventid = news.get_news_subeventid()
@@ -31,7 +36,8 @@ def index():
     comments = eventcomment.getNewsComments(news_id)
 
     return render_template('index/weibo.html', topic=topic_name, topic_id=topicid, \
-            news_id=news_id, news_subeventid=news_subeventid)
+            news_id=news_id, news_subeventid=news_subeventid, min_cluster_num=min_cluster_num,\
+            max_cluster_num=max_cluster_num, cluster_eva_min_size=cluster_eva_min_size, vsm=vsm)
 
 
 @mod.route('/ratio/')
@@ -47,13 +53,17 @@ def ratio():
     topic_name = request.args.get('query', default_weibo_topic_name) # 话题名
     news_id = request.args.get('news_id', default_weibo_news_id)
     topicid = em.getEventIDByName(topic_name)
+    min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
+    max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
+    cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
+    vsm = request.args.get('vsm', default_vsm)
 
     eventcomment = EventComments(topicid)
     comments = eventcomment.getNewsComments(news_id)
     if not comments:
         return json.dumps({"status":"fail"})
 
-    cal_results = comments_calculation_v2(comments)
+    cal_results = comments_calculation_v2(comments, min_cluster_num, max_cluster_num, cluster_eva_min_size, vsm)
     features = cal_results['cluster_infos']['features']
     item_infos = cal_results['item_infos']
 

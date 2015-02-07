@@ -379,18 +379,6 @@
 
 {% endblock navbar %}
     <script>
-        $("#submit_request").click(function(){
-            var min_cluster_num = $("#min_cluster_num").val();
-            var max_cluster_num = $("#max_cluster_num").val();
-            var cluster_eva_min_size = $("#cluster_eva_min_size").val();
-            var vsm = $("select_vsm").val();
-            if (max_cluster_num < min_cluster_num){
-                alert('最大聚簇数应当大于最小聚簇数i!');
-            }
-            else{
-                window.location.href = "/cluster/?query=" + query + "&subevent_id=" + subevent_id + "&min_cluster_num=" + min_cluster_num + "&max_cluster_num=" + max_cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
-            }
-        });
         var QUERY = "{{topic}}";
         var TOPIC_ID="{{topic_id}}";
         var SUBEVENT_ID = "{{subevent_id}}";
@@ -398,6 +386,18 @@
         var MAX_CLUSTER_NUM = "{{ max_cluster_num }}";
         var CLUSTER_EVA_MIN_SIZE = "{{ cluster_eva_min_size }}";
         var VSM = "{{ vsm }}";
+        $("#submit_request").click(function(){
+            var min_cluster_num = $("#min_cluster_num").val();
+            var max_cluster_num = $("#max_cluster_num").val();
+            var cluster_eva_min_size = $("#cluster_eva_min_size").val();
+            var vsm = $("select_vsm").val();
+            if (max_cluster_num < min_cluster_num){
+                alert('最大聚簇数应当大于最小聚簇数!');
+            }
+            else{
+                window.location.href = "/cluster/?query=" + query + "&subevent_id=" + subevent_id + "&min_cluster_num=" + min_cluster_num + "&max_cluster_num=" + max_cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
+            }
+        });
     </script>
     {% block tail_js %}
 
