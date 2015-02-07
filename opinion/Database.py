@@ -73,7 +73,6 @@ class EventComments(object):
             else:
                 r['news_id'] = None
                 r['news_content'] = None
-            print r['news_content']
             rs.append(r)
         return rs
 
