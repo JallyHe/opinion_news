@@ -3,9 +3,12 @@
 from neutral_classifier import triple_classifier
 from rubbish_classifier import rubbish_classifier
 from weibo_subob_classifier import subob_classifier, cut_mid_weibo
+from load_settings import load_settings
 
+settings = load_settings()
+RUBBISH_BATCH_COUNT = settings.get("RUBBISH_BATCH_COUNT")
 
-def weibo_subob_rub_neu_classifier(items, batch=1000):
+def weibo_subob_rub_neu_classifier(items, batch=RUBBISH_BATCH_COUNT):
     '''
     分类主函数:
     输入数据:weibo(list元素)，示例：[[mid,text,...],[mid,text,...]...]

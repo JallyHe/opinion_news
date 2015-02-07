@@ -1,8 +1,9 @@
 #-*-coding=utf-8-*-
-"""默认参数配置文件
+"""默认参数配置文件, 不要修改，可以修改settings.py，以覆盖default_settings
    default_settings.py
 """
 
+# Database.py
 MONGOD_PORT = 27017
 MONGOD_HOST = 'localhost'
 
@@ -15,8 +16,10 @@ EVENTS_NEWS_COLLECTION_PREFIX = 'post_'
 EVENTS_COMMENTS_COLLECTION_PREFIX = 'comment_'
 COMMENTS_CLUSTER_COLLECTION = 'comment_cluster'
 
+# ad_filter.py
 MARKET_WORDS = 'market_words.txt'
 
+# classify_mid_weibo.py
 HAPPY_WORDS = './words/happy.txt'
 ANGRY_WORDS = './words/angry.txt'
 SAD_WORDS = './words/sad.txt'
@@ -34,4 +37,20 @@ CLUSTERING_CLUSTER_EVA_LEAST_SIZE = 8 #
 COMMENT_CLUSTERING_PROCESS_FOR_CLUTO_VERSION = 'v1'
 COMMENT_CLUSTERING_PROCESS_GRAM = 3
 COMMENT_CLUSTERING_CLUSTER_EVA_MIN_SIZE = 5
+
+# feature.py
+FEATURE_TFIDF_TOPK = 100 #
+FEATURE_TITLE_TERM_WEIGHT = 5 #
+FEATURE_CONTENT_TERM_WEIGHT = 1 #
+
+# rubbish_classifier.py
+RUBBISH_BATCH_COUNT = 1000
+
+# utils.py
+CUT_BLACK_WORDS = 'black.txt'
+
+# comment_module.py
+MIN_CLUSTER_NUM = 2
+MAX_CLUSTER_NUM = 10
+CLUSTER_EVA_MIN_SIZE = 5
 

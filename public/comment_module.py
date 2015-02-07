@@ -1,5 +1,6 @@
 #-*-coding=utf-8-*-
 
+import copy
 from duplicate import duplicate
 from ad_filter import ad_filter
 from rubbish_classifier import rubbish_classifier
@@ -10,8 +11,14 @@ from neutral_classifier import triple_classifier as neutral_classifier
 from weibo_subob_rub_neu_classifier import weibo_subob_rub_neu_classifier
 from comment_clustering_tfidf_v7 import tfidf_v2, text_classify, \
         cluster_evaluation, choose_cluster, comment_news, filter_comment
+from load_settings import load_settings
 
+settings = load_settings()
+MIN_CLUSTER_NUM = settings.get("MIN_CLUSTER_NUM")
+MAX_CLUSTER_NUM = settings.get("MAX_CLUSTER_NUM")
+CLUSTER_EVA_MIN_SIZE = settings.get("CLUSTER_EVA_MIN_SIZE")
 
+"""
 def comments_calculation(comments):
     # 无意义信息的clusterid，包括ad_filter分出来的广告，svm分出的垃圾，主客观分类器分出的新闻
     NON_CLUSTER_ID = 'nonsense'
@@ -114,9 +121,10 @@ def comments_calculation(comments):
         items_infos.append(r)
 
     return {'cluster_infos': clusters_infos, 'item_infos': items_infos}
+"""
 
-
-def comments_calculation_v2(comments):
+def comments_calculation_v2(comments, min_cluster_num=MIN_CLUSTER_NUM, \
+        max_cluster_num=MAX_CLUSTER_NUM, cluster_eva_min_size=CLUSTER_EVA_MIN_SIZE):
     """评论计算
        将sentiment和clustering的结果进行合并，取并集
        cluster_infos: 聚簇信息
@@ -126,10 +134,11 @@ def comments_calculation_v2(comments):
                     合并后：sentiment、same_from_sentiment、duplicate_sentiment、
                             clusterid、weight、same_from、duplicate
     """
-    import copy
     comments_copy = copy.deepcopy(comments)
+    # 情绪计算
     sentiment_results = comments_sentiment_rubbish_calculation(comments)
-    clustering_results = comments_rubbish_clustering_calculation(comments_copy)
+    # 观点计算
+    clustering_results = comments_rubbish_clustering_calculation(comments_copy, min_cluster_num, max_cluster_num, cluster_eva_min_size)
 
     sentiment_dict = {r['_id']: r for r in sentiment_results['item_infos']}
     clustering_dict = {r['_id']: r for r in clustering_results['item_infos']}
@@ -150,9 +159,10 @@ def comments_calculation_v2(comments):
     return {'cluster_infos': clustering_results['cluster_infos'], 'item_infos': merge_results}
 
 
-def comments_rubbish_clustering_calculation(comments):
+def comments_rubbish_clustering_calculation(comments, min_cluster_num=MIN_CLUSTER_NUM, \
+        max_cluster_num=MAX_CLUSTER_NUM, cluster_eva_min_size=CLUSTER_EVA_MIN_SIZE):
     """评论垃圾过滤、聚类
-       input: comments  
+       input: comments
            comment中包含news_id, news_content
        cluster_infos: 聚簇信息
        item_infos:单条信息列表, 数据字段：clusterid、weight、same_from、duplicate
@@ -166,13 +176,6 @@ def comments_rubbish_clustering_calculation(comments):
     # 最小聚类输入信息条数，少于则不聚类
     MIN_CLUSTERING_INPUT = 30
 
-    # 最少簇数量
-    MIN_CLUSTER_NUM = 2
-
-    # 最多簇数量
-    MAX_CLUSTER_NUM = 10
-
-    # TFIDF词、聚类数量自动选择、vsm作属性也要可设成参数
     # 簇信息，主要是簇的特征词信息
     clusters_infos = {'features': dict()}
 
@@ -215,7 +218,7 @@ def comments_rubbish_clustering_calculation(comments):
 
         if len(inputs) >= MIN_CLUSTERING_INPUT:
             tfidf_word, input_dict = tfidf_v2(inputs)
-            results = choose_cluster(tfidf_word, inputs, MIN_CLUSTER_NUM, MAX_CLUSTER_NUM)
+            results = choose_cluster(tfidf_word, inputs, min_cluster_num, max_cluster_num)
 
             #评论文本聚类
             cluster_text = text_classify(inputs, results, tfidf_word)
@@ -228,7 +231,7 @@ def comments_rubbish_clustering_calculation(comments):
                 evaluation_inputs.append(inputs[k])
 
             #簇评价, 权重及簇标签
-            recommend_text = cluster_evaluation(evaluation_inputs)
+            recommend_text = cluster_evaluation(evaluation_inputs, min_size=cluster_eva_min_size)
             for label, items in recommend_text.iteritems():
                 if label != OTHER_CLUSTER_ID:
                     clusters_infos['features'][label] = results[label]
@@ -269,22 +272,6 @@ def comments_sentiment_rubbish_calculation(comments):
 
     # 有意义的信息clusterid
     MEAN_CLUSTER_ID = 'sentiment'
-
-    # 其他类的clusterid
-    OTHER_CLUSTER_ID = 'other'
-
-    # 最小聚类输入信息条数，少于则不聚类
-    MIN_CLUSTERING_INPUT = 30
-
-    # 最少簇数量
-    MIN_CLUSTER_NUM = 2
-
-    # 最多簇数量
-    MAX_CLUSTER_NUM = 10
-
-    # TFIDF词、聚类数量自动选择、vsm作属性也要可设成参数
-    # 簇信息，主要是簇的特征词信息
-    clusters_infos = {'features': dict()}
 
     # 单条信息list，每条信息存储 clusterid weight sentiment字段
     items_infos = []

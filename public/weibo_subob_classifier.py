@@ -14,7 +14,8 @@ def remove_rub(text):
 
 
 def cut_mid_weibo(text):
-    # 在中性情感中根据规则再提取新闻微博
+    """在中性情感中根据规则再提取新闻微博
+    """
     text = cut_filter(text) # 去掉文本中的网页链接和分享自
     n1 = text.find('发表')
     n2 = text.find('【')

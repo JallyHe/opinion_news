@@ -381,13 +381,23 @@ def cluto_kmeans_vcluster(k=CLUSTERING_KMEANS_CLUSTERING_NUM, input_file=None, v
 
     results = [line.strip() for line in open(result_file)]
 
+    #提取每类聚类效果
+    with open(evaluation_file) as f:
+        s = f.read()
+        pattern = re.compile(r'\[I2=(\S+?)\]')
+        res = pattern.search(s).groups()
+        evaluation_results = res[0]
+
     if os.path.isfile(result_file):
         os.remove(result_file)
 
     if os.path.isfile(input_file):
         os.remove(input_file)
 
-    return results,evaluation_file
+    if os.path.isfile(evaluation_file):
+        os.remove(evaluation_file)
+
+    return results, evaluation_results
 
 def label2uniqueid(labels):
     '''
@@ -419,7 +429,7 @@ def kmeans(word, inputs, k=CLUSTERING_KMEANS_CLUSTERING_NUM, version=PROCESS_FOR
         raise ValueError("length of input items must be larger than 2")
 
     input_file = process_for_cluto(word, inputs, version=version, gram=gram)
-    labels, evaluation_file = cluto_kmeans_vcluster(k=k, input_file=input_file)
+    labels, evaluation_results = cluto_kmeans_vcluster(k=k, input_file=input_file)
     label2id = label2uniqueid(labels)
 
     #将词对归类，{类标签：[词1，词2，...]}
@@ -439,12 +449,12 @@ def kmeans(word, inputs, k=CLUSTERING_KMEANS_CLUSTERING_NUM, version=PROCESS_FOR
             item.append(word[i][0])
             word_label[l] = item
 
-    return word_label, evaluation_file
+    return word_label, evaluation_results
 
 
-def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
+def choose_cluster(tfidf_word, inputs, cluster_min, cluster_max):
     '''
-    选取聚类个数2~15个中聚类效果最好的保留
+    选取聚类个数cluster_min(2)~cluster_max(5)个中聚类效果最好的保留
     输入数据：
         tfidf_word:tfidf topk词及权值，[(词，权值)]
         inputs:过滤后的评论
@@ -453,18 +463,14 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
     输出数据：
         聚类效果最好的聚类个数下的词聚类结果
     '''
-    evaluation_result = {}#每类的聚类评价效果
-    cluster_result={}#记录每个聚类个数下，kmeans词聚类结果，{聚类个数：{类标签：[词1，词2，...]}}
-    for i in range(cluster_min,cluster_max,1):
-        results, evaluation = kmeans(tfidf_word,inputs,i)
-        cluster_result[i]=results
-        #提取每类聚类效果
-        f = open(evaluation)
-        s = f.read()
-        pattern = re.compile(r'\[I2=(\S+?)\]')
-        res = pattern.search(s).groups()
-        evaluation_result[i]=res[0]
-    sorted_evaluation = sorted(evaluation_result.iteritems(),key = lambda(k,v):k,reverse=False)
+    evaluation_result = {} # 每类的聚类评价效果
+    cluster_result = {} # 记录每个聚类个数下，kmeans词聚类结果，{聚类个数：{类标签：[词1，词2，...]}}
+    for i in range(cluster_min, cluster_max, 1):
+        results, evaluation = kmeans(tfidf_word, inputs, k=i)
+        cluster_result[i] = results
+        evaluation_result[i] = evaluation
+
+    sorted_evaluation = sorted(evaluation_result.iteritems(), key=lambda(k,v):k, reverse=False)
 
     #计算各个点的斜率
     slope = {}#每点斜率
@@ -482,7 +488,7 @@ def choose_cluster(tfidf_word,inputs,cluster_min,cluster_max):
 
     return cluster_result[sorted_slope_difference[0][0]]
 
-def text_classify(inputs,word_label,tfidf_word):
+def text_classify(inputs, word_label, tfidf_word):
     '''
     对每条评论分别计算属于每个类的权重，将其归入权重最大的类
     输入数据：

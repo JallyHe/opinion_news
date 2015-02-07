@@ -2,9 +2,15 @@
 
 import math
 from utils import cut_words
+from load_settings import load_settings
+
+settings = load_settings()
+TFIDF_TOPK = settings.get("FEATURE_TFIDF_TOPK")
+TITLE_TERM_WEIGHT = settings.get("FEATURE_TITLE_TERM_WEIGHT")
+CONTENT_TERM_WEIGHT = settings.get("FEATURE_CONTENT_TERM_WEIGHT")
 
 
-def tfidf_cal(keywords_dict_list, topk=100):
+def tfidf_cal(keywords_dict_list, topk=TFIDF_TOPK):
     '''计算tfidf
        input
            keywords_dict_list: 不同簇的关键词, list
@@ -34,7 +40,7 @@ def tfidf_cal(keywords_dict_list, topk=100):
     return results
 
 
-def extract_feature(items, title_term_weight=5, content_term_weight=1):
+def extract_feature(items, title_term_weight=TITLE_TERM_WEIGHT, content_term_weight=CONTENT_TERM_WEIGHT):
     '''
     提取特征词函数: Tf-idf, 名词/动词/形容词, TOP100, 标题与内容权重区分 5:1
     input：
