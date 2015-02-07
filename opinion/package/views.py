@@ -6,7 +6,7 @@ import json
 from flask import Blueprint, render_template, request
 from opinion.global_utils import ts2datetime, ts2date
 from opinion.Database import Event, EventComments, EventManager, Feature
-from opinion.global_config import default_task_id, default_min_cluster_num, default_max_cluster_num, default_cluster_eva_min_size, default_vsm
+from opinion.global_config import default_task_id, default_cluster_num, default_cluster_eva_min_size, default_vsm
 from comment_module import comments_calculation_v2
 AB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../public/')
 sys.path.append(AB_PATH)
@@ -21,20 +21,20 @@ def index():
     """返回页面
     """
     taskid = request.args.get('taskid', default_task_id)
-    min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
-    max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
+    cluster_num = request.args.get('cluster_num', '')
     cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
     vsm = request.args.get('vsm', default_vsm)
 
-    return render_template('index/package_comment.html', min_cluster_num=min_cluster_num, max_cluster_num=max_cluster_num, cluster_eva_min_size=cluster_eva_min_size,\
+    return render_template('index/package_comment.html', cluster_num=cluster_num, cluster_eva_min_size=cluster_eva_min_size,\
             vsm=vsm, taskid=taskid)
 
 @mod.route('/comments_list/')
 def comments_list():
 
     taskid = request.args.get('taskid', default_task_id)
-    min_cluster_num = request.args.get('min_cluster_num', default_min_cluster_num)
-    max_cluster_num = request.args.get('max_cluster_num', default_max_cluster_num)
+    cluster_num = request.args.get('cluster_num', '') #若无此参数，取-1；否则取用户设定值
+    if cluster_num == '':
+        cluster_num = default_cluster_num
     cluster_eva_min_size = request.args.get('cluster_eva_min_size', default_cluster_eva_min_size)
     vsm = request.args.get('vsm', default_vsm)
 
@@ -48,7 +48,7 @@ def comments_list():
     if not comments:
         return json.dumps({"status":"fail"})
 
-    cal_results = comments_calculation_v2(comments, int(min_cluster_num), int(max_cluster_num), int(cluster_eva_min_size), vsm)
+    cal_results = comments_calculation_v2(comments, cluster_eva_min_size=int(cluster_eva_min_size), version=vsm)
     features = cal_results['cluster_infos']['features']
     item_infos = cal_results['item_infos']
 

@@ -25,6 +25,7 @@ else:
     ALLOWED_EXTENSIONS = set(['jl'])
     UPLOAD_FOLDER = '/tmp/upload/'
     default_task_id = default_topic_id
+    default_cluster_num = -1
     default_min_cluster_num = MIN_CLUSTER_NUM
     default_max_cluster_num = MAX_CLUSTER_NUM
     default_cluster_eva_min_size = CLUSTER_EVA_MIN_SIZE

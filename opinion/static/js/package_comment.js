@@ -378,7 +378,7 @@ function drawVsmSelect(){
     $("#select_vsm").empty();
     var html = '';
     var vsm_list = ['v1', 'v2'];
-    var vsm_name = ['普通', '基于上下文'];
+    var vsm_name = ['文档空间', '上下文空间'];
     for (var i=0;i < vsm_list.length;i++){
         var name = vsm_name[i];
         var value = vsm_list[i];
@@ -464,8 +464,7 @@ function bindSentiSortClick(){
 }
 
 var task_id = TASK_ID;
-var min_cluster_num = MIN_CLUSTER_NUM;
-var max_cluster_num = MAX_CLUSTER_NUM;
+var cluster_num = CLUSTER_NUM;
 var cluster_eva_min_size = CLUSTER_EVA_MIN_SIZE;
 var vsm = VSM;
 var start_ts = undefined;
@@ -477,7 +476,7 @@ var global_comments_opinion = undefined;
 var global_subevent_display = 10;
 var global_senti_display = 10;
 var addition = 10;
-var global_ajax_url = "/package/comments_list/?taskid=" + task_id + "&min_cluster_num=" + min_cluster_num + "&max_cluster_num=" + max_cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
+var global_ajax_url = "/package/comments_list/?taskid=" + task_id + "&cluster_num=" + cluster_num + "&cluster_eva_min_size=" + cluster_eva_min_size + "&vsm=" + vsm;
 var sentiment_comments_pre = "/package/sentiment_comments?taskid=" + task_id + "&sort=";
 var cluster_comments_pre = "/package/cluster_comments?taskid=" + task_id +"&sort=";
 
